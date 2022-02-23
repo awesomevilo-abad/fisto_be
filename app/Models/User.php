@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class User extends Authenticatable
+{
+    use HasFactory, Notifiable, HasApiTokens;
+    use SoftDeletes;
+    protected $fillable = [
+        'id_prefix'
+        , 'id_no'
+        , 'role'
+        , 'first_name'
+        , 'middle_name'
+        , 'last_name'
+        , 'suffix'
+        , 'department'
+        , 'position'
+        , 'permissions'
+        , 'document_types'
+        , 'username'
+        , 'password'
+    ];
+
+    protected $hidden = [
+        'password', 'remember_token','pivot'
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'permissions' => 'array',
+        'document_types' => 'array',
+    ];
+
+    protected $attributes = [
+        "is_active"=>1
+    ];
+
+    public function setUsernameAttribute($value)
+    {
+        $this->attributes['username']=strtolower($value);
+    }
+
+
+    public function documents()
+    {
+       return $this->belongsToMany(Document::class,'user_documents','user_id','document_id')->select('documents.id','documents.id as document_id');
+    }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class,'user_permission','user_id','permission_id');
+    }
+
+}

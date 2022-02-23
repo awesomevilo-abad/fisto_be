@@ -1,0 +1,138 @@
+// Transactions Format
+// DOCUMENT & PO
+// PAD FULL
+
+{
+    "users_id": 2
+    ,"id_prefix":"RDFFLFI"
+    ,"id_no":"10100"
+    ,"first_name":"Micha"
+    ,"middle_name":"borlo"
+    ,"last_name":"Estra"
+    ,"suffix":null
+    ,"department":"MIS"
+    ,"document_id":2
+    ,"document_type":"PRM"
+    ,"category_id":1
+    ,"category":null
+    ,"payment_type":"partial"
+    ,"company_id":1
+    ,"company":"Corporate Services"
+    ,"document_no":301
+    ,"supplier_id":1
+    ,"supplier":"INFOBIP"
+    ,"document_date":"2021-09-13"
+    ,"document_amount":20000
+    ,"remarks":"Sample Remarks for Trial Only"
+    ,"po_group":[{
+                "po_no": 1131,
+                "rr_group": [
+                    {"rr_no":40000,
+                    "rr_qty":125
+                    },
+                    {"rr_no":2500,
+                    "rr_qty":25
+                    },
+                    {"rr_no":7500,
+                    "rr_qty":50
+                    }
+                ],
+                "po_amount": "50000",
+                "po_qty":200
+                }]
+    ,"referrence_group":[]
+    ,"reason_id":null
+    ,"reason":null
+    ,"pcf_date":null
+    ,"pcf_letter":null
+    ,"utilities_from":null
+    ,"utilities_to":null
+    ,"account_no":null
+    ,"consumption":null
+    ,"receipt_no":null
+
+
+
+}
+
+// UTILITIES
+{
+    "users_id": 2
+    ,"id_prefix":"RDFFLFI"
+    ,"id_no":"10100"
+    ,"first_name":"Micha"
+    ,"middle_name":"borlo"
+    ,"last_name":"Estra"
+    ,"suffix":null
+    ,"department":"MIS"
+    ,"document_id":9
+    ,"document_type":"Utilities"
+    ,"category_id":null
+    ,"category":null
+    ,"payment_type":"full"
+    ,"company_id":1
+    ,"company":"Corporate Services"
+    ,"document_no":1003
+    ,"supplier_id":3
+    ,"supplier":"SFELAPCO"
+    ,"document_date":"2021-09-20"
+    ,"document_amount":20000
+    ,"remarks":"Electric Bill Nepo"
+    ,"po_group":[]
+    ,"referrence_group":[]
+    ,"reason_id":null
+    ,"reason":null
+    ,"pcf_date":null
+    ,"pcf_letter":null
+    ,"utilities_from":null
+    ,"utilities_to":null
+    ,"utilities_account_no":10001
+    ,"utilities_consumption":500
+    ,"utilities_uom":"kW"
+    ,"utilities_receipt_no":"SI1001"
+    ,"payroll_location":null
+    ,"payroll_tax_category":null
+
+}
+
+// PAYROLL
+    {
+    "users_id": 2
+    ,"id_prefix":"RDFFLFI"
+    ,"id_no":"10100"
+    ,"first_name":"Micha"
+    ,"middle_name":"borlo"
+    ,"last_name":"Estra"
+    ,"suffix":null
+    ,"department":"MIS"
+    ,"document_id":9
+    ,"document_type":"Utilities"
+    ,"category_id":null
+    ,"category":null
+    ,"payment_type":"full"
+    ,"company_id":1
+    ,"company":"Corporate Services"
+    ,"document_no":1007
+    ,"supplier_id":3
+    ,"supplier":"SFELAPCO"
+    ,"document_date":"2021-09-20"
+    ,"document_amount":20000
+    ,"remarks":"Electric Bill Nepo"
+    ,"po_group":[]
+    ,"referrence_group":[]
+    ,"reason_id":null
+    ,"reason":null
+    ,"pcf_date":null
+    ,"pcf_letter":null
+    ,"utilities_from":null
+    ,"utilities_to":null
+    ,"utilities_account_no":null
+    ,"utilities_consumption":null
+    ,"utilities_uom":null
+    ,"utilities_receipt_no":null
+    ,"payroll_location":null
+    ,"payroll_tax_category":null
+    ,"payroll_from":"2021-09-06"
+    ,"payroll_to":"2021-09-21"
+}
+

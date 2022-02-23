@@ -1,0 +1,150 @@
+// Transactions Format
+// DOCUMENT & PO
+// PAD FULL
+
+{
+    "users_id": 2
+    ,"id_prefix":"RDFFLFI"
+    ,"id_no":"10100"
+    ,"first_name":"Micha"
+    ,"middle_name":"borlo"
+    ,"last_name":"Estra"
+    ,"suffix":null
+    ,"department":"MIS"
+    ,"document_id":2
+    ,"document_type":"PRM"
+    ,"category_id":1
+    ,"category":null
+    ,"payment_type":"partial"
+    ,"company_id":1
+    ,"company":"Corporate Services"
+    ,"document_no":301
+    ,"supplier_id":1
+    ,"supplier":"INFOBIP"
+    ,"document_date":"2021-09-13"
+    ,"document_amount":20000
+    ,"remarks":"Sample Remarks for Trial Only"
+    ,"po_group":[{
+                "po_no": 1131,
+                "rr_group": [
+                    {"rr_no":40000,
+                    "rr_qty":125
+                    },
+                    {"rr_no":2500,
+                    "rr_qty":25
+                    },
+                    {"rr_no":7500,
+                    "rr_qty":50
+                    }
+                ],
+                "po_amount": "50000",
+                "po_qty":200
+                }]
+    ,"referrence_group":[]
+    ,"reason_id":null
+    ,"reason":null
+    ,"pcf_date":null
+    ,"pcf_letter":null
+    ,"utilities_category":null
+    ,"utilities_account_no":null
+    ,"utilities_consumption":null
+    ,"utilities_uom":null
+    ,"utilities_receipt_no":null
+    ,"utilities_from":null
+    ,"utilities_to":null
+    ,"payroll_client":null
+    ,"payroll_category":null
+    ,"payroll_type":null
+    ,"payroll_from":null
+    ,"payroll_to":null
+
+
+}
+
+// UTILITIES
+
+{
+    "users_id": 2
+    ,"id_prefix":"RDFFLFI"
+    ,"id_no":"10100"
+    ,"first_name":"Micha"
+    ,"middle_name":"borlo"
+    ,"last_name":"Estra"
+    ,"suffix":null
+    ,"department":"MIS"
+    ,"document_id":9
+    ,"document_type":"Utilities"
+    ,"category_id":null
+    ,"category":null
+    ,"payment_type":"full"
+    ,"company_id":1
+    ,"company":"Corporate Services"
+    ,"document_no":10031235
+    ,"supplier_id":2
+    ,"supplier":"AIMCORE AGENCY"
+    ,"document_date":"2021-09-19"
+    ,"document_amount":20023
+    ,"remarks":"System SMS Load for Genus and Metro"
+    ,"po_group":[]
+    ,"referrence_group":[]
+    ,"reason_id":null
+    ,"reason":null
+    ,"pcf_date":null
+    ,"pcf_letter":null
+    ,"utilities_category":"Electric"
+    ,"utilities_account_no":"20-0325-25"
+    ,"utilities_consumption":200.15
+    ,"utilities_uom":"kW"
+    ,"utilities_receipt_no":"SOA-1123"
+    ,"utilities_from":"2021-10-01"
+    ,"utilities_to":"2021-10-31"
+    ,"payroll_client":null
+    ,"payroll_category":null
+    ,"payroll_type":null
+    ,"payroll_from":null
+    ,"payroll_to":null
+
+
+}
+
+// PAYROLL
+    {
+}
+
+// PRM
+{
+    "users_id": 2
+    ,"id_prefix":"RDFFLFI"
+    ,"id_no":"10100"
+    ,"first_name":"Micha"
+    ,"middle_name":"borlo"
+    ,"last_name":"Estra"
+    ,"suffix":null
+    ,"department":"MIS"
+    ,"document_id":2
+    ,"document_type":"PRM"
+    ,"category_id":null
+    ,"category":null
+    ,"payment_type":"full"
+    ,"company_id":1
+    ,"company":"Corporate Services"
+    ,"document_no":1001
+    ,"supplier_id":2
+    ,"supplier":"AIMCORE AGENCY"
+    ,"document_date":"2021-09-19"
+    ,"document_amount":20023
+    ,"remarks":"System SMS Load for Genus and Metro"
+    ,"po_group":[]
+    ,"referrence_group":[]
+    ,"reason_id":null
+    ,"reason":null
+    ,"pcf_date":null
+    ,"pcf_letter":null
+    ,"utilities_from":null
+    ,"utilities_to":null
+
+
+}
+
+
+
