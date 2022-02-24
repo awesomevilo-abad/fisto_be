@@ -21,9 +21,9 @@ class Controller extends BaseController
         return response($arrayResponse,$code);
     }
 
-    public function validateHeader($template,$keys){
+    public function validateHeader($template,$keys,$headers){
       if(count(array_diff($template,$keys))){
-        throw new FistoException("Invalid excel template, it should be Account No, Location, Supplier, Category", 406, NULL, []);
+        throw new FistoException("Invalid excel template, it should be ".$headers, 406, NULL, []);
       }
     }
 

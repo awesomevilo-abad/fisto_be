@@ -183,7 +183,7 @@ class AccountTitleController extends Controller
     
   public function archive(Request $request,$id)
     {
-      $softDeleteAccountTitle = AccountTitle::find($id)->delete();
+      $softDeleteAccountTitle = AccountTitle::where('id',$id)->delete();
 
       if ($softDeleteAccountTitle == true) {
         $result = [
@@ -200,7 +200,7 @@ class AccountTitleController extends Controller
 
   public function restore(Request $request,$id)
     {
-      $softRestoreAccountTitle = AccountTitle::onlyTrashed()->find($id)->restore();
+      $softRestoreAccountTitle = AccountTitle::onlyTrashed()->where('id',$id)->restore();
 
       if ($softRestoreAccountTitle == true) {
         $result = [
@@ -216,56 +216,110 @@ class AccountTitleController extends Controller
     }
   public function import(Request $request)
     {
+      $account_title_masterlist = AccountTitle::withTrashed()->get();
       $timezone = "Asia/Dhaka";
       date_default_timezone_set($timezone);
       $date = date("Y-m-d H:i:s", strtotime('now'));
   
       $errorBag = [];
       $data = $request->all();
+      $data_validation_fields = $request->all();
       $index = 2;
 
+      $categories = ['asset','capital','expenses','income','payable'];
+      $headers = 'Code, Title, Category';
+      $template = ['code','title','category'];
+      $keys = array_keys(current($data));
+      $this->validateHeader($template,$keys,$headers);
+  
       foreach ($data as $account_title) {
         $code = $account_title['code'];
         $title = $account_title['title'];
         $category = $account_title['category'];
         
-        return $account_title;
+        foreach($account_title as $key=>$value){
+          if(empty($value)){
+            $errorBag[] = [
+              "error_type" => "empty",
+              "line" => $index,
+              "description" => $key." is empty."
+            ];
+          }
+        }
         
+        if (!empty($code)) {
+          $duplicateCode = $account_title_masterlist->filter(function ($query) use ($code){
+            return ($query['code'] == $code) ; 
+          });
+          if ($duplicateCode->count() > 0)
+            $errorBag[] = (object) [
+              "error_type" => "duplicate",
+              "line" => $index,
+              "description" => "Account Code: ".$code. " is already registered."
+            ];
+        }
+        if (!empty($title)) {
+          $duplicateTitle = $account_title_masterlist->filter(function ($query) use ($title){
+            return ($query['title'] == $title) ; 
+          });
+          if ($duplicateTitle->count() > 0)
+            $errorBag[] = (object) [
+              "error_type" => "duplicate",
+              "line" => $index,
+              "description" => "Account Title: ".$title. " is already registered."
+            ];
+        }
+        if (!empty($category)) {
+          // $existingLocation = 
+          if(!in_array($category,$categories)){
+            $errorBag[] = (object) [
+              "error_type" => "unregistered category",
+              "line" => $index,
+              "description" => "Category: ".$category. " is not registered."
+            ];
+          };
+        }
 
 
 
         $index++;
       }
+        
+      foreach ($data_validation_fields as $key => $subArr) {
+        unset($subArr['category']);
+        $data_validation_fields[$key] = $subArr;  
+      }
+
+      $original_lines = array_keys($data_validation_fields);
+      $unique_lines = array_keys(array_unique($data_validation_fields,SORT_REGULAR));
+      $duplicate_lines = array_values(array_diff($original_lines,$unique_lines));
+      foreach($duplicate_lines as $line){
+        $errorBag[] = [
+          "error_type" => "excel duplicate",
+          "line" => $line,
+          "description" =>  $data_validation_fields[$line]['code'].' with '.strtolower($data_validation_fields[$line]['title']).' account title has a duplicate in your excel file.'
+        ];
+      }
   
       if (empty($errorBag)) {
-        foreach ($data as $supplier) {
-            $supplier_type = $supplier['supplier_type'];
+        foreach ($data as $account_title) {
           $fields = [
-            'supplier_code' => $supplier['supplier_code'],
-            'supplier_name' => $supplier['supplier_name'],
-            'terms' => $supplier['terms'],
-            'supplier_type_id' => SupplierType::where('type',$supplier_type)->first()->id,
-            'is_active' => 1,
+            'code' => $account_title['code'],
+            'title' => $account_title['title'],
+            'category' => $account_title['category'],
             'created_at' => $date,
             'updated_at' => $date,
           ];
   
           $inputted_fields[] = $fields;
-          $references = explode(",", $supplier['referrences']);
-          $references_ids = Referrence::whereIn('referrence_type', $references)->pluck('id');
         }
         $inputted_fields = collect($inputted_fields);
-        $chunks = $inputted_fields->chunk(1000);
-  
-        foreach ($chunks as $specific_chunk)
+        $chunks = $inputted_fields->chunk(100);
+        foreach($chunks as $chunk)
         {
-          $new_supplier = DB::table('suppliers')->insert($specific_chunk->toArray());
-          foreach($specific_chunk->toArray() as $chunk){
-            $supplier= Supplier::where('supplier_code',$chunk)->first();
-            $supplier->referrences()->attach($references_ids);
-          }
+          AccountTitle::insert($chunk->toArray()) ;
         }
-        return $this->result(201,"Suppliers has been imported",[]);
+        return $this->result(201,'Account Title has been imported.',$inputted_fields);
       }
       else
         throw new FistoException("No Account Title were imported. Please correct the errors in the excel file.", 409, NULL, $errorBag);

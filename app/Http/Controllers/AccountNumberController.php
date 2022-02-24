@@ -33,8 +33,8 @@ class AccountNumberController extends Controller
         'AN.updated_at',
         'AN.deleted_at'
       )
-      ->where(function ($query) use ($status) {
-        ($status == true)?$query->whereNull('AN.deleted_at'):$query->whereNotNull('AN.deleted_at');
+      ->where(function ($query) use ($status){
+        return ($status==true)?$query->whereNull('AN.deleted_at'):$query->whereNotNull('AN.deleted_at');
       })
       ->latest('AN.updated_at')
       ->paginate($rows);
@@ -189,9 +189,10 @@ class AccountNumberController extends Controller
     $errorBag = [];
     $index = 2;
     $template = ['account_no','location','supplier','category'];
+    $headers = 'Account No, Location, Supplier, Category';
     $keys = array_keys(current($data));
 
-    $this->validateHeader($template,$keys);
+    $this->validateHeader($template,$keys,$headers);
 
     foreach($data as $account_number){
       $account_no = $account_number['account_no'];
@@ -290,7 +291,9 @@ class AccountNumberController extends Controller
           "account_no"=>$account_no['account_no'],
           "location_id"=>$location,
           "category_id"=>$category,
-          "supplier_id"=>$supplier
+          "supplier_id"=>$supplier,
+          "created_at"=>\Carbon\Carbon::now(),
+          "updated_at"=>\Carbon\Carbon::now()
         ];
         $inputted_fields[] = $fields; 
       }
