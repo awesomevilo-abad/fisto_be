@@ -226,7 +226,7 @@ class AccountTitleController extends Controller
       $data_validation_fields = $request->all();
       $index = 2;
 
-      $categories = ['asset','capital','expenses','income','payable'];
+      $categories = ['asset','capital','expense','income','payable'];
       $headers = 'Code, Title, Category';
       $template = ['code','title','category'];
       $keys = array_keys(current($data));
@@ -236,7 +236,6 @@ class AccountTitleController extends Controller
         $code = $account_title['code'];
         $title = $account_title['title'];
         $category = $account_title['category'];
-        
         foreach($account_title as $key=>$value){
           if(empty($value)){
             $errorBag[] = [
@@ -246,7 +245,6 @@ class AccountTitleController extends Controller
             ];
           }
         }
-        
         if (!empty($code)) {
           $duplicateCode = $account_title_masterlist->filter(function ($query) use ($code){
             return ($query['code'] == $code) ; 
@@ -270,7 +268,6 @@ class AccountTitleController extends Controller
             ];
         }
         if (!empty($category)) {
-          // $existingLocation = 
           if(!in_array($category,$categories)){
             $errorBag[] = (object) [
               "error_type" => "unregistered category",
@@ -279,9 +276,6 @@ class AccountTitleController extends Controller
             ];
           };
         }
-
-
-
         $index++;
       }
         
@@ -293,14 +287,44 @@ class AccountTitleController extends Controller
       $original_lines = array_keys($data_validation_fields);
       $unique_lines = array_keys(array_unique($data_validation_fields,SORT_REGULAR));
       $duplicate_lines = array_values(array_diff($original_lines,$unique_lines));
+
       foreach($duplicate_lines as $line){
-        $errorBag[] = [
-          "error_type" => "excel duplicate",
-          "line" => $line,
-          "description" =>  $data_validation_fields[$line]['code'].' with '.strtolower($data_validation_fields[$line]['title']).' account title has a duplicate in your excel file.'
-        ];
+        if((empty($data_validation_fields[$line]['code'])) || (empty($data_validation_fields[$line]['title']))){
+
+        }else{
+          $errorBag[] = [
+            "error_type" => "excel duplicate",
+            "line" => $line,
+            "description" =>  $data_validation_fields[$line]['code'].' with '.strtolower($data_validation_fields[$line]['title']).' account title has a duplicate in your excel file.'
+          ];
+        }
       }
-  
+      
+      $duplicate_code = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'code'))));
+      foreach($duplicate_code as $line){
+        if((empty($data_validation_fields[$line]['code']))){
+
+        }else{
+          $errorBag[] = [
+            "error_type" => "excel duplicate",
+            "line" => $line,
+            "description" =>  $data_validation_fields[$line]['code'].' code has a duplicate in your excel file.'
+          ];
+        }
+      }
+
+      $duplicate_title = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'title'))));
+      foreach($duplicate_title as $line){
+        if((empty($data_validation_fields[$line]['title']))){
+        }else{
+          $errorBag[] = [
+            "error_type" => "excel duplicate",
+            "line" => $line,
+            "description" =>  $data_validation_fields[$line]['title'].' Account Title has a duplicate in your excel file.'
+          ];
+        }
+      }
+
       if (empty($errorBag)) {
         foreach ($data as $account_title) {
           $fields = [
@@ -322,6 +346,6 @@ class AccountTitleController extends Controller
         return $this->result(201,'Account Title has been imported.',$inputted_fields);
       }
       else
-        throw new FistoException("No Account Title were imported. Please correct the errors in the excel file.", 409, NULL, $errorBag);
+        throw new FistoException("No Account Title were imported. Kindly check the errors!.", 409, NULL, $errorBag);
     }
 }

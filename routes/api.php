@@ -105,7 +105,9 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::get('banks/all/{status}/', [BankController::class, 'all']);
     Route::get('banks/{status}/{row_per_page}/', [BankController::class, 'index']);
     Route::post('banks/search/{status}/{row_per_page}/', [BankController::class, 'search']);
-    // Route::post('banks/archive/{id}', [BankController::class, 'archive']);
+    Route::post('banks/archive/{id}', [BankController::class, 'archive']);
+    Route::post('banks/restore/{id}', [BankController::class, 'restore']);
+    Route::post('banks/import/', [BankController::class, 'import']);
     Route::resource('banks', BankController::class);
 
     // SUPPLIER TYPE

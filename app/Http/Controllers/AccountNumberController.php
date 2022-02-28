@@ -209,6 +209,7 @@ class AccountNumberController extends Controller
           ];
         }
       }
+      
       if (!empty($account_no)) {
         $duplicateAccountNo = $account_number_masterlist->filter(function ($query) use ($account_no){
           return ($query['account_no'] == $account_no) ; 
@@ -253,7 +254,6 @@ class AccountNumberController extends Controller
             "description" => "Supplier: ".$supplier. " is not registered."
           ];
       }
-      
       $index++;
     }
     foreach ($data_validation_fields as $key => $subArr) {
@@ -261,16 +261,22 @@ class AccountNumberController extends Controller
       unset($subArr['supplier']);
       $data_validation_fields[$key] = $subArr;  
     }
+
     $original_lines = array_keys($data_validation_fields);
     $unique_lines = array_keys(array_unique($data_validation_fields,SORT_REGULAR));
     $duplicate_lines = array_values(array_diff($original_lines,$unique_lines));
+
     foreach($duplicate_lines as $line){
-      $errorBag[] = [
-        "error_type" => "excel duplicate",
-        "line" => $line,
-        "description" =>  $data_validation_fields[$line]['account_no'].' with '.strtolower($data_validation_fields[$line]['category']).' category has a duplicate in your excel file.'
-      ];
+      if((empty($data_validation_fields[$line]['account_no'])) || (empty($data_validation_fields[$line]['category']))){
+      }else{
+        $errorBag[] = [
+          "error_type" => "excel duplicate",
+          "line" => $line + 2,
+          "description" =>  $data_validation_fields[$line]['account_no'].' with '.strtolower($data_validation_fields[$line]['category']).' category has a duplicate in your excel file.'
+        ];
+      }
     }
+
     if(empty($errorBag)){
       foreach($data as $account_no){
         $inputted_supplier = $account_no['supplier'];
@@ -306,6 +312,6 @@ class AccountNumberController extends Controller
       return $this->result(201,'Account Number has been imported.',$inputted_fields);
     }
     else
-      throw new FistoException("No Account Number were imported. Please correct the errors in the excel file.", 409, NULL, $errorBag);
+      throw new FistoException("No Account Number were imported. Kindly check the errors!.", 409, NULL, $errorBag);
   }
 }
