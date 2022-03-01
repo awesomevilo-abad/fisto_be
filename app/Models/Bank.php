@@ -16,7 +16,7 @@ class Bank extends Model
   use SoftDeletes;
 
   protected $table = 'banks';
-  protected $fillable = ['code', 'name', 'branch', 'account_no', 'location', 'creation', 'clearing'];
+  protected $fillable = ['code', 'name', 'branch', 'account_no', 'location', 'account_title_1', 'account_title_2'];
 
   public function getCreatedAtAttribute($value){
     $date = Carbon::parse($value);

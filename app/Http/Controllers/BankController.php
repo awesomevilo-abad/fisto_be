@@ -171,10 +171,13 @@ class BankController extends Controller
         $specific_bank = Bank::find($id);
 
         $fields = $request->validate([
-            'bank_code' => ['unique:banks,bank_code,' . $id],
-            'bank_name' => ['unique:banks,bank_name,' . $id],
-            'bank_account' => ['unique:banks,bank_account,' . $id],
-
+            'code' => ['unique:banks,code,' . $id],
+            'name' => ['required'],
+            'branch' => ['unique:banks,branch,' . $id],
+            'account_no' => ['unique:banks,account_no,' . $id],
+            'location' => ['required'],
+            'account_title_1' => ['required'],
+            'account_title_2' => ['required']
         ]);
 
         if (!$specific_bank) {
@@ -184,10 +187,13 @@ class BankController extends Controller
                 "data" => $specific_bank,
             ];
         } else {
-            $specific_bank->bank_code = $request->get('bank_code');
-            $specific_bank->bank_name = $request->get('bank_name');
-            $specific_bank->bank_account = $request->get('bank_account');
-            $specific_bank->bank_location = $request->get('bank_location');
+            $specific_bank->code = $request->get('code');
+            $specific_bank->name = $request->get('name');
+            $specific_bank->branch = $request->get('branch');
+            $specific_bank->account_no = $request->get('account_no');
+            $specific_bank->location = $request->get('location');
+            $specific_bank->account_title_1 = $request->get('account_title_1');
+            $specific_bank->account_title_2 = $request->get('account_title_2');
             $specific_bank->save();
 
             $response = [
