@@ -1,0 +1,505 @@
+
+// PAD
+{
+    "requestor":{
+        "id": 1
+        ,"id_prefix":"RDFFLFI"
+        ,"id_no":"10791"
+        ,"role": "Administrator"
+        ,"position": "MIS Developer"
+        ,"first_name":"Limay Louie"
+        ,"middle_name":"Ocampo"
+        ,"last_name":"Ducut"
+        ,"suffix":null
+        ,"department":"Management Information System"
+    }
+    ,"document":{
+        "id":7,
+        "company":"sample",
+        "department":"sample",
+        "location":"sample"
+        ,"supplier":{
+            "id":1,
+            "name":"sample"
+        }
+        ,"payment_type":"full"
+        ,"no":"pad#14-1235"
+        ,"date":"2021-10-22" 
+        ,"amount":20000
+        ,"remarks":"Payment for JECIADRYL PAD Payment" 
+    }
+    ,"po_group":[{
+        "no": 10002,
+        "amount": 20000,
+        "rr_no": []
+    }]
+
+    
+}
+
+// PRM Common
+{
+    "requestor":{
+        "id": 1
+        ,"id_prefix":"RDFFLFI"
+        ,"id_no":"10791"
+        ,"role": "Administrator"
+        ,"position": "MIS Developer"
+        ,"first_name":"Limay Louie"
+        ,"middle_name":"Ocampo"
+        ,"last_name":"Ducut"
+        ,"suffix":null
+        ,"department":"Management Information System"
+    }
+    ,"document":{
+        "id":7,
+        "company":"sample",
+        "department":"sample",
+        "location":"sample"
+        ,"category":
+            {
+                "id":1,
+                "name":"rentals"
+            }
+        ,"supplier":{
+            "id":1,
+            "name":"sample"
+        }
+        ,"payment_type":"full"
+        ,"no":"prm-mlti#14-1235"
+        ,"date":"2021-10-22" 
+        ,"payment_date":"2021-10-31" 
+        ,"amount":60000
+        ,"remarks":"Payment for JECIADRYL PAD Payment" 
+    }
+}
+
+// PRM Multiple
+{
+    "requestor":{
+        "id": 1
+        ,"id_prefix":"RDFFLFI"
+        ,"id_no":"10791"
+        ,"role": "Administrator"
+        ,"position": "MIS Developer"
+        ,"first_name":"Limay Louie"
+        ,"middle_name":"Ocampo"
+        ,"last_name":"Ducut"
+        ,"suffix":null
+        ,"department":"Management Information System"
+    }
+    ,"document":{
+        "id":7,
+        "company":"sample",
+        "department":"sample",
+        "location":"sample"
+        ,"category":
+            {
+                "id":1,
+                "name":"rentals"
+            }
+        ,"supplier":{
+            "id":1,
+            "name":"sample"
+        }
+        ,"payment_type":"full"
+        ,"no":"prm-mlti#14-1235"
+        ,"date":"2021-10-22" 
+        ,"payment_date":"2021-10-31" 
+        ,"amount":60000
+        ,"coverage":.3
+        ,"remarks":"Payment for JECIADRYL PAD Payment" 
+    }
+    ,"document_prm_multi":[
+        {
+            "date":"2021-10-31",
+            "amount":20000.00
+        },
+        {
+            "date":"2021-11-22",
+            "amount":20000.00
+        },
+        {
+            "date":"2021-12-22",
+            "amount":20000.00
+        }
+    ]
+
+
+    
+}
+
+// Receipt SI FULL
+{
+    "requestor":{
+        "id": 1
+        ,"id_prefix":"RDFFLFI"
+        ,"id_no":"10791"
+        ,"role": "Administrator"
+        ,"position": "MIS Developer"
+        ,"first_name":"Limay Louie"
+        ,"middle_name":"Ocampo"
+        ,"last_name":"Ducut"
+        ,"suffix":null
+        ,"department":"Management Information System"
+    }
+    ,"document":{
+        "id":7,
+        "company":"sample",
+        "department":"sample",
+        "location":"sample"
+        ,"category":
+            {
+                "id":1,
+                "name":"rentals"
+            }
+        ,"supplier":{
+            "id":1,
+            "name":"sample"
+        }
+        ,"payment_type":"full"
+        ,"date":"2021-10-22" 
+        ,"remarks":"Payment for JECIADRYL PAD Payment" 
+    }
+    ,"reference":{
+        "id":1,
+        "type":"SI",
+        "no":2131,
+        "amount":1200.50,
+    }
+    ,"po_group":[{
+        "no": 10002,
+        "quantity":10000,
+        "amount": 20000,
+        "unit_price":null,
+        "rr_no": [1011,1022]
+    }]
+    
+
+    
+}
+
+// Receipt DR FULL
+{
+    "requestor":{
+        "id": 1
+        ,"id_prefix":"RDFFLFI"
+        ,"id_no":"10791"
+        ,"role": "Administrator"
+        ,"position": "MIS Developer"
+        ,"first_name":"Limay Louie"
+        ,"middle_name":"Ocampo"
+        ,"last_name":"Ducut"
+        ,"suffix":null
+        ,"department":"Management Information System"
+    }
+    ,"document":{
+        "id":7,
+        "company":"sample",
+        "department":"sample",
+        "location":"sample"
+        ,"category":
+            {
+                "id":1,
+                "name":"rentals"
+            }
+        ,"supplier":{
+            "id":1,
+            "name":"sample"
+        }
+        ,"payment_type":"full"
+        ,"date":"2021-10-22" 
+        ,"remarks":"Payment for JECIADRYL PAD Payment" 
+    }
+    ,"reference":{
+        "id":1,
+        "type":"DR",
+        "no":2131,
+        "quantities":[{
+            "quantity":25000,
+            "unit_price":2
+        }],
+        "is_allowable":false
+    }
+    ,"po_group":[{
+                "no": 10002,
+                "quantity":"25,000",
+                "amount": "50,000",
+                "rr_no": [1011,1022]
+    }]
+    ,
+
+    
+}
+
+// Contractor's Billing
+{
+    "requestor":{
+        "id": 1
+        ,"id_prefix":"RDFFLFI"
+        ,"id_no":"10791"
+        ,"role": "Administrator"
+        ,"position": "MIS Developer"
+        ,"first_name":"Limay Louie"
+        ,"middle_name":"Ocampo"
+        ,"last_name":"Ducut"
+        ,"suffix":null
+        ,"department":"Management Information System"
+    }
+    ,"document":{
+        "id":7,
+        "company":"sample",
+        "department":"sample",
+        "location":"sample"
+        ,"category":
+            {
+                "id":1,
+                "name":"downpayment"
+            }
+        ,"supplier":{
+            "id":1,
+            "name":"sample"
+        }
+        ,"payment_type":"full"
+        ,"no":"#14-1235"
+        ,"date":"2021-10-22" 
+        ,"amount":20000
+        ,"remarks":"Payment for Constructions" 
+    }
+    ,"po_group":[{
+        "no": 10002,
+        "amount": 20000,
+        "rr_no": []
+    }]
+}
+
+// Payroll
+{
+    "requestor":{
+        "id": 1
+        ,"id_prefix":"RDFFLFI"
+        ,"id_no":"10791"
+        ,"role": "Administrator"
+        ,"position": "MIS Developer"
+        ,"first_name":"Limay Louie"
+        ,"middle_name":"Ocampo"
+        ,"last_name":"Ducut"
+        ,"suffix":null
+        ,"department":"Management Information System"
+    }
+    ,"document":{
+        "id":7,
+        "company":"sample",
+        "department":"sample",
+        "location":"sample"
+        ,"payment_type":"full"
+        ,"amount":20000
+        ,"supplier":{
+            "id":1,
+            "name":"sample"
+        },
+        "payroll":{
+            "from":"2022-02-01"
+            ,"to":"2022-02-28"
+            ,"client":[1,2,3]
+            ,"category":"Vatable"
+            ,"type":"Regular"
+        }
+        ,"remarks":"Payment for Payroll" 
+    }
+}
+
+// Utilities
+{
+    "requestor":{
+        "id": 1
+        ,"id_prefix":"RDFFLFI"
+        ,"id_no":"10791"
+        ,"role": "Administrator"
+        ,"position": "MIS Developer"
+        ,"first_name":"Limay Louie"
+        ,"middle_name":"Ocampo"
+        ,"last_name":"Ducut"
+        ,"suffix":null
+        ,"department":"Management Information System"
+    }
+    ,"document":{
+        "id":7,
+        "company":"sample",
+        "department":"sample",
+        "location":"sample"
+        ,"payment_type":"full"
+        ,"amount":20000
+        ,"supplier":{
+            "id":1,
+            "name":"sample"
+        },
+        "utilities":{
+            "from":"2022-02-01"
+            ,"to":"2022-02-28"
+            ,"category":"Electric"
+            ,"location":"FO15 - Baliti"
+            ,"account_no":"000656656"
+            ,"consumption":"2250"
+            ,"receipt_no":"000656656"
+        }
+        ,"remarks":"Payment for Utilities" 
+    }
+}
+
+// Utilities Credit Card
+{
+    "requestor":{
+        "id": 1
+        ,"id_prefix":"RDFFLFI"
+        ,"id_no":"10791"
+        ,"role": "Administrator"
+        ,"position": "MIS Developer"
+        ,"first_name":"Limay Louie"
+        ,"middle_name":"Ocampo"
+        ,"last_name":"Ducut"
+        ,"suffix":null
+        ,"department":"Management Information System"
+    }
+    ,"document":{
+        "id":7,
+        "company":"sample",
+        "department":"sample",
+        "location":"sample"
+        ,"payment_type":"full"
+        ,"amount":20000
+        ,"supplier":{
+            "id":1,
+            "name":"sample"
+        },
+        "utilities":{
+            "from":"2022-02-01"
+            ,"to":"2022-02-28"
+            ,"category":"Electric"
+            ,"location":"FO15 - Baliti"
+            ,"account_no":"000656656"
+            ,"consumption":null
+            ,"receipt_no":"000656656"
+        }
+        ,"remarks":"Payment for Utilities" 
+    }
+}
+
+// PCF
+{
+    "requestor":{
+        "id": 1
+        ,"id_prefix":"RDFFLFI"
+        ,"id_no":"10791"
+        ,"role": "Administrator"
+        ,"position": "MIS Developer"
+        ,"first_name":"Limay Louie"
+        ,"middle_name":"Ocampo"
+        ,"last_name":"Ducut"
+        ,"suffix":null
+        ,"department":"Management Information System"
+    }
+    ,"document":{
+        "id":7,
+        "company":"sample",
+        "department":"sample",
+        "location":"sample"
+        ,"payment_type":"full"
+        ,"date":"2021-10-22" 
+        ,"amount":20000
+        ,"supplier":{
+            "id":1,
+            "name":"sample"
+        },
+        "pcf_batch":{
+            "name":"RF-2121"
+            ,"letter":"J"
+            ,"date":"2022-02-28"
+        }
+        ,"remarks":"Payment for Utilities" 
+    }
+}
+
+
+// RAW
+{
+    "requestor":{
+        "id": 1
+        ,"id_prefix":"RDFFLFI"
+        ,"id_no":"10791"
+        ,"role": "Administrator"
+        ,"position": "MIS Developer"
+        ,"first_name":"Limay Louie"
+        ,"middle_name":"Ocampo"
+        ,"last_name":"Ducut"
+        ,"suffix":null
+        ,"department":"Management Information System"
+    }
+    ,"charging":{
+        "company":{
+            "id":1,
+            "name":"sample"
+        },
+        "department":{
+            "id":1,
+            "name":"sample"
+        },
+        "location":{
+            "id":1,
+            "name":"sample"
+        }
+    }
+    ,"supplier":{
+        "id":1,
+        "name":"sample"
+    }
+    ,"document":{
+        "id":7
+        ,"category":
+            {
+                "id":1,
+                "name":"rentals"
+            }
+        ,"payment_type":"full"
+        ,"no":"pad#14-1235"
+        ,"date":"2021-10-22" 
+        ,"amount":"20,000"
+        ,"remarks":"Payment for JECIADRYL PAD Payment" 
+    }
+    ,"po_group":[{
+                "no": 10002,
+                "quantity":"10,000",
+                "amount": "20,000",
+                "unit_price":null,
+                "rr_no": [1011,1022]
+    }]
+    ,"reference":{
+        "id":1,
+        "type":"SI",
+        "no":2131,
+        "amount":1200.50,
+        "toBeName":[{
+            "qty":1,
+            "unit_price":25.60
+        }]
+    }
+    ,"reason_id":null
+    ,"reason":null
+    ,"pcf_date":null
+    ,"pcf_letter":null
+    ,"utilities_category":null
+    ,"utilities_account_no":null
+    ,"utilities_consumption":null
+    ,"utilities_uom":null
+    ,"utilities_receipt_no":null
+    ,"utilities_from":null
+    ,"utilities_to":null
+    ,"payroll_client":null
+    ,"payroll_category":null
+    ,"payroll_type":null
+    ,"payroll_from":null
+    ,"payroll_to":null
+    ,"is_allowable":false
+
+    
+}
