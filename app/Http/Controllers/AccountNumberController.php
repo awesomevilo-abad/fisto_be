@@ -182,10 +182,12 @@ class AccountNumberController extends Controller
   {
     $data = $request->all();
     $data_validation_fields = $request->all();
+
     $account_number_masterlist = AccountNumber::withTrashed()->get();
     $utility_location_masterlist = UtilityLocation::withTrashed()->get();
     $utility_category_masterlist = UtilityCategory::withTrashed()->get();
     $supplier_masterlist = Supplier::get();
+
     $errorBag = [];
     $index = 2;
     $template = ['account_no','location','supplier','category'];
@@ -199,83 +201,28 @@ class AccountNumberController extends Controller
       $category = $account_number['category'];
       $location = $account_number['location'];
       $supplier = $account_number['supplier'];
-
-      foreach($account_number as $key=>$value){
-        if(empty($value)){
-          $errorBag[] = [
-            "error_type" => "empty",
-            "line" => $index,
-            "description" => $key." is empty."
-          ];
-        }
-      }
       
-      if (!empty($account_no)) {
-        $duplicateAccountNo = $account_number_masterlist->filter(function ($query) use ($account_no){
-          return ($query['account_no'] == $account_no) ; 
-        });
-        if ($duplicateAccountNo->count() > 0)
-          $errorBag[] = (object) [
-            "error_type" => "duplicate",
-            "line" => $index,
-            "description" => "Category: ".$category. ", Account No.: ".$account_no. " is already registered."
-          ];
-      }
-      if (!empty($location)) {
-        $existingLocation = $utility_location_masterlist->filter(function ($query) use ($location){
-          return (strtolower($query['location']) == strtolower($location)); 
-        });
-        if ($existingLocation->count() == 0)
-          $errorBag[] = (object) [
-            "error_type" => "unregistered location",
-            "line" => $index,
-            "description" => "Location: ".$location. " is not registered."
-          ];
-      }
-      if (!empty($category)) {
-        $existingCagtegory= $utility_category_masterlist->filter(function ($query) use ($category){
-          return (strtolower($query['category']) == strtolower($category)); 
-        });
-        if ($existingCagtegory->count() == 0)
-          $errorBag[] = (object) [
-            "error_type" => "unregistered category",
-            "line" => $index,
-            "description" => "Category: ".$category. " is not registered."
-          ];
-      }
-      if (!empty($supplier)) {
-        $existingSupplier = $supplier_masterlist->filter(function ($query) use ($supplier){
-          return (strtolower($query['supplier_name']) == strtolower($supplier)); 
-        });
-        if ($existingSupplier->count() == 0)
-          $errorBag[] = (object) [
-            "error_type" => "unregistered supplier",
-            "line" => $index,
-            "description" => "Supplier: ".$supplier. " is not registered."
-          ];
-      }
+      $emptyCells= $this->validateEmptyCells($account_number,$index);
+
+      $category_id = $this->getCategoryId($category,$utility_category_masterlist);
+      $duplicates = $this->validateDuplicateInDBFrom2Params($account_no,$category_id,$category,$account_number_masterlist,$index);
+      $existingLocations = $this->validateExistingLocation($location,$utility_location_masterlist,$index);
+      $existingCategories = $this->validateExistingCategory($category,$utility_category_masterlist,$index);
+      $existingSuppliers = $this->validateExistingSupplier($supplier,$supplier_masterlist,$index);
+      
+      (!empty(current($emptyCells)))?array_push($errorBag,current($emptyCells)):"none";
+      (!empty(current($duplicates)))?array_push($errorBag,current($duplicates)):"none";
+      (!empty(current($existingLocations)))?array_push($errorBag,current($existingLocations)):"none";
+      (!empty(current($existingSuppliers)))?array_push($errorBag,current($existingSuppliers)):"none";
+      (!empty(current($existingCategories)))?array_push($errorBag,current($existingCategories)):"none";
       $index++;
     }
-    foreach ($data_validation_fields as $key => $subArr) {
-      unset($subArr['location']);
-      unset($subArr['supplier']);
-      $data_validation_fields[$key] = $subArr;  
-    }
-
-    $original_lines = array_keys($data_validation_fields);
-    $unique_lines = array_keys(array_unique($data_validation_fields,SORT_REGULAR));
-    $duplicate_lines = array_values(array_diff($original_lines,$unique_lines));
-
-    foreach($duplicate_lines as $line){
-      if((empty($data_validation_fields[$line]['account_no'])) || (empty($data_validation_fields[$line]['category']))){
-      }else{
-        $errorBag[] = [
-          "error_type" => "excel duplicate",
-          "line" => $line + 2,
-          "description" =>  $data_validation_fields[$line]['account_no'].' with '.strtolower($data_validation_fields[$line]['category']).' category has a duplicate in your excel file.'
-        ];
-      }
-    }
+    
+    $data_validation_fields =  $this->removeFieldInArrayOfObjects($data_validation_fields,['location','supplier']);
+    $duplicate_lines =  $this->getDuplicateLines($data_validation_fields);
+    $excelDuplicates = $this->validateDuplicatesInAccountNumberExcel($duplicate_lines,$data_validation_fields);
+    (!empty(current($excelDuplicates)))?array_push($errorBag,current($excelDuplicates)):"none";
+    $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
 
     if(empty($errorBag)){
       foreach($data as $account_no){
@@ -303,6 +250,7 @@ class AccountNumberController extends Controller
         ];
         $inputted_fields[] = $fields; 
       }
+      
       $inputted_fields = collect($inputted_fields);
       $chunks = $inputted_fields->chunk(100);
       foreach($chunks as $chunk)

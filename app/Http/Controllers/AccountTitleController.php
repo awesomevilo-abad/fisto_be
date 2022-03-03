@@ -240,7 +240,7 @@ class AccountTitleController extends Controller
           if(empty($value)){
             $errorBag[] = [
               "error_type" => "empty",
-              "line" => $index,
+              "line" => (string) $index,
               "description" => $key." is empty."
             ];
           }
@@ -252,7 +252,7 @@ class AccountTitleController extends Controller
           if ($duplicateCode->count() > 0)
             $errorBag[] = (object) [
               "error_type" => "duplicate",
-              "line" => $index,
+              "line" => (string) $index,
               "description" => "Account Code: ".$code. " is already registered."
             ];
         }
@@ -263,7 +263,7 @@ class AccountTitleController extends Controller
           if ($duplicateTitle->count() > 0)
             $errorBag[] = (object) [
               "error_type" => "duplicate",
-              "line" => $index,
+              "line" => (string) $index,
               "description" => "Account Title: ".$title. " is already registered."
             ];
         }
@@ -271,7 +271,7 @@ class AccountTitleController extends Controller
           if(!in_array($category,$categories)){
             $errorBag[] = (object) [
               "error_type" => "unregistered category",
-              "line" => $index,
+              "line" => (string) $index,
               "description" => "Category: ".$category. " is not registered."
             ];
           };
@@ -289,16 +289,28 @@ class AccountTitleController extends Controller
       $duplicate_lines = array_values(array_diff($original_lines,$unique_lines));
 
       foreach($duplicate_lines as $line){
+        $input_code = $data_validation_fields[$line]['code'];
+        $input_title = $data_validation_fields[$line]['title'];
+        $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_code, $input_title){
+          return ($query['code'] == $input_code) && ($query['title'] == $input_title);
+        }); 
+        $duplicate_lines =  implode(",",array_map(function($query){
+          return $query+2;
+        },array_keys($duplicate_data)));
+        $firstDuplicateLine =  array_key_first($duplicate_data);
+        
         if((empty($data_validation_fields[$line]['code'])) || (empty($data_validation_fields[$line]['title']))){
 
         }else{
           $errorBag[] = [
             "error_type" => "excel duplicate",
-            "line" => $line,
-            "description" =>  $data_validation_fields[$line]['code'].' with '.strtolower($data_validation_fields[$line]['title']).' account title has a duplicate in your excel file.'
+            "line" => (string) $duplicate_lines,
+            "description" =>  $data_validation_fields[$firstDuplicateLine]['code'].' with '.strtolower($data_validation_fields[$firstDuplicateLine]['title']).' account title has a duplicate in your excel file.'
           ];
         }
       }
+      
+    $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
       
       $duplicate_code = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'code'))));
       foreach($duplicate_code as $line){
@@ -307,7 +319,7 @@ class AccountTitleController extends Controller
         }else{
           $errorBag[] = [
             "error_type" => "excel duplicate",
-            "line" => $line,
+            "line" => (string) $line,
             "description" =>  $data_validation_fields[$line]['code'].' code has a duplicate in your excel file.'
           ];
         }
@@ -319,7 +331,7 @@ class AccountTitleController extends Controller
         }else{
           $errorBag[] = [
             "error_type" => "excel duplicate",
-            "line" => $line,
+            "line" => (string) $line,
             "description" =>  $data_validation_fields[$line]['title'].' Account Title has a duplicate in your excel file.'
           ];
         }

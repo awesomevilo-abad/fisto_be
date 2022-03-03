@@ -105,6 +105,7 @@ class BankController extends Controller
         ->select(
           'B.id',
           'B.code',
+          'B.name',
           'B.branch',
           'B.account_no',
           'B.location',
@@ -341,37 +342,68 @@ class BankController extends Controller
       
       $duplicate_code = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'code'))));
       foreach($duplicate_code as $line){
+        
+        $input_code = $data_validation_fields[$line]['code'];
+        $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_code){
+          return ($query['code'] == $input_code);
+        }); 
+        $duplicate_lines =  implode(",",array_map(function($query){
+          return $query+2;
+        },array_keys($duplicate_data)));
+        $firstDuplicateLine =  array_key_first($duplicate_data);
+
         if((empty($data_validation_fields[$line]['code']))){
 
         }else{
           $errorBag[] = [
             "error_type" => "excel duplicate",
-            "line" => $line,
-            "description" =>  $data_validation_fields[$line]['code'].' code has a duplicate in your excel file.'
+            "line" => (string) $duplicate_lines,
+            "description" =>  $data_validation_fields[$firstDuplicateLine]['code'].' code has a duplicate in your excel file.'
           ];
         }
       }
 
       $duplicate_branch = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'branch'))));
       foreach($duplicate_branch as $line){
+        $input_branch = $data_validation_fields[$line]['branch'];
+        $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_branch){
+          return ($query['branch'] == $input_branch);
+        }); 
+        $duplicate_lines =  implode(",",array_map(function($query){
+          return $query+2;
+        },array_keys($duplicate_data)));
+        $firstDuplicateLine =  array_key_first($duplicate_data);
+
         if((empty($data_validation_fields[$line]['branch']))){
         }else{
           $errorBag[] = [
             "error_type" => "excel duplicate",
-            "line" => $line,
-            "description" =>  $data_validation_fields[$line]['branch'].' Branch has a duplicate in your excel file.'
+            "line" => (string) $duplicate_lines,
+            "description" =>  $data_validation_fields[$firstDuplicateLine]['branch'].' Branch has a duplicate in your excel file.'
           ];
         }
       }
+
+    $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
       
       $duplicate_account_no = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'account_no'))));
       foreach($duplicate_account_no as $line){
+
+        $input_account_no = $data_validation_fields[$line]['account_no'];
+        $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_account_no){
+          return ($query['account_no'] == $input_account_no);
+        }); 
+        $duplicate_lines =  implode(",",array_map(function($query){
+          return $query+2;
+        },array_keys($duplicate_data)));
+        $firstDuplicateLine =  array_key_first($duplicate_data);
+
         if((empty($data_validation_fields[$line]['account_no']))){
         }else{
           $errorBag[] = [
             "error_type" => "excel duplicate",
-            "line" => $line,
-            "description" =>  $data_validation_fields[$line]['account_no'].' Account Number has a duplicate in your excel file.'
+            "line" => (string) $duplicate_lines,
+            "description" =>  $data_validation_fields[$firstDuplicateLine]['account_no'].' Account Number has a duplicate in your excel file.'
           ];
         }
       }
