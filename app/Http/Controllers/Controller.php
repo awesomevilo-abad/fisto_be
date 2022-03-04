@@ -167,4 +167,20 @@ class Controller extends BaseController
       }
       return $excelDuplicates;
     }
+
+    public function change_masterlist_status($status,$model,$id){
+      if($status == 1){
+        $softDelete = $model::where('id',$id)->delete();
+        if($softDelete == 1){
+            return $this->result(200,"Succefully Archived",[]);
+        }
+        throw new FistoException("No records found.", 404, NULL, []);
+    }else {
+        $restore = $model::onlyTrashed()->where('id',$id)->restore();
+        if($restore == 1){
+            return $this->result(200,"Succefully Restored",[]);
+        }
+        throw new FistoException("No records found.", 404, NULL, []);
+    }
+    }
 }

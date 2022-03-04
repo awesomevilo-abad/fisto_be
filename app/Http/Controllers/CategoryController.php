@@ -6,81 +6,30 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Exceptions\FistoException;
 
 class CategoryController extends Controller
 {
-    public function index(Request $request,$status,$tableRows)
+    public function index(Request $request)
     {
-        $tableRows = (int)$tableRows;
-        $is_active = $status;
-
-        if ($is_active == 1) {
-            $categories = DB::table('categories')
-                ->select(['id', 'name', 'updated_at', 'deleted_at'])
-                ->whereNull('deleted_at')
-                ->orderBy('updated_at','desc')
-                ->paginate($tableRows);
-        } elseif ($is_active == 0) {
-            $categories = DB::table('categories')
-                ->select(['id', 'name', 'updated_at', 'deleted_at'])
-                ->whereNotNull('deleted_at')
-                ->orderBy('updated_at','desc')
-                ->paginate($tableRows);
-        } else {
-            $categories = DB::table('categories')
-                ->orderBy('updated_at','desc')
-                ->paginate($tableRows);
+        $status =  $request['status'];
+        $rows =  $request['rows'];
+        $search =  $request['search'];
+        
+        $categories = Category::withTrashed()
+        ->where(function ($query) use ($status){
+          return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
+        })
+        ->where(function ($query) use ($search){
+            return (isset($search))?$query->where('name', 'like', '%' . $search . '%'):$query;
+        })
+        ->latest('updated_at')
+        ->paginate($rows);
+        
+        if(count($categories)==true){
+          return $this->result(200,"Category has been fetched.",$categories);
         }
-
-        $code = 200;
-        $message = "Succefully Retrieved";
-        $data = $categories;
-
-        if (!$categories || $categories->isEmpty()) {
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = [];
-        }
-
-        return $this->result($code,$message,$data);
-    }
-
-    public function all(Request $request,$status)
-    {
-        $is_active = $status;
-
-        if ($is_active == 1) {
-            $categories = DB::table('categories')
-                ->select(['id','name'])
-                ->whereNull('deleted_at')
-                ->orderBy('updated_at','desc')
-                ->get();
-
-        } elseif ($is_active == 0) {
-            $categories = DB::table('categories')
-                ->select(['id','name'])
-                ->whereNotNull('deleted_at')
-                ->orderBy('updated_at','desc')
-                ->get();
-
-        }else{
-            $categories = DB::table('categories')
-            ->orderBy('updated_at','desc')
-            ->get();
-        }
-
-        if (!$categories || $categories->isEmpty()) {
-
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = [];
-        }else{
-            $code =    200;
-            $message = "Succefully Retrieved";
-            $data = $categories;
-        }
-
-        return $this->result($code,$message,$data);
+        throw new FistoException("No records found.", 404, NULL, []);
     }
 
     public function store(Request $request)
@@ -158,69 +107,10 @@ class CategoryController extends Controller
         return $this->result($code,$message,$data);
     }
 
-    public function archive(Request $request, $id)
-    {
-        $softDeletePayrollCategory = Category::where('id',$id)->delete();
-
-
-        if ($softDeletePayrollCategory == 0) {
-            $code = 403;
-            $data = [];
-            $message = "Data Not Found";
-        }else{
-            $code = 200;
-            $data = [];
-            $message = "Succefully Archived";
-        }
-        return $this->result($code,$message,$data);
+    public function change_status(Request $request,$id){
+        $status = $request['status'];
+        $model = new Category();
+        return $this->change_masterlist_status($status,$model,$id);
     }
 
-    public function restore(Request $request, $id)
-    {
-        $restoreSoftDelete = Category::onlyTrashed()->find($id)->restore();
-        if ($restoreSoftDelete == 1) {
-            $code = 200;
-            $data = [];
-            $message = "Succefully Restored";
-        }else{
-            $code = 403;
-            $data = [];
-            $message = "Data Not Found";
-        }
-        return $this->result($code,$message,$data);
-    }
-
-    public function search(Request $request,$status,$tableRows)
-    {
-
-        $tableRows = (int)$tableRows;
-        $value = $request['value'];
-
-        if($status == 1){
-            $result = DB::table('categories')
-            ->select(['id', 'name', 'updated_at', 'deleted_at'])
-            ->where('name', 'like', '%' . $value . '%')
-            ->whereNull('deleted_at')
-            ->orderBy('updated_at','desc')
-            ->paginate($tableRows);
-        }else{
-            $result = DB::table('categories')
-            ->select(['id', 'name', 'updated_at', 'deleted_at'])
-            ->where('name', 'like', '%' . $value . '%')
-            ->whereNotNull('deleted_at')
-            ->orderBy('updated_at','desc')
-            ->paginate($tableRows);
-        }
-
-        if ($result->isEmpty()) {
-            $code = 404;
-            $message = "Data Not Found";
-            $data = [];
-        } else {
-            $code = 200;
-            $message = "Succefully Retrieved";
-            $data = $result;
-        }
-        return $this->result($code,$message,$data);
-    }
 }

@@ -34,7 +34,7 @@ class Document extends Model
 
     public function categories()
     {
-        return $this->belongsToMany(Category::class, 'document_categories','document_id','category_id');
+        return $this->belongsToMany(Category::class, 'document_categories','document_id','category_id')->select('categories.id','categories.name');
     }
 
     public function document_categories()

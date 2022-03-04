@@ -12,82 +12,30 @@ use App\Exceptions\FistoException;
 
 class DocumentController extends Controller
 {
-    public function index(Request $request,$status,$tableRows)
+    public function index(Request $request)
     {
-        $tableRows = (int)$tableRows;
-        $value = $request['value'];
-        $category_ids = collect();
-        if($status == 1){
-            $result = DB::table('documents AS d')
-            ->select('d.id AS did','d.updated_at','d.deleted_at')
-            ->leftjoin('document_categories AS dc', 'd.id', '=', 'dc.document_id')
-            ->whereNull('d.deleted_at')
-            ->get();
-        }else{
-            $result = DB::table('documents AS d')
-            ->select('d.id AS did','d.updated_at','d.deleted_at')
-            ->leftjoin('document_categories AS dc', 'd.id', '=', 'dc.document_id')
-            ->whereNotNull('d.deleted_at')
-            ->get();
-        }
-        if ($result->isEmpty()) {
-            $code = 404;
-            $message = "Data Not Found";
-            $data = [];
-            return $this->result($code,$message,$data);
-        }
-        $all_did = [];
-        foreach($result as  $specific_result){
-            array_push($all_did,$specific_result->did);
-        }
+        $status =  $request['status'];
+        $rows =  $request['rows'];
+        $search =  $request['search'];
 
-        $unique_all_did= array_values(array_unique($all_did));
-        foreach($unique_all_did as $specific_unique_all_did){
-            $getCategories = DB::table('document_categories AS dc')
-            ->select('c.id AS cat_id','c.name AS cat_name')
-            ->leftjoin('categories AS c', 'dc.category_id', '=', 'c.id')
-            ->where('dc.document_id', '=', $specific_unique_all_did)
-            ->get();
-            $category_object = collect();
-            foreach($getCategories as $specific_getCategories){
-                $category_object->push(['id'=>$specific_getCategories->cat_id,
-                'name'=>$specific_getCategories->cat_name]);
-            }
-            $category_ids->push(['doc_id' => $specific_unique_all_did, 'cat_id' => $category_object]);
-        }
-        $document_categories = [];
-        $document_categories_no_duplicates = [];
-        $documents = collect();
-        foreach ($category_ids as $specific_document) {
-            $doc_id = $specific_document['doc_id'];
-            $cat_id = $specific_document['cat_id'];
-            $document_details = DB::table('documents AS d')
-                ->select('id', 'document_type', 'document_description', 'updated_at', 'deleted_at')
-                ->where('id', '=', $doc_id)
-                ->get();
-            $documents->push([
-              "id"=>$document_details[0]->id,
-              "type"=>$document_details[0]->document_type,
-              "description"=>$document_details[0]->document_description,
-              "categories"=>$cat_id->unique()->values(),
-              "updated_at"=>$document_details[0]->updated_at,
-              "deleted_at"=>$document_details[0]->deleted_at
-            ]);
-        }
+        $documents = Document::withTrashed()
+        ->with('categories')
+        ->where(function ($query) use ($status){
+          return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
+        })
+        ->where(function ($query) use ($search) {
+            $query->where('documents.document_type', 'like', '%' . $search . '%')
+                ->orWhere('documents.document_description', 'like', '%' . $search . '%');
+        })
+        ->select(['id','document_type','document_description','created_at','updated_at','deleted_at'])
+        ->latest('updated_at')
+        ->paginate($rows);
 
-        $unique_documents= $documents->unique()->values()->sortByDesc('id');
-        $document_with_pagination= GenericMethod::paginateme($unique_documents,$tableRows);
+        if(count($documents)==true){
+            return $this->result(200,"Documents has been fetched.",$documents);
+          }
+          throw new FistoException("No records found.", 404, NULL, []);
 
-        if (!$document_details || $document_details->isEmpty()) {
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = [];
-        }else{
-            $code =    200;
-            $message = "Succefully Retrieved";
-            $data = $document_with_pagination;
-        }
-        return $this->result($code,$message,$data);
     }
 
     public function store(Request $request)
@@ -240,138 +188,10 @@ class DocumentController extends Controller
         return $this->result($code,$message,$data);
     }
 
-    public function archive(Request $request, $id)
-    {
-        $softDeletePayrollCategory = Document::where('id',$id)->delete();
-
-        if ($softDeletePayrollCategory == 0) {
-            $code = 403;
-            $data = [];
-            $message = "Data Not Found";
-            return $this->result($code,$message,$data);
-        }
-
-        $specific_document_category_details = DB::table('document_categories')
-            ->where('document_id', '=', $id)
-            ->update(['is_active' => 0]);
-
-        $users = DB::table('users')->orderBy('updated_at','desc')->get();
-
-        // foreach ($users as $specific_user) {
-
-        //     $document_types = json_decode($specific_user->document_types);
-        //     foreach ($document_types as $key => $value) {
-        //         if ($document_types[$key]->document_id == $id) {
-        //             unset($document_types[$key]);
-        //         }
-        //     }
-
-        //     $document_types = json_encode(array_values($document_types));
-        //     $updated_user = DB::table('users')
-        //         ->where('id', '=', $specific_user->id)
-        //         ->update(['document_types' => $document_types]);
-        // }
-
-        $code =200;
-        $message = "Succefully Archived";
-        $data = [];
-        return $this->result($code,$message,$data);
-
-    }
-
-    public function restore(Request $request, $id)
-    {
-        if(!Document::onlyTrashed()->find($id)){
-            throw new FistoException("No records found.", 404, NULL, []);
-        }
-        $restoreSoftDelete = Document::onlyTrashed()->find($id)->restore();
-        if ($restoreSoftDelete == 1) {
-            return $this->result(200,"Succefully Restored",[]);
-        }
-    }
-
-    public function search(Request $request,$status,$tableRows)
-    {
-        $tableRows = (int)$tableRows;
-        $value = $request['value'];
-        $category_ids = collect();
-        if($status == 1){
-            $result = DB::table('documents AS d')
-            ->select('d.id AS did','d.updated_at','d.deleted_at')
-            ->leftjoin('document_categories AS dc', 'd.id', '=', 'dc.document_id')
-            ->whereNull('d.deleted_at')
-            ->where(function ($query) use ($value) {
-                $query->where('d.document_type', 'like', '%' . $value . '%')
-                    ->orWhere('d.document_description', 'like', '%' . $value . '%');
-            })
-            ->get();
-        }else{
-            $result = DB::table('documents AS d')
-            ->select('d.id AS did','d.updated_at','d.deleted_at')
-            ->leftjoin('document_categories AS dc', 'd.id', '=', 'dc.document_id')
-            ->whereNotNull('d.deleted_at')
-            ->where(function ($query) use ($value) {
-                $query->where('d.document_type', 'like', '%' . $value . '%')
-                    ->orWhere('d.document_description', 'like', '%' . $value . '%');
-            })
-            ->get();
-        }
-        if ($result->isEmpty()) {
-            $code = 404;
-            $message = "Data Not Found";
-            $data = [];
-            return $this->result($code,$message,$data);
-        }
-        $all_did = [];
-        foreach($result as  $specific_result){
-            array_push($all_did,$specific_result->did);
-        }
-        $unique_all_did= array_values(array_unique($all_did));
-        foreach($unique_all_did as $specific_unique_all_did){
-            $getCategories = DB::table('document_categories AS dc')
-            ->select('c.id AS cat_id','c.name AS cat_name')
-            ->leftjoin('categories AS c', 'dc.category_id', '=', 'c.id')
-            ->where('dc.document_id', '=', $specific_unique_all_did)
-            ->get();
-            $category_object = collect();
-            foreach($getCategories as $specific_getCategories){
-                $category_object->push(['id'=>$specific_getCategories->cat_id,
-                'name'=>$specific_getCategories->cat_name]);
-            }
-            $category_ids->push(['doc_id' => $specific_unique_all_did, 'cat_id' => $category_object]);
-        }
-        $document_categories = [];
-        $document_categories_no_duplicates = [];
-        $documents = collect();
-        foreach ($category_ids as $specific_document) {
-            $doc_id = $specific_document['doc_id'];
-            $cat_id = $specific_document['cat_id'];
-            $document_details = DB::table('documents AS d')
-                ->select('id', 'document_type', 'document_description', 'updated_at', 'deleted_at')
-                ->where('id', '=', $doc_id)
-                ->get();
-                
-            $documents->push([
-              "id"=>$document_details[0]->id,
-              "type"=>$document_details[0]->document_type,
-              "description"=>$document_details[0]->document_description,
-              "categories"=>$cat_id->unique()->values(),
-              "updated_at"=>$document_details[0]->updated_at,
-              "deleted_at"=>$document_details[0]->deleted_at
-            ]);
-        }
-        $unique_documents= $documents->unique()->values()->sortByDesc('id');
-        $document_with_pagination= GenericMethod::paginateme($unique_documents,$tableRows);
-        if (!$document_details || $document_details->isEmpty()) {
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = [];
-        }else{
-            $code =    200;
-            $message = "Succefully Retrieved";
-            $data = $document_with_pagination;
-        }
-        return $this->result($code,$message,$data);
+    public function change_status(Request $request,$id){
+        $status = $request['status'];
+        $model = new Document();
+        return $this->change_masterlist_status($status,$model,$id);
     }
 
     public function documents(Request $request,$status)

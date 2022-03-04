@@ -73,49 +73,34 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::post('/logout', [UserController::class, 'logout']);
 
     // CATEGORY
-    Route::get('categories/all/{status}/', [CategoryController::class, 'all']);
-    Route::get('categories/{status}/{row_per_page}/', [CategoryController::class, 'index']);
-    Route::post('categories/restore/{id}', [CategoryController::class, 'restore']);
-    Route::post('categories/archive/{id}', [CategoryController::class, 'archive']);
-    Route::post('categories/search/{status}/{row_per_page}', [CategoryController::class, 'search']);
+    Route::get('categories/', [CategoryController::class, 'index']);
+    Route::patch('categories/{id}', [CategoryController::class, 'change_status']);
     Route::resource('categories', CategoryController::class);
 
     // DOCUMENTS
-    Route::get('documents/all/{status}/', [DocumentController::class, 'documents']);
-    Route::get('documents/{status}/{row_per_page}/', [DocumentController::class, 'index']);
-    Route::post('documents/restore/{id}', [DocumentController::class, 'restore']);
-    Route::post('documents/archive/{id}', [DocumentController::class, 'archive']);
-    Route::post('documents/search/{status}/{row_per_page}/', [DocumentController::class, 'search']);
+    Route::get('documents/', [DocumentController::class, 'index']);
+    Route::patch('documents/{id}', [DocumentController::class, 'change_status']);
     Route::resource('documents', DocumentController::class);
 
     // COMPANY
-    Route::resource('companies', CompanyController::class);
+    Route::resource('companies/', CompanyController::class);
     Route::post('companies/archive/{id}', [CompanyController::class, 'archive']);
     Route::post('companies/search/', [CompanyController::class, 'search']);
 
     // REASON
-    Route::get('reasons/all/{status}/', [ReasonController::class, 'all']);
-    Route::get('reasons/{status}/{row_per_page}/', [ReasonController::class, 'index']);
-    Route::post('reasons/search/{status}/{row_per_page}/', [ReasonController::class, 'search']);
-    Route::post('reasons/archive/{id}', [ReasonController::class, 'archive']);
-    Route::post('reasons/restore/{id}', [ReasonController::class, 'restore']);
+    Route::get('reasons/', [ReasonController::class, 'index']);
+    Route::patch('reasons/{id}', [ReasonController::class, 'change_status']);
     Route::resource('reasons', ReasonController::class);
 
     // BANK
-    Route::get('banks/all/{status}/', [BankController::class, 'all']);
-    Route::get('banks/{status}/{row_per_page}/', [BankController::class, 'index']);
-    Route::post('banks/search/{status}/{row_per_page}/', [BankController::class, 'search']);
-    Route::post('banks/archive/{id}', [BankController::class, 'archive']);
-    Route::post('banks/restore/{id}', [BankController::class, 'restore']);
+    Route::get('banks/', [BankController::class, 'index']);
+    Route::patch('banks/{id}', [BankController::class, 'change_status']);
     Route::post('banks/import/', [BankController::class, 'import']);
     Route::resource('banks', BankController::class);
 
     // SUPPLIER TYPE
-    Route::get('supplier-types/all/{status}/', [SupplierTypeController::class, 'all']);
-    Route::get('supplier-types/{status}/{row_per_page}/', [SupplierTypeController::class, 'index']);
-    Route::post('supplier-types/restore/{id}/',[SupplierTypeController::class, 'restore']);
-    Route::post('supplier-types/archive/{id}/',[SupplierTypeController::class, 'archive']);
-    Route::post('supplier-types/search/{status}/{row_per_page}/', [SupplierTypeController::class, 'search']);
+    Route::get('supplier-types/', [SupplierTypeController::class, 'index']);
+    Route::patch('supplier-types/{id}', [SupplierTypeController::class, 'change_status']);
     Route::resource('supplier-types', SupplierTypeController::class);
 
     // REFERRENCE

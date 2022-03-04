@@ -6,81 +6,32 @@ use App\Models\SupplierType;
 use App\Methods\GenericMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Exceptions\FistoException;
 
 class SupplierTypeController extends Controller
 {
 
-    public function index(Request $request,$status,$tableRows)
+    public function index(Request $request)
     {
-        $tableRows = (int)$tableRows;
-        $is_active = $status;
+        $status =  $request['status'];
+        $rows =  $request['rows'];
+        $search =  $request['search'];
         
-        if ($is_active == 1) {
-            $supplier_type = DB::table('supplier_types AS s')
-                ->select('s.id', 's.type', 's.transaction_days', 's.updated_at', 's.deleted_at')
-                ->whereNull('deleted_at')
-                ->latest()
-                ->paginate($tableRows);
+        $supplier_types = SupplierType::withTrashed()
+        ->where(function ($query) use ($status){
+          return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
+        })
+        ->where(function ($query) use ($search) {
+            $query->where('type', 'like', '%' . $search . '%')
+                ->orWhere('transaction_days', 'like', '%' . $search . '%');
+        })
+        ->latest('updated_at')
+        ->paginate($rows);
+        
+        if(count($supplier_types)==true){
+          return $this->result(200,"Supplier Type has been fetched.",$supplier_types);
         }
-        else {
-            $supplier_type = DB::table('supplier_types AS s')
-                ->select('s.id', 's.type', 's.transaction_days', 's.updated_at', 's.deleted_at')
-                ->whereNotNull('deleted_at')
-                ->latest()
-                ->paginate($tableRows);
-        }
-
-        if (!$supplier_type || $supplier_type->isEmpty()) {
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = [];
-        } else {
-            $code = 200;
-            $message = "Succefully Retrieved";
-            $data = $supplier_type;
-
-        }
-
-        return $this->result($code,$message,$data);
-    }
-
-    public function all(Request $request,$status)
-    {
-        $is_active = $status;
-
-        if ($is_active ==1) {
-            $supplier_type = DB::table('supplier_types')
-                ->select(['id','type'])
-                ->whereNull('deleted_at')
-                ->latest()
-                ->get();
-
-        } elseif ($is_active == 0) {
-            $supplier_type = DB::table('supplier_types')
-                ->select(['id','type'])
-                ->whereNotNull('deleted_at')
-                ->latest()
-                ->get();
-
-        } else {
-            $supplier_type = DB::table('supplier_types')
-                ->latest()
-                ->get();
-        }
-
-        if (!$supplier_type || $supplier_type->isEmpty()) {
-
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = [];
-        } else {
-            $code = 200;
-            $message = "Succefully Retrieved";
-            $data = $supplier_type;
-
-        }
-
-        return $this->result($code,$message,$data);
+        throw new FistoException("No records found.", 404, NULL, []);
     }
 
     public function store(Request $request)
@@ -159,86 +110,12 @@ class SupplierTypeController extends Controller
 
     }
 
-    public function archive(Request $request, $id)
-    {
-        $softDeleteReferrence = SupplierType::where('id',$id)->delete();
-        if ($softDeleteReferrence == 0) {
-            $code = 403;
-            $data = [];
-            $message = "Data Not Found";
-        }else{
-
-            $code =200;
-            $message = "Supplier type has been archived.";
-            $data = [];
-        }
-        return $this->result($code,$message,$data);
-
-    }
-
-    public function restore(Request $request, $id)
-    {
-        $validateIfIdIsArchived = SupplierType::onlyTrashed()->find($id);
-
-        if (!isset($validateIfIdIsArchived)) {
-            $code = 403;
-            $data = [];
-            $message = "Supplier type is not in archive status.";
-            return $this->result($code,$message,$data);
-        }
-
-        $restoreSoftDelete = SupplierType::onlyTrashed()->find($id)->restore();
-        if ($restoreSoftDelete == 1) {
-            $code = 200;
-            $data = [];
-            $message = "Supplier type has been restored.";
-        }else{
-            $code = 403;
-            $data = [];
-            $message = "Data Not Found";
-        }
-        return $this->result($code,$message,$data);
-    }
-
-
-    public function search(Request $request,$status,$tableRows)
-    {
-
-        $tableRows = (int)$tableRows;
-        $value = $request['value'];
-
-        if($status == 1){
-            $result = DB::table('supplier_types AS s')
-            ->select('s.id', 's.type', 's.transaction_days', 's.updated_at', 's.deleted_at')
-            ->whereNull('deleted_at')
-            ->where(function ($query) use ($value) {
-                $query->where('type', 'like', '%' . $value . '%')
-                    ->orWhere('transaction_days', 'like', '%' . $value . '%');
-            })
-            ->orderBy('updated_at','desc')
-            ->paginate($tableRows);
-        }else{
-            $result = DB::table('supplier_types AS s')
-            ->select('s.id', 's.type', 's.transaction_days', 's.updated_at', 's.deleted_at')
-            ->whereNotNull('deleted_at')
-            ->where(function ($query) use ($value) {
-                    $query->where('type', 'like', '%' . $value . '%')
-                        ->orWhere('transaction_days', 'like', '%' . $value . '%');
-                })
-                ->orderBy('updated_at','desc')
-                ->paginate($tableRows);
-       }
-       if ($result->isEmpty()) {
-           $code = 404;
-           $message = "Data Not Found";
-           $data = [];
-       } else {
-           $code = 200;
-           $message = "Succefully Retrieved";
-           $data = $result;
-       }
-       return $this->result($code,$message,$data);
-    }
+    public function change_status(Request $request,$id){
+        $status = $request['status'];
+        $model = new SupplierType();
+        return $this->change_masterlist_status($status,$model,$id);
+      }
+    
 
 
 }
