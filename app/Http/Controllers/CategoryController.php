@@ -38,8 +38,6 @@ class CategoryController extends Controller
             'name' => 'required|string'
         ]);
 
-        return $fields->errors();
-
         $duplicate_category = DB::table('categories')
             ->where('name', $fields['name'])
             ->whereNull('deleted_at')

@@ -10,56 +10,24 @@ use App\Exceptions\FistoException;
 
 class UtilityLocationController extends Controller
 {
-  public function index(Request $request,bool $status,int $rows)
+  public function index(Request $request)
   {
-    $utility_location = UtilityLocation::where(function ($query) use ($status){
+    $status =  $request['status'];
+    $rows =  $request['rows'];
+    $search =  $request['search'];
+    
+    $utility_locations= UtilityLocation::withTrashed()
+    ->where(function ($query) use ($status){
       ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
     })
-    ->select(['id', 'location', 'updated_at', 'deleted_at'])
-    ->latest()
+    ->where('location', 'like', '%'.$search.'%')
+    ->latest('updated_at')
     ->paginate($rows);
 
-    if (count($utility_location)>0)
-    {
-      return $this->result(200,"Utility locations has been fetched.",$utility_location);
-    }
+    if(count($utility_locations) == true)
+      return $this->result(200,'Utility locations has been fetched.',$utility_locations);
     else
-    {
       throw new FistoException("No records found.",404,NULL,[]);
-    }
-  }
-  public function all(Request $request,$status)
-  {
-
-    if ($status == 1) {
-      $utility_location = DB::table('utility_locations')
-        ->select(['id','location'])
-        ->whereNull('deleted_at')
-        ->latest()
-        ->get();
-
-    }
-    
-    if ($status == 0) {
-      $utility_location = DB::table('utility_locations')
-        ->select(['id','location'])
-        ->whereNotNull('deleted_at')
-        ->latest()
-        ->get();
-
-    }
-
-    $code = 200;
-    $message = "Succefully Retrieved";
-    $data = $utility_location;
-
-    if (!$utility_location || $utility_location->isEmpty()) {
-      $code = 404;
-      $message = "Data Not Found!";
-      $data = $utility_location;
-    }
-
-    return $this->result($code,$message,$data);
   }
   public function show($id)
   {
@@ -70,22 +38,6 @@ class UtilityLocationController extends Controller
     else {
       return $this->result(200,"Utility locations has been fetched.",$result);
     }
-  }
-  public function search(Request $request,bool $status,int $rows)
-  {
-    $value = $request['value'];
-    $utility_location = UtilityLocation::where(function ($query) use ($status){
-      ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
-    })
-    ->where('location', 'like', '%'.$value.'%')
-    ->select(['id', 'location', 'updated_at', 'deleted_at'])
-    ->latest('updated_at')
-    ->paginate($rows);
-    
-    if(count($utility_location) == true)
-      return $this->result(200,'Utility locations has been fetched.',$utility_location);
-    else
-      throw new FistoException("No records found.",404,NULL,[]);
   }
   public function store(Request $request)
   {
@@ -133,24 +85,9 @@ class UtilityLocationController extends Controller
       }
     }
   }
-  public function archive(Request $request,$id)
-  {
-    $softDeleteUtilityLocation = UtilityLocation::where('id', $id)->delete();
-    if ($softDeleteUtilityLocation == true) {
-      return $this->result(200,"Utility location has been archived.",[]);
-    }
-    else {
-      throw new FistoException("No records found.",404,NULL,[]);
-    }
-  }
-  public function restore(Request $request,$id)
-  {
-    $softRestoreSoftDelete = UtilityLocation::onlyTrashed()->where('id', $id)->restore();
-    if ($softRestoreSoftDelete == true) {
-      return $this->result(200,"Utility location has been restored.",[]);
-    }
-    else {
-      throw new FistoException("No records found.",404,NULL,[]);
-    }
+  public function change_status(Request $request,$id){
+    $status = $request['status'];
+    $model = new UtilityLocation();
+    return $this->change_masterlist_status($status,$model,$id);
   }
 }

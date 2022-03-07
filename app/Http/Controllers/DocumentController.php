@@ -41,11 +41,11 @@ class DocumentController extends Controller
     public function store(Request $request)
     {
         $fields = $request->validate([
-            'document_type' => 'required|string',
-            'document_description' => 'required|string',
+            'type' => 'required|string',
+            'description' => 'required|string',
         ]);
 
-        $duplicateDocumentType =  GenericMethod::validateDuplicateDocumentType($fields['document_type']);
+        $duplicateDocumentType =  GenericMethod::validateDuplicateDocumentType($fields['type']);
         if(count($duplicateDocumentType)>0) {
             $code =403;
             $message = "Document Already Registered";
@@ -84,8 +84,8 @@ class DocumentController extends Controller
             $data = $unregistered_category;
         } else {
             $new_document = Document::create([
-                'document_type' => $fields['document_type']
-                , 'document_description' => $fields['document_description']
+                'document_type' => $fields['type']
+                , 'document_description' => $fields['description']
                 , 'is_active' => 1,
             ]);
             $category_ids = $request['categories'];
@@ -137,8 +137,8 @@ class DocumentController extends Controller
         $deleted_at= $result[0]->deleted_at;
 
         $category_ids->push(['document_id' => $docid,
-        'document_type' => $document_type,
-        'document_description' => $document_description,
+        'type' => $document_type,
+        'description' => $document_description,
         'categories' => $category_object,
         'updated_at' => $updated_at,
         'deleted_at' => $deleted_at]);
@@ -154,12 +154,12 @@ class DocumentController extends Controller
         $specific_document = Document::find($id);
 
         $fields = $request->validate([
-            'document_type' => 'required|string',
-            'document_description' => 'required|string',
+            'type' => 'required|string',
+            'description' => 'required|string',
 
         ]);
 
-        $validateDuplicateDocumentTypeInUpdate =  GenericMethod::validateDuplicateDocumentTypeInUpdate($fields['document_type'],$id);
+        $validateDuplicateDocumentTypeInUpdate =  GenericMethod::validateDuplicateDocumentTypeInUpdate($fields['type'],$id);
         if(count($validateDuplicateDocumentTypeInUpdate)>0) {
             $code =403;
             $message = "Document Type already registered in other document type";
@@ -174,8 +174,8 @@ class DocumentController extends Controller
             return $this->result($code,$message,$data);
         }
 
-        $specific_document->document_type = $request->get('document_type');
-        $specific_document->document_description = $request->get('document_description');
+        $specific_document->document_type = $request->get('type');
+        $specific_document->document_description = $request->get('description');
 
         $category_ids = $request['categories'];
         $specific_document->categories()->detach();

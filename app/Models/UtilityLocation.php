@@ -26,4 +26,8 @@ class UtilityLocation extends Model
     $date = Carbon::parse($value);
     return $date->format('Y-m-d H:i');
   }
+  public function account_numbers()
+  {
+      return $this->belongsTo(AccountNumber::class);
+  }
 }

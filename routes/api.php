@@ -104,19 +104,13 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::resource('supplier-types', SupplierTypeController::class);
 
     // REFERRENCE
-    Route::get('referrences/all/{status}/', [ReferrenceController::class, 'all']);
-    Route::get('referrences/{status}/{row_per_page}/', [ReferrenceController::class, 'index']);
-    Route::post('referrences/restore/{id}', [ReferrenceController::class, 'restore']);
-    Route::post('referrences/archive/{id}', [ReferrenceController::class, 'archive']);
-    Route::post('referrences/search/{status}/{row_per_page}/', [ReferrenceController::class, 'search']);
+    Route::get('referrences/', [ReferrenceController::class, 'index']);
+    Route::patch('referrences/{id}', [ReferrenceController::class, 'change_status']);
     Route::resource('referrences', ReferrenceController::class);
 
     // SUPPLIER
-    Route::get('suppliers/all/{status}/', [SupplierController::class, 'all']);
-    Route::get('suppliers/{status}/{row_per_page}/', [SupplierController::class, 'index']);
-    Route::post('suppliers/search/{status}/{row_per_page}/', [SupplierController::class, 'search']);
-    Route::post('suppliers/archive/{id}', [SupplierController::class, 'archive']);
-    Route::post('suppliers/restore/{id}', [SupplierController::class, 'restore']);
+    Route::get('suppliers/', [SupplierController::class, 'index']);
+    Route::patch('suppliers/{id}', [SupplierController::class, 'change_status']);
     Route::post('suppliers/import/', [SupplierController::class, 'import']);
     Route::resource('suppliers', SupplierController::class);
 
@@ -146,45 +140,29 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::resource('locations',LocationController::class);
 
     // UTILITY CATEGORY
-    Route::get('utility-category/all/{status}/', [UtilityCategoryController::class, 'all']);
-    Route::get('utility-category/{status}/{row_per_page}/', [UtilityCategoryController::class, 'index']);
-    Route::post('utility-category/search/{status}/{row_per_page}/', [UtilityCategoryController::class, 'search']);
-    Route::post('utility-category/archive/{id}', [UtilityCategoryController::class, 'archive']);
-    Route::post('utility-category/restore/{id}', [UtilityCategoryController::class, 'restore']);
+    Route::get('utility-category/', [UtilityCategoryController::class, 'index']);
+    Route::patch('utility-category/{id}', [UtilityCategoryController::class, 'change_status']);
     Route::resource('utility-category', UtilityCategoryController::class);
 
     // UTILITY LOCATION
-    Route::get('utility-location/all/{status}/', [UtilityLocationController::class, 'all']);
-    Route::get('utility-location/{status}/{row_per_page}', [UtilityLocationController::class, 'index']);
-    Route::post('utility-location/search/{status}/{row_per_page}/', [UtilityLocationController::class, 'search']);
-    Route::post('utility-location/archive/{id}', [UtilityLocationController::class, 'archive']);
-    Route::post('utility-location/restore/{id}', [UtilityLocationController::class, 'restore']);
+    Route::get('utility-location', [UtilityLocationController::class, 'index']);
+    Route::patch('utility-location/{id}', [UtilityLocationController::class, 'change_status']);
     Route::resource('utility-location', UtilityLocationController::class);
 
     // ACCOUNT TITLE
+    Route::get('account-title/', [AccountTitleController::class, 'index']);
+    Route::patch('account-title/{id}', [AccountTitleController::class, 'change_status']);
     Route::post('account-title/import',[AccountTitleController::class,'import']);
-    Route::get('account-title/all/{status}/', [AccountTitleController::class, 'all']);
-    Route::get('account-title/{status}/{row_per_page}/', [AccountTitleController::class, 'index']);
-    Route::post('account-title/search/{status}/{row_per_page}/', [AccountTitleController::class, 'search']);
-    Route::post('account-title/archive/{id}', [AccountTitleController::class, 'archive']);
-    Route::post('account-title/restore/{id}', [AccountTitleController::class, 'restore']);
     Route::resource('account-title', AccountTitleController::class);
 
     // PAYROLL CLIENT
-    Route::get('payroll-client/all/{status}', [PayrollClientController::class, 'all']);
-    Route::get('payroll-client/{status}/{row_per_page}', [PayrollClientController::class, 'index']);
-    Route::post('payroll-client/search/{status}/{row_per_page}/', [PayrollClientController::class, 'search']);
-    Route::post('payroll-client/archive/{id}', [PayrollClientController::class, 'archive']);
-    Route::post('payroll-client/restore/{id}', [PayrollClientController::class, 'restore']);
-    Route::post('payroll-client/search/', [PayrollClientController::class, 'search']);
+    Route::get('payroll-client/', [PayrollClientController::class, 'index']);
+    Route::patch('payroll-client/{id}', [PayrollClientController::class, 'change_status']);
     Route::resource('payroll-client',PayrollClientController::class);
 
     // PAYROLL CATEGORY
-    Route::get('payroll-category/all/{status}/', [PayrollCategoryController::class, 'all']);
-    Route::post('payroll-category/archive/{id}', [PayrollCategoryController::class, 'archive']);
-    Route::post('payroll-category/restore/{id}', [PayrollCategoryController::class, 'restore']);
-    Route::post('payroll-category/search/{status}/{row_per_page}/', [PayrollCategoryController::class, 'search']);
-    Route::get('payroll-category/{status}/{row_per_page}/', [PayrollCategoryController::class, 'index']);
+    Route::get('payroll-category/', [PayrollCategoryController::class, 'index']);
+    Route::patch('payroll-category/{id}', [PayrollCategoryController::class, 'change_status']);
     Route::resource('payroll-category',PayrollCategoryController::class);
 
     // PAYROLL TYPE
@@ -195,19 +173,14 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::resource('payroll-type',PayrollTypeController::class);
 
     // ACCOUNT #
-    Route::get('account-number/all/{status}', [AccountNumberController::class, 'all']);
-    Route::get('account-number/{status}/{row_per_page}', [AccountNumberController::class, 'index']);
-    Route::post('account-number/search/{status}/{row_per_page}/', [AccountNumberController::class, 'search']);
-    Route::post('account-number/archive/{id}', [AccountNumberController::class, 'archive']);
-    Route::post('account-number/restore/{id}', [AccountNumberController::class, 'restore']);
+    Route::get('account-number/', [AccountNumberController::class, 'index']);
+    Route::patch('account-number/{id}', [AccountNumberController::class, 'change_status']);
     Route::post('account-number/import/', [AccountNumberController::class, 'import']);
     Route::resource('account-number',AccountNumberController::class);
 
     // CREDIT CARD
-    Route::get('credit-card/{status}/{row_per_page}',[CreditCardController::class,'index']);
-    Route::post('credit-card/search/{status}/{row_per_page}',[CreditCardController::class,'search']);
-    Route::post('credit-card/archive/{id}',[CreditCardController::class,'archive']);
-    Route::post('credit-card/restore/{id}',[CreditCardController::class,'restore']);
+    Route::get('credit-card/',[CreditCardController::class,'index']);
+    Route::patch('credit-card/{id}', [CreditCardController::class, 'change_status']);
     Route::resource('credit-card',CreditCardController::class);
 
 });

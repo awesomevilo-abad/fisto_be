@@ -114,7 +114,7 @@ class SupplierTypeController extends Controller
         $status = $request['status'];
         $model = new SupplierType();
         return $this->change_masterlist_status($status,$model,$id);
-      }
+    }
     
 
 

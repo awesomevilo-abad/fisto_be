@@ -13,43 +13,26 @@ use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
 {
-  public function index(Request $request,bool $status,int $rows)
+  public function index(Request $request)
   {
+    $status =  $request['status'];
+    $rows =  $request['rows'];
+    $search =  $request['search'];
+
     $suppliers = Supplier::withTrashed()
       ->with('referrences')
-      ->join('supplier_types', 'suppliers.supplier_type_id', 'supplier_types.id')
-      ->select([
-        'suppliers.id',
-        'suppliers.supplier_code as code',
-        'suppliers.supplier_name as name',
-        'suppliers.terms',
-        'suppliers.supplier_type_id',
-        'supplier_types.type as supplier_type',
-        'suppliers.updated_at',
-        'suppliers.deleted_at'
-      ])
+      ->with('supplier_types')
       ->where(function ($query) use ($status) {
         if ($status == true) $query->whereNull('suppliers.deleted_at');
         else  $query->whereNotNull('suppliers.deleted_at');
       })
+      ->where(function ($query) use ($search) {
+        $query->where('suppliers.supplier_code', 'like', '%'.$search.'%')
+          ->orWhere('suppliers.supplier_name', 'like', '%'.$search.'%')
+          ->orWhere('suppliers.terms', 'like', '%'.$search.'%');
+      })
       ->latest('suppliers.updated_at')
       ->paginate($rows);
-
-    if (count($suppliers) == true) {
-      return $this->result(200,"Suppliers has been fetched",$suppliers);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
-  }
-  public function all(Request $request,bool $status)
-  {
-    $suppliers = DB::table('suppliers')->select(['id','supplier_name'])
-      ->where(function ($query) use ($status) {
-        if ($status == true) $query->whereNull('deleted_at');
-        else  $query->whereNotNull('deleted_at');
-      })
-      ->latest('supplier_name')
-      ->get();
 
     if (count($suppliers) == true) {
       return $this->result(200,"Suppliers has been fetched",$suppliers);
@@ -76,40 +59,6 @@ class SupplierController extends Controller
 
     if (!empty($supplier)) {
       return $this->result(200,"Supplier has been fetched",$supplier);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
-  }
-  public function search(Request $request,bool $status,int $rows)
-  {
-    $value = $request['value'];
-    $suppliers = Supplier::withTrashed()
-      ->with('referrences')
-      ->join('supplier_types', 'suppliers.supplier_type_id', 'supplier_types.id')
-      ->select([
-        'suppliers.id',
-        'suppliers.supplier_code as code',
-        'suppliers.supplier_name as name',
-        'suppliers.terms',
-        'suppliers.supplier_type_id',
-        'supplier_types.type as supplier_type',
-        'suppliers.updated_at',
-        'suppliers.deleted_at'
-      ])
-      ->where(function ($query) use ($status) {
-        if ($status == true) $query->whereNull('suppliers.deleted_at');
-        else $query->whereNotNull('suppliers.deleted_at');
-      })
-      ->where(function ($query) use ($value) {
-        $query->where('suppliers.supplier_code', 'like', '%'.$value.'%')
-          ->orWhere('suppliers.supplier_name', 'like', '%'.$value.'%')
-          ->orWhere('suppliers.terms', 'like', '%'.$value.'%');
-      })
-      ->latest('suppliers.updated_at')
-      ->paginate($rows);
-
-    if (count($suppliers) == true) {
-      return $this->result(200,"Suppliers has been fetched",$suppliers);
     }
     else
       throw new FistoException("No records found.", 404, NULL, []);
@@ -181,24 +130,6 @@ class SupplierController extends Controller
 
       $supplier->save();
       return $this->result(200,"Supplier has been updated",$supplier);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
-  }
-  public function archive(Request $request,$id)
-  {
-    $softDeleteSupplier = Supplier::where('id', $id)->delete();
-    if ($softDeleteSupplier == true) {
-      return $this->result(200,"Suppliers has been archived",[]);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
-  }
-  public function restore(Request $request, $id)
-  {
-    $softRestoreSupplier = Supplier::onlyTrashed()->where('id', $id)->restore();
-    if ($softRestoreSupplier == true) {
-      return $this->result(200,"Suppliers has been restored",[]);
     }
     else
       throw new FistoException("No records found.", 404, NULL, []);
@@ -319,7 +250,10 @@ class SupplierController extends Controller
     else
       throw new FistoException("No supplier were imported. Please correct the errors in the excel file.", 409, NULL, $errorBag);
   }
-
-
-
+  public function change_status(Request $request,$id)
+  {
+    $status = $request['status'];
+    $model = new Supplier();
+    return $this->change_masterlist_status($status,$model,$id);
+  }
 }

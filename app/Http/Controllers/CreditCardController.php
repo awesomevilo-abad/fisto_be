@@ -15,19 +15,27 @@ use Illuminate\Validation\ValidationException;
 
 class CreditCardController extends Controller
 {
-    public function index(Request $request, bool $status, int $rows)
+    public function index(Request $request)
     {
-        $credit_card = CreditCard::with(['utility_categories','utility_locations'])->withTrashed()
-        ->where(function ($query) use ($status){
-          return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
-        })
-        ->latest('updated_at')
-        ->paginate($rows);
-        
-        if(count($credit_card)==true){
-          return $this->result(200,"Credit Card has been fetched.",$credit_card);
-        }
-        throw new FistoException("No records found.", 404, NULL, []);
+      $status =  $request['status'];
+      $rows =  $request['rows'];
+      $search =  $request['search'];
+      
+      $credit_card= CreditCard::with(['utility_categories','utility_locations'])->withTrashed()
+      ->where(function ($query) use ($status){
+        ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
+      })
+      ->where(function ($query) use ($search){
+        $query->where('name', 'like', '%'.$search.'%')
+          ->orWhere('account_no', 'like', '%'.$search.'%');
+      })
+      ->latest('updated_at')
+      ->paginate($rows);
+  
+      if(count($credit_card) == true)
+        return $this->result(200,'Credit Card has been fetched.',$credit_card);
+      else
+        throw new FistoException("No records found.",404,NULL,[]);
     }
 
     public function store(CreditCardRequest $request)
@@ -56,26 +64,6 @@ class CreditCardController extends Controller
       }
       throw new FistoException("No records found.", 404, NULL, []);
     }
-    
-    public function search(Request $request, bool $status, int $rows)
-    {
-        $value = $request['value'];
-        $credit_card = CreditCard::with(['utility_categories','utility_locations'])->withTrashed()
-        ->where(function ($query) use ($status){
-          return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
-        })
-        ->where(function ($query) use ($value){
-          $query->where('credit_cards.name', 'like', '%'.$value.'%')
-            ->orWhere('credit_cards.account_no', 'like', '%'.$value.'%');
-        })
-        ->latest('updated_at')
-        ->paginate($rows);
-        
-        if(count($credit_card)==true){
-          return $this->result(200,"Credit Card has been fetched.",$credit_card);
-        }
-        throw new FistoException("No records found.", 404, NULL, []);
-    }
 
     public function update(CreditCardRequest $request, $id)
     {
@@ -101,24 +89,9 @@ class CreditCardController extends Controller
 
     }
     
-    public function archive(Request $request,$id)
-    {
-      $softDeleteCreditCard = CreditCard::where('id', $id)->delete();
-      if ($softDeleteCreditCard == true) {
-        return $this->result(200,"Credit Card has been archived",[]);
-      }
-      else
-        throw new FistoException("No records found.", 404, NULL, []);
-    }
-    
-    public function restore(Request $request, $id)
-    {
-        if(!CreditCard::onlyTrashed()->find($id)){
-            throw new FistoException("No records found.", 404, NULL, []);
-        }
-        $restoreSoftDelete = CreditCard::onlyTrashed()->find($id)->restore();
-        if ($restoreSoftDelete == 1) {
-            return $this->result(200,"Succefully Restored",[]);
-        }
-    }
+  public function change_status(Request $request,$id){
+    $status = $request['status'];
+    $model = new CreditCard();
+    return $this->change_masterlist_status($status,$model,$id);
+  }
 }

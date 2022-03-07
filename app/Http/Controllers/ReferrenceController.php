@@ -6,99 +6,43 @@ use App\Models\Referrence;
 use App\Methods\GenericMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Exceptions\FistoException;
 
 class ReferrenceController extends Controller
 {
-    public function index(Request $request,$status,$tableRows)
+    public function index(Request $request)
     {
-        $tableRows = (int)$tableRows;
-        $is_active = $status;
+        $status =  $request['status'];
+        $rows =  $request['rows'];
+        $search =  $request['search'];
 
-        if ($is_active == 1) {
-            $referrences = DB::table('referrences')
-                ->select(['id','referrence_type as type','referrence_description as description','updated_at','deleted_at'])
-                ->whereNull('deleted_at')
-                ->latest()
-                ->paginate($tableRows);
+        $referrences = Referrence::withTrashed()
+        ->select(['id','referrence_type as type','referrence_description as description','updated_at','deleted_at'])
+        ->where(function ($query) use ($status) {
+            if ($status == true) $query->whereNull('deleted_at');
+            else  $query->whereNotNull('deleted_at');
+        })
+        ->where(function ($query) use ($search) {
+            $query->where('referrence_type', 'like', '%' . $search . '%')
+                ->orWhere('referrence_description', 'like', '%' . $search . '%');
+        })
+        ->latest('updated_at')
+        ->paginate($rows);
 
-        } elseif ($is_active == 0) {
-            $referrences = DB::table('referrences')
-                ->select(['id','referrence_type as type','referrence_description as description','updated_at','deleted_at'])
-                ->whereNotNull('deleted_at')
-                ->latest()
-                ->paginate($tableRows);
-
-        } else {
-            $referrences = DB::table('referrences')
-                ->select(['id','referrence_type as type','referrence_description as description','updated_at','deleted_at'])
-                ->latest()
-                ->paginate($tableRows);
+        if (count($referrences) == true) {
+            return $this->result(200,"References has been fetched",$referrences);
         }
-
-        if (!$referrences || $referrences->isEmpty()) {
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = [];
-
-        } else {
-            $code = 200;
-            $message = "Succefully Retrieved";
-            $data = $referrences;
-
-        }
-
-        return $this->result($code,$message,$data);
-
+        else
+         throw new FistoException("No records found.", 404, NULL, []);
     }
-
-    public function all(Request $request,$status)
-    {
-        $is_active = $status;
-
-        if ($is_active == 1) {
-            $referrences = DB::table('referrences')
-                ->select(['id','referrence_type'])
-                ->whereNull('deleted_at')
-                ->latest()
-                ->get();
-
-        } elseif ($is_active == 0) {
-            $referrences = DB::table('referrences')
-                ->select(['id','referrence_type'])
-                ->whereNotNull('deleted_at')
-                ->latest()
-                ->get();
-
-        } else {
-            $referrences = DB::table('referrences')
-                ->latest()
-                ->get();
-        }
-
-        if (!$referrences || $referrences->isEmpty()) {
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = [];
-
-        } else {
-            $code =    200;
-            $message = "Succefully Retrieved";
-            $data = $referrences;
-
-        }
-
-        return $this->result($code,$message,$data);
-
-    }
-
     public function store(Request $request)
     {
         $fields = $request->validate([
-            'referrence_type' => 'required|string',
-            'referrence_description' => 'required|string'
+            'type' => 'required|string',
+            'description' => 'required|string'
         ]);
 
-       $duplicateValues= GenericMethod::validateDuplicateByIdAndTable($fields['referrence_type'],'referrence_type','referrences');
+       $duplicateValues= GenericMethod::validateDuplicateByIdAndTable($fields['type'],'referrence_type','referrences');
 
        if(count($duplicateValues)>0) {
             $code =403;
@@ -108,8 +52,8 @@ class ReferrenceController extends Controller
         }
 
         $new_referrence = Referrence::create([
-            'referrence_type' => $fields['referrence_type']
-            , 'referrence_description' => $fields['referrence_description']
+            'referrence_type' => $fields['type']
+            , 'referrence_description' => $fields['description']
         ]);
 
         if (!$new_referrence->count() == 0) {
@@ -129,7 +73,6 @@ class ReferrenceController extends Controller
         return $this->result($code,$message,$data);
 
     }
-
     public function show($id)
     {
         $result = Referrence::find($id);
@@ -146,24 +89,22 @@ class ReferrenceController extends Controller
         }
         return $this->result($code,$message,$data);
     }
-
     public function update(Request $request, $id)
     {
         $specific_referrence = Referrence::find($id);
-
         $fields = $request->validate([
-            'referrence_type' => 'required|string',
-            'referrence_description' => 'required|string',
-
+            'type' => 'required|string',
+            'description' => 'required|string',
         ]);
 
         if (!$specific_referrence) {
             $code =404;
             $message = "Data Not Found!";
             $data = [];
+
         } else {
 
-            $validateDuplicateInUpdate =  GenericMethod::validateDuplicateInUpdate($fields['referrence_type'],'referrence_type','referrences',$id);
+            $validateDuplicateInUpdate =  GenericMethod::validateDuplicateInUpdate($fields['type'],'referrence_type','referrences',$id);
             if(count($validateDuplicateInUpdate)>0) {
                 $code =403;
                 $message = "Referrence type already registered in other referrence type";
@@ -171,8 +112,8 @@ class ReferrenceController extends Controller
                 return $this->result($code,$message,$data);
             }
 
-            $specific_referrence->referrence_type = $request->get('referrence_type');
-            $specific_referrence->referrence_description = $request->get('referrence_description');
+            $specific_referrence->referrence_type = $request->get('type');
+            $specific_referrence->referrence_description = $request->get('description');
             $specific_referrence->save();
 
             $code =200;
@@ -183,89 +124,10 @@ class ReferrenceController extends Controller
 
         return $this->result($code,$message,$data);
     }
-
-    public function archive(Request $request, $id)
+    public function change_status(Request $request,$id)
     {
-        $softDeleteReferrence = Referrence::where('id',$id)->delete();
-        if ($softDeleteReferrence == 0) {
-            $code = 403;
-            $data = [];
-            $message = "Data Not Found";
-        }else{
-
-            $code =200;
-            $message = "Succefully Archived";
-            $data = [];
-        }
-        return $this->result($code,$message,$data);
-
+        $status = $request['status'];
+        $model = new Referrence();
+        return $this->change_masterlist_status($status,$model,$id);
     }
-
-    public function restore(Request $request, $id)
-    {
-        $validateIfIdIsArchived = Referrence::onlyTrashed()->find($id);
-
-        if (!isset($validateIfIdIsArchived)) {
-            $code = 403;
-            $data = [];
-            $message = "Data is not in archive status";
-            return $this->result($code,$message,$data);
-        }
-
-        $restoreSoftDelete = Referrence::onlyTrashed()->find($id)->restore();
-        if ($restoreSoftDelete == 1) {
-            $code = 200;
-            $data = [];
-            $message = "Succefully Restored";
-        }else{
-            $code = 403;
-            $data = [];
-            $message = "Data Not Found";
-        }
-        return $this->result($code,$message,$data);
-    }
-
-    public function search(Request $request,$status,$tableRows)
-    {
-
-        $tableRows = (int)$tableRows;
-        $value = $request['value'];
-
-        if($status == 1){
-            $result = DB::table('referrences')
-            ->select(['id','referrence_type as type','referrence_description as description','updated_at','deleted_at'])
-            ->whereNull('deleted_at')
-            ->where(function ($query) use ($value) {
-                $query->where('referrence_type', 'like', '%' . $value . '%')
-                    ->orWhere('referrence_description', 'like', '%' . $value . '%');
-
-            })
-            ->orderBy('updated_at','desc')
-            ->paginate($tableRows);
-        }else{
-            $result = DB::table('referrences')
-            ->select(['id','referrence_type as type','referrence_description as description','updated_at','deleted_at'])
-            ->whereNotNull('deleted_at')
-            ->where(function ($query) use ($value) {
-                $query->where('referrence_type', 'like', '%' . $value . '%')
-                    ->orWhere('referrence_description', 'like', '%' . $value . '%');
-
-            })
-            ->orderBy('updated_at','desc')
-            ->paginate($tableRows);
-        }
-
-        if ($result->isEmpty()) {
-            $code = 404;
-            $message = "Data Not Found";
-            $data = [];
-        } else {
-            $code = 200;
-            $message = "Succefully Retrieved";
-            $data = $result;
-        }
-        return $this->result($code,$message,$data);
-
-    }
-
 }

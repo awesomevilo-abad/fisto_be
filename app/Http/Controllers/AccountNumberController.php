@@ -15,63 +15,34 @@ use Illuminate\Validation\Rule;
 
 class AccountNumberController extends Controller
 {
-  public function index(Request $request,bool $status,int $rows)
+  public function index(Request $request)
   {
-    $account_numbers = DB::table('account_numbers as AN')
-      ->join('utility_locations as UL', 'AN.location_id', 'UL.id')
-      ->join('utility_categories as UC', 'AN.category_id', 'UC.id')
-      ->join('suppliers as SU', 'AN.supplier_id', 'SU.id')
-      ->select(
-        'AN.id',
-        'AN.account_no',
-        'AN.location_id',
-        'UL.location as location_name',
-        'AN.category_id',
-        'UC.category as category_name',
-        'AN.supplier_id',
-        'SU.supplier_name',
-        'AN.updated_at',
-        'AN.deleted_at'
-      )
-      ->where(function ($query) use ($status){
-        return ($status==true)?$query->whereNull('AN.deleted_at'):$query->whereNotNull('AN.deleted_at');
-      })
-      ->latest('AN.updated_at')
-      ->paginate($rows);
-
-    if (count($account_numbers) == true) {
-      return $this->result(200,"Account numbers has been fetched.",$account_numbers);
+    $status =  $request['status'];
+    $rows =  $request['rows'];
+    $search =  $request['search'];
+    
+    $account_number = AccountNumber::withTrashed()
+    ->with('locations')
+    ->with('categories')
+    ->with('suppliers')
+    ->where(function ($query) use ($status){
+      return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
+    })
+    ->where(function ($query) use ($search) {
+      $query->where('account_no', 'like', '%'.$search.'%')
+      ->orWhereHas ('locations',function($q)use($search){$q->where('location', 'like', '%'.$search.'%');})
+      ->orWhereHas ('categories',function($q)use($search){$q->where('category', 'like', '%'.$search.'%');})
+      ->orWhereHas ('suppliers',function($q)use($search){$q->where('supplier_name', 'like', '%'.$search.'%');});
+    })
+    ->latest('updated_at')
+    ->paginate($rows);
+    
+    if(count($account_number)==true){
+      return $this->result(200,"Account Number has been fetched.",$account_number);
     }
-    else{
-      throw new FistoException("No records found.", 404, NULL, []);
-    }
+    throw new FistoException("No records found.", 404, NULL, []);
   }
 
-  public function all(Request $request,$status)
-    {
-      $status = (bool)$status;
-
-      $account_numbers = DB::table('account_numbers')
-        ->select(['id','account_no'])
-        ->where(function ($query) use ($status) {
-          if ($status == true) $query->whereNull('deleted_at');
-          else  $query->whereNotNull('deleted_at');
-        })
-        ->latest('account_no')
-        ->get();
-
-      if (count($account_numbers) == true) {
-        $result = [
-          "code" => 200,
-          "message" => "Account numbers has been fetched.",
-          "result" => $account_numbers
-        ];
-        
-        return response($result);
-      }
-      else
-        throw new FistoException("No records found.", 404, NULL, []);
-    }
     
   public function show(Request $request,$id)
   {
@@ -138,7 +109,6 @@ class AccountNumberController extends Controller
   public function update(AccountNumberRequest $request,$id)
   {
     $account_number = AccountNumber::find($id);
-    
     $fields = $request->validated();
 
     if (!empty($account_number)) {
@@ -158,25 +128,11 @@ class AccountNumberController extends Controller
       throw new FistoException("No records found.", 404, NULL, []);
   }
 
-  public function archive(Request $request,$id)
-  {
-    $softDeleteAccountNumber = AccountNumber::where('id',$id)->delete();
-    if ($softDeleteAccountNumber == true) {
-      return $this->result(200,"Account number has been archived.",[]);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
-  }
-
-  public function restore(Request $request,$id)
-  {
-    $softRestoreAccountNumber = AccountNumber::onlyTrashed()->where('id',$id)->restore();
-    if ($softRestoreAccountNumber == true) {
-      return $this->result(200,"Account number has been restored.",[]);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
-  }
+  public function change_status(Request $request,$id){
+    $status = $request['status'];
+    $model = new AccountNumber();
+    return $this->change_masterlist_status($status,$model,$id);
+}
 
   public function import(Request $request)
   {

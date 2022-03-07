@@ -9,12 +9,17 @@ use Illuminate\Support\Facades\DB;
 
 class PayrollClientController extends Controller
 {
-  public function index(Request $request,bool $status,int $rows)
+  public function index(Request $request)
   {
+    $status =  $request['status'];
+    $rows =  $request['rows'];
+    $search =  $request['search'];
+    
     $payroll_client = PayrollClient::withTrashed()
     ->where(function ($query) use ($status){
       return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
     })
+    ->where('client', 'like', '%'.$search.'%')
     ->latest('updated_at')
     ->paginate($rows);
     
@@ -22,32 +27,6 @@ class PayrollClientController extends Controller
       return $this->result(200,"Payroll Client has been fetched.",$payroll_client);
     }
     throw new FistoException("No records found.", 404, NULL, []);
-  }
-  
-  public function all(Request $request,$status)
-  {
-    $status = (bool)$status;
-
-    $payroll_clients = DB::table('payroll_clients')
-      ->select(['id', 'client'])
-      ->where(function ($query) use ($status) {
-        if ($status == true) $query->whereNull('deleted_at');
-        else  $query->whereNotNull('deleted_at');
-      })
-      ->latest('client')
-      ->get();
-
-    if (count($payroll_clients) == true) {
-      $result = [
-        "code" => 200,
-        "message" => "Payroll clients has been fetched.",
-        "result" => $payroll_clients
-      ];
-          
-      return response($result);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
   }
     
   public function show(Request $request,$id)
@@ -61,45 +40,6 @@ class PayrollClientController extends Controller
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }
-
-  public function search(Request $request,bool $status,int $rows)
-  {
-    $value = $request['value'];
-    $payroll_client = PayrollClient::withTrashed()
-    ->where(function ($query) use ($status){
-      return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
-    })
-    ->where('client', 'like', '%'.$value.'%')
-    ->latest('updated_at')
-    ->paginate($rows);
-    
-    if(count($payroll_client)==true){
-      return $this->result(200,"Payroll Client has been fetched.",$payroll_client);
-    }
-    throw new FistoException("No records found.", 404, NULL, []);
-  }
-
-  public function archive(Request $request,$id)
-  {
-    $softDeletePayrollClient = PayrollClient::where('id', $id)->delete();
-    if ($softDeletePayrollClient == true) {
-      return $this->result(200,"Payroll Client has been archived",[]);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
-  }
-  
-  public function restore(Request $request, $id)
-  {
-      if(!PayrollClient::onlyTrashed()->find($id)){
-          throw new FistoException("No records found.", 404, NULL, []);
-      }
-      $restoreSoftDelete = PayrollClient::onlyTrashed()->find($id)->restore();
-      if ($restoreSoftDelete == 1) {
-          return $this->result(200,"Succefully Restored",[]);
-      }
-  }
-
     
   public function store(Request $request)
   {
@@ -116,6 +56,12 @@ class PayrollClientController extends Controller
         $payroll_client = PayrollClient::create($fields);
         return $this->result(201,"Payroll Client has been saved.",$payroll_client);
 
+  }
+
+  public function change_status(Request $request,$id){
+    $status = $request['status'];
+    $model = new PayrollClient();
+    return $this->change_masterlist_status($status,$model,$id);
   }
 
   public function update(Request $request, $id)

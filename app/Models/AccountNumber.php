@@ -15,7 +15,7 @@ class AccountNumber extends Model
 
   protected $table = 'account_numbers';
   protected $fillable = ['account_no', 'location_id', 'category_id', 'supplier_id'];
-
+  protected $hidden = ['location_id','category_id','supplier_id'];
   public function getCreatedAtAttribute($value){
     $date = Carbon::parse($value);
     return $date->format('Y-m-d H:i');
@@ -27,6 +27,14 @@ class AccountNumber extends Model
 
   public function locations()
   {
-    $this->belongsTo(UtilityLocation::class);
+    return $this->hasOne(UtilityLocation::class,'id', 'location_id')->select(['id','location']);
+  }
+  public function categories()
+  {
+    return $this->hasOne(UtilityCategory::class,'id', 'category_id')->select(['id','category']);
+  }
+  public function suppliers()
+  {
+    return $this->hasOne(Supplier::class,'id', 'supplier_id')->select(['id','supplier_name']);
   }
 }
