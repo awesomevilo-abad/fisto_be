@@ -61,15 +61,13 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::resource('masterlist', MasterlistController::class);
 
     // USER
-    Route::get('users/{status}/{row_per_page}',[UserController::class,'index']);
-    Route::get('users/username-validation', [UserController::class, 'username_validation']);
-    Route::get('users/id-validation', [UserController::class, 'id_validation']);
+    Route::get('users/',[UserController::class,'index']);
+    Route::patch('users/{id}', [UserController::class, 'change_status']);
+    Route::patch('users/reset/{id}', [UserController::class, 'reset']);
+    Route::put('users/change-password', [UserController::class, 'change_password']);
+    Route::post('users/username-validation', [UserController::class, 'username_validation']);
+    Route::post('users/id-validation', [UserController::class, 'id_validation']);
     Route::resource('users', UserController::class);
-    Route::post('users/archive/{id}', [UserController::class, 'archive']);
-    Route::post('users/restore/{id}', [UserController::class, 'restore']);
-    Route::post('users/reset/{id}', [UserController::class, 'reset']);
-    Route::post('users/search/{status}/{row_per_page}', [UserController::class, 'search']);
-    Route::post('users/change-password', [UserController::class, 'change_password']);
     Route::post('/logout', [UserController::class, 'logout']);
 
     // CATEGORY

@@ -12,7 +12,7 @@ class PayrollClientController extends Controller
   public function index(Request $request)
   {
     $status =  $request['status'];
-    $rows =  $request['rows'];
+    $rows =  (empty($request['rows']))?10:$request['rows'];
     $search =  $request['search'];
     
     $payroll_client = PayrollClient::withTrashed()

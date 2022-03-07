@@ -14,7 +14,7 @@ class AccountTitleController extends Controller
   {
     
     $status =  $request['status'];
-    $rows =  $request['rows'];
+    $rows =  (empty($request['rows']))?10:$request['rows'];
     $search =  $request['search'];
     
     $account_titles = AccountTitle::withTrashed()

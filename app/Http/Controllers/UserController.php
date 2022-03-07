@@ -26,15 +26,31 @@ use Illuminate\Support\Arr;
 
 class UserController extends Controller
 {
-    public function index(Request $request, bool $status, int $rows)
+    public function index(Request $request)
     {
+        $status =  $request['status'];
+        $rows =  (empty($request['rows']))?10:$request['rows'];
+        $search =  $request['search'];
+
         $categories = Category::all();
         $documents = Document::all();
         $permissions = Permission::all();
         
         $users = User::withTrashed()
         ->where(function ($query) use ($status){
-            ($status == true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
+          ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
+        })
+        ->where(function ($query) use ($search) {
+            $query->where('id_prefix', 'like', '%' . $search . '%')
+            ->orWhere('id_no', 'like', '%' . $search . '%')
+            ->orWhere('first_name', 'like', '%' . $search . '%')
+            ->orWhere('middle_name', 'like', '%' . $search . '%')
+            ->orWhere('last_name', 'like', '%' . $search . '%')
+            ->orWhere('suffix', 'like', '%' . $search . '%')
+            ->orWhere('department', 'like', '%' . $search . '%')
+            ->orWhere('position', 'like', '%' . $search . '%')
+            ->orWhere('username', 'like', '%' . $search . '%')
+            ->orWhere('role', 'like', '%' . $search . '%');
         })
         ->latest('updated_at')
         ->paginate($rows);
@@ -186,85 +202,6 @@ class UserController extends Controller
             return $this->result(200,"Succefully Restored",[]);
         }
     }
-
-    public function search(Request $request, bool $status, int $rows)
-    {
-        $value = $request['value'];
-        $categories = Category::all();
-        $documents = Document::all();
-        $permissions = Permission::all();
-        $users = User::withTrashed()
-        ->where(function ($query) use ($status){
-            ($status == true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
-        })
-        ->where(function ($query) use ($value) {
-            $query->where('id_prefix', 'like', '%' . $value . '%')
-            ->orWhere('id_no', 'like', '%' . $value . '%')
-            ->orWhere('first_name', 'like', '%' . $value . '%')
-            ->orWhere('middle_name', 'like', '%' . $value . '%')
-            ->orWhere('last_name', 'like', '%' . $value . '%')
-            ->orWhere('suffix', 'like', '%' . $value . '%')
-            ->orWhere('department', 'like', '%' . $value . '%')
-            ->orWhere('position', 'like', '%' . $value . '%')
-            ->orWhere('username', 'like', '%' . $value . '%')
-            ->orWhere('role', 'like', '%' . $value . '%');
-        })
-        ->latest('updated_at')
-        ->paginate($rows);
-        
-        if(count($users)!=true){
-            throw new FistoException("No records found.", 404, NULL, []);
-        }
-
-        foreach($users as $user)
-        {
-            $permission_list = [];   
-            $new_permissions = [];
-            foreach($user['permissions'] as $permission)
-            {
-                if(count(($permissions->where('id',$permission)))>0)
-                {
-                    $permission_list['permission_id'] = $permission;
-                    $permission_list['permission_description'] = $permissions->where('id',$permission)->first()->name;
-                    array_push($new_permissions,$permission_list);
-                }
-            }
-            $user['permissions'] = ($new_permissions);
-            $new_document_type_list = [];
-            $new_document_types = [];
-            foreach($user['document_types'] as $document_type)
-            {
-                $new_category_list = [];
-                $new_categories = [];
-                
-                if(count(($documents->where('id',$document_type['document_id'])))>0)
-                {
-                    $document_description = $documents->where('id',$document_type['document_id']);
-                    $category_ids = $document_type['category_ids'];
-                    if(count($category_ids)>0)
-                    {
-                        foreach($category_ids as $category_id)
-                        {
-                            if(count(($categories->where('id',$category_id)))>0)
-                            {
-                                $category_description = $categories->where('id',$category_id)->first()->name;
-                                $new_category_list['category_id'] = $category_id;
-                                $new_category_list['category_name'] = $category_description;
-                                array_push($new_categories,$new_category_list);
-                            }
-                        }
-                    }
-                    $new_document_type_list['document_id'] = ($document_description->values()->first()->id);
-                    $new_document_type_list['document_description'] = ($document_description->values()->first()->document_type);
-                    $new_document_type_list['document_categories'] = $new_categories;
-                    array_push($new_document_types,$new_document_type_list);
-                }
-            }
-            $user['document_types'] =  $new_document_types;
-        }
-        return $this->result(200,"Users has been fetched.",$users);
-
-    }
     
     public function change_password(Request $request)
     {
@@ -370,5 +307,10 @@ class UserController extends Controller
            return $this->result(200,"User's default password has been restored.",[]);
         }  
         throw new FistoException("You don't have the proper credentials to perform this action.", 401, NULL, []);
+    }
+    public function change_status(Request $request,$id){
+      $status = $request['status'];
+      $model = new User();
+      return $this->change_masterlist_status($status,$model,$id);
     }
 }
