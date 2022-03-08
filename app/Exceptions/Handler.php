@@ -5,7 +5,7 @@ namespace App\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\AuthenticationException;
-
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class Handler extends ExceptionHandler
 {
     /**
@@ -50,12 +50,12 @@ class Handler extends ExceptionHandler
         ], 401);
       });
 
-      $this->renderable(function (MethodNotAllowedHttpException $exception, $request) {
+      $this->renderable(function (NotFoundHttpException $exception) {
         return response()->json([
-          "code" => 405,
-          "message" =>"Check Route in backend, Method not allowed",
+          "code" => 404,
+          "message" =>"API Not Found, Check the route in backend.",
           "result" => []
-        ], 405);
+        ], 404);
       });
     }
 }

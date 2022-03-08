@@ -12,6 +12,7 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
+        
         $status =  $request['status'];
         $rows =  (empty($request['rows']))?10:$request['rows'];
         $search =  $request['search'];
