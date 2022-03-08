@@ -18,8 +18,8 @@ class CreateLocationsTable extends Migration
             $table->string("code")->nullable();
             $table->string("location")->nullable();
             $table->string("company")->nullable();
-            $table->boolean("is_active")->nullable();
             $table->timestamps();
+            $table->softDeletes($column='deleted_at',$precision=0);
         });
     }
 

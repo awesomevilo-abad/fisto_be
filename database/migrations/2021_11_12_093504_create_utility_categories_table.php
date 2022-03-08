@@ -16,7 +16,6 @@ class CreateUtilityCategoriesTable extends Migration
         Schema::create('utility_categories', function (Blueprint $table) {
             $table->id();
             $table->string("category")->nullable();
-            $table->boolean("is_active")->nullable();
             $table->timestamps();
         });
     }

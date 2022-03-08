@@ -15,10 +15,10 @@ class CreateReferrencesTable extends Migration
     {
         Schema::create('referrences', function (Blueprint $table) {
             $table->id();
-            $table->string('referrence_type');
-            $table->string('referrence_description');
-            $table->boolean('is_active');
+            $table->string('type');
+            $table->string('description');
             $table->timestamps();
+            $table->softDeletes($column='deleted_at',$precision=0);
         });
     }
 

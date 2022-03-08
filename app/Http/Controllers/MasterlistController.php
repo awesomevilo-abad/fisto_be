@@ -77,4 +77,8 @@ class MasterlistController extends Controller
     else
       throw new FistoException("No records found.", 404, NULL, []);
   }
+
+  // public function categoryPerDocument(){
+  //   return "sample";
+  // }
 }

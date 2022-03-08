@@ -15,8 +15,8 @@ class CreateSupplierReferrencesTable extends Migration
     {
         Schema::create('supplier_referrences', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('supplier_id')->unsigned();
-            $table->bigInteger('referrence_id')->unsigned();
+            $table->unsignedBigInteger('supplier_id');
+            $table->unsignedBigInteger('referrence_id');
             $table->timestamps();
 
             $table->foreign('supplier_id')->references('id')->on('suppliers')->onDelete('cascade');

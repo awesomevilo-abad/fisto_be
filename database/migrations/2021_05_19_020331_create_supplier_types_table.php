@@ -17,8 +17,8 @@ class CreateSupplierTypesTable extends Migration
             $table->id();
             $table->string('type');
             $table->bigInteger('transaction_days');
-            $table->boolean('is_active');
             $table->timestamps();
+            $table->softDeletes($column='deleted_at',$precision=0);
         });
     }
 

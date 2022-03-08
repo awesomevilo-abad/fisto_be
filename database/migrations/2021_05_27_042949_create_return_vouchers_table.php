@@ -15,10 +15,13 @@ class CreateReturnVouchersTable extends Migration
     {
         Schema::create('return_vouchers', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('tag_id')->unsigned();
+            $table->unsignedBigInteger('tag_id');
             $table->date('date_received');
             $table->string('status');
             $table->date('date_status');
+            $table->bigInteger('reason_id')->nullable();
+            $table->string('remarks')->nullable();
+            $table->string('distributed_to')->nullable();
             $table->timestamps();
         });
     }

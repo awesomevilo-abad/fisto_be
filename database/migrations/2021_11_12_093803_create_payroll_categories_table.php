@@ -15,9 +15,9 @@ class CreatePayrollCategoriesTable extends Migration
     {
         Schema::create('payroll_categories', function (Blueprint $table) {
             $table->id();
-            $table->string("category")->nullable();
-            $table->boolean("is_active")->nullable();
+            $table->string("category");
             $table->timestamps();
+            $table->softDeletes($column='deleted_at',$precision=0);
         });
     }
 

@@ -33,6 +33,7 @@ class CreateUsersTable extends Migration
             $table->boolean('is_active');
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes($column='deleted_at',$precision=0);
         });
     }
 

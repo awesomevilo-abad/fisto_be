@@ -6,6 +6,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\AuthenticationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\BadMethodCallException;
 class Handler extends ExceptionHandler
 {
     /**
@@ -32,8 +33,18 @@ class Handler extends ExceptionHandler
      *
      * @return void
      */
+
+
+    // public function report(Exception $exception)
+    // {
+    //   dd($exception);
+
+    //   return parent::report($exception);
+    // }
+
     public function register()
     {
+
       $this->renderable(function (ValidationException $exception, $request) {
         return response()->json([
           "code" => 422,
@@ -54,6 +65,14 @@ class Handler extends ExceptionHandler
         return response()->json([
           "code" => 404,
           "message" =>"API Not Found, Check the route in backend.",
+          "result" => []
+        ], 404);
+      });
+
+      $this->renderable(function (BadMethodCallException $exception){
+        return response()->json([
+          "code"=>404,
+          "message" =>"Method Not Found.",
           "result" => []
         ], 404);
       });

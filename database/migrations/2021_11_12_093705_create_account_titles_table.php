@@ -15,10 +15,11 @@ class CreateAccountTitlesTable extends Migration
     {
         Schema::create('account_titles', function (Blueprint $table) {
             $table->id();
-            $table->string("code")->nullable();
-            $table->string("title")->nullable();
-            $table->boolean("is_active")->nullable();
+            $table->string("code");
+            $table->string("title");
+            $table->string("category");
             $table->timestamps();
+            $table->softDeletes($column='deleted_at',$precision=0);
         });
     }
 

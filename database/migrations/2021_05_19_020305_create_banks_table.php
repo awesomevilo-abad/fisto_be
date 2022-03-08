@@ -15,12 +15,15 @@ class CreateBanksTable extends Migration
     {
         Schema::create('banks', function (Blueprint $table) {
             $table->id();
-            $table->string('bank_code');
-            $table->string('bank_name');
-            $table->string('bank_account');
-            $table->string('bank_location');
-            $table->boolean('is_active');
+            $table->string('code');
+            $table->string('name');
+            $table->string('branch');
+            $table->string('account_no');
+            $table->string('location');
+            $table->unsignedBigInteger('account_title_1');
+            $table->unsignedBigInteger('account_title_2');
             $table->timestamps();
+            $table->softDeletes($column='deleted_at',$precision=0);
         });
     }
 

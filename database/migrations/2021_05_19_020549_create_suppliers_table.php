@@ -15,12 +15,12 @@ class CreateSuppliersTable extends Migration
     {
         Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
-            $table->string('supplier_code');
-            $table->string('supplier_name');
+            $table->string('code');
+            $table->string('name');
             $table->string('terms');
-            $table->bigInteger('supplier_type_id')->unsigned();
-            $table->boolean('is_active');
+            $table->unsignedBigInteger('supplier_type_id');
             $table->timestamps();
+            $table->softDeletes($column='deleted_at',$precision=0);
 
             $table->foreign('supplier_type_id')->references('id')->on('supplier_types')->onDelete('cascade');
         });

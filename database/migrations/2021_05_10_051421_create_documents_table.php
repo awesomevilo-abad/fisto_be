@@ -15,11 +15,10 @@ class CreateDocumentsTable extends Migration
     {
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
-            $table->string('document_type');
-            $table->string('document_description');
-            $table->boolean('is_active');
-            
+            $table->string('type');
+            $table->string('description');
             $table->timestamps();
+            $table->softDeletes($column='deleted_at',$precision=0);
         });
     }
 

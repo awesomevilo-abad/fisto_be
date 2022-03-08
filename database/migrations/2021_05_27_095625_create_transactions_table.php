@@ -52,6 +52,23 @@ class CreateTransactionsTable extends Migration
             $table->string('utilities_from')->nullable();
             $table->string('utilities_to')->nullable();
 
+            $table->float('balance_document_po_amount')->nullable();
+            $table->float('balance_document_ref_amount')->nullable();
+            $table->float('balance_po_ref_amount')->nullable();
+            $table->float('balance_po_ref_qty')->nullable();
+            
+            $table->bigInteger('tagging_tag_id')->nullable();
+            $table->string('utilities_category')->nullable();
+            $table->string('utilities_account_no')->nullable();
+            $table->float('utilities_consumption')->nullable();
+            $table->string('utilities_uom')->nullable();
+            $table->string('utilities_receipt_no')->nullable();
+            $table->json('payroll_client')->nullable();
+            $table->string('payroll_category')->nullable();
+            $table->string('payroll_type')->nullable();
+            $table->string('payroll_from')->nullable();
+            $table->string('payroll_to')->nullable();
+
             $table->timestamps();
 
             // TAGGINGS

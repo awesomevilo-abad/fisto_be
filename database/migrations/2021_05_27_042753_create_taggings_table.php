@@ -20,6 +20,8 @@ class CreateTaggingsTable extends Migration
             $table->date('date_received');
             $table->string('status');
             $table->date('date_status');
+            $table->bigInteger('reason_id')->nullable();
+            $table->string('remarks')->nullable();
             $table->timestamps();
 
         });

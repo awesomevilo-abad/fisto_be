@@ -15,9 +15,9 @@ class CreatePayrollClientsTable extends Migration
     {
         Schema::create('payroll_clients', function (Blueprint $table) {
             $table->id();
-            $table->string("client")->nullable();
-            $table->boolean("is_active")->nullable();
+            $table->string("client");
             $table->timestamps();
+            $table->softDeletes($column='deleted_at',$precision=0);
         });
     }
 

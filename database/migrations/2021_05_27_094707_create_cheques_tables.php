@@ -15,7 +15,7 @@ class CreateChequesTables extends Migration
     {
         Schema::create('cheque_tables', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('cheque_info_id')->unsigned();
+            $table->unsignedBigInteger('cheque_info_id');
             $table->string('transaction_id');
             $table->timestamps();
 

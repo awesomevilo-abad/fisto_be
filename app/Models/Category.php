@@ -15,7 +15,7 @@ class Category extends Model
     protected $table = "categories";
     protected $fillable = ['name'];
     protected $attributes = ['is_active' => 1];
-    protected $hidden = ['pivot'];
+    protected $hidden = ['pivot','is_active','created_at'];
     public function getCreatedAtAttribute($value){
         $date = Carbon::parse($value);
         return $date->format('Y-m-d H:i');
