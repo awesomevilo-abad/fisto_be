@@ -15,10 +15,9 @@ class Document extends Model
     protected $table = 'documents';
 
     protected $fillable = [
-        'document_type', 'document_description', 'categories', 'is_active',
+        'type', 'description', 'categories',
     ];
-    protected $hidden = ['pivot'];
-    protected $attributes = ['is_active' => 1];
+    protected $hidden = ['pivot','created_at'];
     protected $casts = [
         'categories' => 'array',
     ];

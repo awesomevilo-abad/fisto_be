@@ -15,6 +15,7 @@ class Reason extends Model
 
   protected $table = 'reasons';
   protected $fillable = ['reason', 'remarks'];
+  protected $hidden = ['created_at'];
 
   public function getCreatedAtAttribute($value){
     $date = Carbon::parse($value);

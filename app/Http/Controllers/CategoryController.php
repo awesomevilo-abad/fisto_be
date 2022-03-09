@@ -12,9 +12,8 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        
         $status =  $request['status'];
-        $rows =  (empty($request['rows']))?10:$request['rows'];
+        $rows =  (empty($request['rows']))?10:(int)$request['rows'];
         $search =  $request['search'];
         
         $categories = Category::withTrashed()
@@ -50,23 +49,15 @@ class CategoryController extends Controller
             ->get();
 
         if ($duplicate_category->count()) {
-            $code = 403;
-            $message = "Category already registered.";
-            $data = [];
+            throw new FistoException("Category already registered.", 409, NULL, []);
         } elseif ($duplicate_category_inactive->count()) {
-            $code = 403;
-            $message = "Category already registered but inactive.";
-            $data = [];
+            throw new FistoException("Category already registered but inactive.", 409, NULL, []);
         }else{
             $new_category = Category::create([
                 'name' => $fields['name']
             ]);
-
-            $code = 200;
-            $message = "New category has been saved.";
-            $data =$new_category;
+            return $this->result(201,"New category has been saved.",$new_category);
         }
-        return $this->result($code,$message,$data);
     }
 
     public function show($id)
@@ -88,28 +79,23 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $specific_category = Category::find($id);
+
         $fields = $request->validate([
             'name' => ['unique:categories,name,' . $id],
         ]);
 
         if (!$specific_category) {
-            $code = 404;
-            $data = [];
-            $message = "Data Not Found!";
+            throw new FistoException("No records found.", 404, NULL, []);
         } else {
             $specific_category->name = $request->get('name');
-            $specific_category->save();
-            $code = 200;
-            $data = $specific_category;
-            $message = "Succefully Updated";
+            return $this->validateIfNothingChangeThenSave($specific_category,'Category');
         }
-        return $this->result($code,$message,$data);
     }
 
     public function change_status(Request $request,$id){
         $status = $request['status'];
         $model = new Category();
-        return $this->change_masterlist_status($status,$model,$id);
+        return $this->change_masterlist_status($status,$model,$id,'Category');
     }
 
 }

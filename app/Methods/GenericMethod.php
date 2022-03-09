@@ -638,18 +638,18 @@ class GenericMethod{
             ->update(['status' => $status]);
     }
 
-    public static function validateDuplicateDocumentType($document_type){
+    public static function validateDuplicateDocumentType($type){
         $documentType = DB::table('documents')
-        ->where('document_type', '=', $document_type)
+        ->where('type', '=', $type)
         ->get();
 
         return $documentType;
 
     }
-    public static function validateDuplicateDocumentTypeInUpdate($document_type,$id){
+    public static function validateDuplicateDocumentTypeInUpdate($type,$id){
         $documentType = DB::table('documents')
         ->where('id', '!=', $id)
-        ->where('document_type', '=', $document_type)
+        ->where('type', '=', $type)
         ->get();
 
         return $documentType;

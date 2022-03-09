@@ -21,6 +21,15 @@ class Controller extends BaseController
         return response($arrayResponse,$code);
     }
 
+    public function validateIfNothingChangeThenSave($model,$modelName){
+      if($model->isClean()){
+        return $this->result(200,"Nothing has changed.",[]);
+      }else{
+          $model->save();
+          return $this->result(200,$modelName." has been updated.",$model);
+      }
+    }
+    
     public function unique_multidim_array($array, $key) {
       $temp_array = array();
       $i = 0;
@@ -168,17 +177,17 @@ class Controller extends BaseController
       return $excelDuplicates;
     }
 
-    public function change_masterlist_status($status,$model,$id){
+    public function change_masterlist_status($status,$model,$id,$modelName){
       if($status == 1){
         $softDelete = $model::where('id',$id)->delete();
         if($softDelete == 1){
-            return $this->result(200,"Succefully Archived",[]);
+            return $this->result(200,$modelName." has been archived.",[]);
         }
         throw new FistoException("No records found.", 404, NULL, []);
     }else {
         $restore = $model::onlyTrashed()->where('id',$id)->restore();
         if($restore == 1){
-            return $this->result(200,"Succefully Restored",[]);
+            return $this->result(200,$modelName." has been restored.",[]);
         }
         throw new FistoException("No records found.", 404, NULL, []);
     }

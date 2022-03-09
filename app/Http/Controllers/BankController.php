@@ -14,7 +14,7 @@ class BankController extends Controller
   public function index(Request $request)
   {
     $status =  $request['status'];
-    $rows =  (empty($request['rows']))?10:$request['rows'];
+    $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
     
     $banks = Bank::withTrashed()

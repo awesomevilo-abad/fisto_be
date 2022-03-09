@@ -13,7 +13,7 @@ class ReasonController extends Controller
     public function index(Request $request)
     {
       $status =  $request['status'];
-      $rows =  (empty($request['rows']))?10:$request['rows'];
+      $rows =  (empty($request['rows']))?10:(int)$request['rows'];
       $search =  $request['search'];
       
       $reasons = Reason::withTrashed()
@@ -94,15 +94,7 @@ class ReasonController extends Controller
         if (count($reason_validateDuplicate) === 0) {
           $reason->reason = $fields['reason'];
           $reason->remarks = $fields['remarks'];
-          $reason->save();
-
-          $result = [
-            "code" => 200,
-            "message" => "Reason has been updated.",
-            "result" => $reason
-          ];
-          
-          return response($result);
+          return $this->validateIfNothingChangeThenSave($reason,'Reason');
         }
         else
           throw new FistoException("Reason already registered.", 409, NULL, []);
@@ -114,7 +106,7 @@ class ReasonController extends Controller
     public function change_status(Request $request,$id){
         $status = $request['status'];
         $model = new Reason();
-        return $this->change_masterlist_status($status,$model,$id);
+        return $this->change_masterlist_status($status,$model,$id,'Reason');
     }
     
 }

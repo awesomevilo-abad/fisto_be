@@ -15,7 +15,7 @@ class DocumentController extends Controller
     public function index(Request $request)
     {
         $status =  $request['status'];
-        $rows =  (empty($request['rows']))?10:$request['rows'];
+        $rows =  (empty($request['rows']))?10:(int)$request['rows'];
         $search =  $request['search'];
 
         $documents = Document::withTrashed()
@@ -24,10 +24,10 @@ class DocumentController extends Controller
           return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
         })
         ->where(function ($query) use ($search) {
-            $query->where('documents.document_type', 'like', '%' . $search . '%')
-                ->orWhere('documents.document_description', 'like', '%' . $search . '%');
+            $query->where('documents.type', 'like', '%' . $search . '%')
+                ->orWhere('documents.description', 'like', '%' . $search . '%');
         })
-        ->select(['id','document_type','document_description','created_at','updated_at','deleted_at'])
+        ->select(['id','type','description','created_at','updated_at','deleted_at'])
         ->latest('updated_at')
         ->paginate($rows);
 
@@ -84,9 +84,8 @@ class DocumentController extends Controller
             $data = $unregistered_category;
         } else {
             $new_document = Document::create([
-                'document_type' => $fields['type']
-                , 'document_description' => $fields['description']
-                , 'is_active' => 1,
+                'type' => $fields['type']
+                , 'description' => $fields['description']
             ]);
             $category_ids = $request['categories'];
             $new_document->categories()->attach($category_ids);
@@ -103,7 +102,7 @@ class DocumentController extends Controller
         $category_object = collect();
 
         $result = DB::table('documents AS d')
-        ->select('d.updated_at','d.deleted_at','c.id AS cat_id','c.name AS cat_name','d.id as docid','d.document_type','d.document_description','d.is_active')
+        ->select('d.updated_at','d.deleted_at','c.id AS cat_id','c.name AS cat_name','d.id as docid','d.type','d.description')
         ->leftJoin('document_categories AS dc', 'd.id', '=', 'dc.document_id')
         ->leftJoin('categories AS c', 'dc.category_id', '=', 'c.id')
         ->where('d.id', '=', $id)
@@ -130,15 +129,14 @@ class DocumentController extends Controller
         }
 
         $docid= $result[0]->docid;
-        $document_type= $result[0]->document_type;
-        $document_description= $result[0]->document_description;
-        $is_active= $result[0]->is_active;
+        $type= $result[0]->type;
+        $description= $result[0]->description;
         $updated_at= $result[0]->updated_at;
         $deleted_at= $result[0]->deleted_at;
 
         $category_ids->push(['document_id' => $docid,
-        'type' => $document_type,
-        'description' => $document_description,
+        'type' => $type,
+        'description' => $description,
         'categories' => $category_object,
         'updated_at' => $updated_at,
         'deleted_at' => $deleted_at]);
@@ -152,7 +150,6 @@ class DocumentController extends Controller
     public function update(Request $request, $id)
     {
         $specific_document = Document::find($id);
-
         $fields = $request->validate([
             'type' => 'required|string',
             'description' => 'required|string',
@@ -161,10 +158,7 @@ class DocumentController extends Controller
 
         $validateDuplicateDocumentTypeInUpdate =  GenericMethod::validateDuplicateDocumentTypeInUpdate($fields['type'],$id);
         if(count($validateDuplicateDocumentTypeInUpdate)>0) {
-            $code =403;
-            $message = "Document Type already registered in other document type";
-            $data = [];
-            return $this->result($code,$message,$data);
+            throw new FistoException("Category already registered.", 409, NULL, []);
         }
 
         if (!$specific_document) {
@@ -174,24 +168,19 @@ class DocumentController extends Controller
             return $this->result($code,$message,$data);
         }
 
-        $specific_document->document_type = $request->get('type');
-        $specific_document->document_description = $request->get('description');
+        $specific_document->type = $request->get('type');
+        $specific_document->description = $request->get('description');
 
         $category_ids = $request['categories'];
         $specific_document->categories()->detach();
         $specific_document->categories()->attach($category_ids);
-        $specific_document->save();
-
-        $code =200;
-        $message = "Succefully Updated";
-        $data = $specific_document;
-        return $this->result($code,$message,$data);
+        return $this->validateIfNothingChangeThenSave($specific_document,'Document');
     }
 
     public function change_status(Request $request,$id){
         $status = $request['status'];
         $model = new Document();
-        return $this->change_masterlist_status($status,$model,$id);
+        return $this->change_masterlist_status($status,$model,$id,'Document');
     }
 
     public function documents(Request $request,$status)
@@ -205,8 +194,8 @@ class DocumentController extends Controller
             ->leftjoin('document_categories AS dc', 'd.id', '=', 'dc.document_id')
             ->whereNull('d.deleted_at')
             ->where(function ($query) use ($value) {
-                $query->where('d.document_type', 'like', '%' . $value . '%')
-                    ->orWhere('d.document_description', 'like', '%' . $value . '%');
+                $query->where('d.type', 'like', '%' . $value . '%')
+                    ->orWhere('d.description', 'like', '%' . $value . '%');
             })
             ->get();
         }else{
@@ -215,8 +204,8 @@ class DocumentController extends Controller
             ->leftjoin('document_categories AS dc', 'd.id', '=', 'dc.document_id')
             ->whereNotNull('d.deleted_at')
             ->where(function ($query) use ($value) {
-                $query->where('d.document_type', 'like', '%' . $value . '%')
-                    ->orWhere('d.document_description', 'like', '%' . $value . '%');
+                $query->where('d.type', 'like', '%' . $value . '%')
+                    ->orWhere('d.description', 'like', '%' . $value . '%');
             })
             ->get();
         }
@@ -251,13 +240,12 @@ class DocumentController extends Controller
             $doc_id = $specific_document['doc_id'];
             $cat_id = $specific_document['cat_id'];
             $document_details = DB::table('documents AS d')
-                ->select('id', 'document_type', 'document_description', 'is_active','updated_at','deleted_at')
-                ->where('is_active', '=', 1)
+                ->select('id', 'type', 'description','updated_at','deleted_at')
                 ->where('id', '=', $doc_id)
                 ->get();
                 $documents->push(["id"=>$document_details[0]->id,
-                "document_type"=>$document_details[0]->document_type,
-                "document_description"=>$document_details[0]->document_description,
+                "type"=>$document_details[0]->type,
+                "description"=>$document_details[0]->description,
                 "categories"=>$cat_id->unique()->values(),
                 "updated_at"=>$document_details[0]->updated_at,
                 "deleted_at"=>$document_details[0]->deleted_at]);
