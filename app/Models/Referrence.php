@@ -14,10 +14,8 @@ class Referrence extends Model
     use SoftDeletes;
 
     protected $table = 'referrences';
-    protected $fillable = ['referrence_type', 'referrence_description', 'is_active'];
-    protected $attributes = ['is_active' => 1];
-    protected $hidden = ['pivot'];
-    
+    protected $fillable = ['type', 'description'];
+    protected $hidden = ['pivot','created_at'];
 
     public function getCreatedAtAttribute($value){
         $date = Carbon::parse($value);

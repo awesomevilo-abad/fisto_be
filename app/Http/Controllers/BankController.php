@@ -56,56 +56,6 @@ class BankController extends Controller
       throw new FistoException("No records found.", 404, NULL, []);
   }
 
-  public function search(Request $request,$status,$rows)
-  {
-    $rows = (int)$rows;
-    $status = (bool)$status;
-    $value = $request['value'];
-
-    $banks = DB::table('banks as B')
-      ->join('account_titles as AT1', 'B.account_title_1', 'AT1.id')
-      ->join('account_titles as AT2', 'B.account_title_2', 'AT2.id')
-      ->select(
-        'B.id',
-        'B.code',
-        'B.name',
-        'B.branch',
-        'B.account_no',
-        'B.location',
-        'AT1.id as account_title_1_id',
-        'AT1.title as account_title_1',
-        'AT2.id as account_title_2_id',
-        'AT2.title as account_title_2',
-        'B.updated_at',
-        'B.deleted_at'
-      )
-      ->where(function ($query) use ($status) {
-        if ($status == true) $query->whereNull('B.deleted_at');
-        else $query->whereNotNull('B.deleted_at');
-      })
-      ->where(function ($query) use ($value) {
-        $query->where('B.code', 'like', '%'.$value.'%')
-        ->orWhere('B.name', 'like', '%'.$value.'%')
-        ->orWhere('B.branch', 'like', '%'.$value.'%')
-        ->orWhere('B.account_no', 'like', '%'.$value.'%')
-        ->orWhere('B.location', 'like', '%'.$value.'%');
-      })
-      ->latest('B.updated_at')
-      ->paginate($rows);
-
-    if (count($banks) == true) {
-      $result = [
-        "code" => 200,
-        "message" => "Banks has been fetched.",
-        "result" => $banks
-      ];
-      
-      return response($result);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
-  }
-
   public function store(Request $request)
   {
     $fields = $request->validate([
@@ -158,23 +108,14 @@ class BankController extends Controller
           $specific_bank->location = $request->get('location');
           $specific_bank->account_title_1 = $request->get('account_title_1');
           $specific_bank->account_title_2 = $request->get('account_title_2');
-          $specific_bank->save();
-
-          $response = [
-              "code" => 200,
-              "message" => "Succefully Updated",
-              "data" => $specific_bank,
-          ];
-
+          return $this->validateIfNothingChangeThenSave($specific_bank,'Bank');
       }
-      return response($response);
-
   }
     
   public function change_status(Request $request,$id){
     $status = $request['status'];
     $model = new Bank();
-    return $this->change_masterlist_status($status,$model,$id);
+    return $this->change_masterlist_status($status,$model,$id,'Bank');
   }
 
   public function import(Request $request)
@@ -220,7 +161,7 @@ class BankController extends Controller
         });
         if ($duplicateCode->count() > 0)
           $errorBag[] = (object) [
-            "error_type" => "duplicate",
+            "error_type" => "existing",
             "line" => $index,
             "description" => "Bank Code: ".$code. " is already registered."
           ];
@@ -231,7 +172,7 @@ class BankController extends Controller
         });
         if ($duplicateBranch->count() > 0)
           $errorBag[] = (object) [
-            "error_type" => "duplicate",
+            "error_type" => "existing",
             "line" => $index,
             "description" => "Bank Branch: ".$branch. " is already registered."
           ];
@@ -242,7 +183,7 @@ class BankController extends Controller
         });
         if ($duplicateAccountNo->count() > 0)
           $errorBag[] = (object) [
-            "error_type" => "duplicate",
+            "error_type" => "existing",
             "line" => $index,
             "description" => "Bank Account Number: ".$account_no. " is already registered."
           ];
@@ -252,7 +193,7 @@ class BankController extends Controller
       if (!empty($account_title_1)) {
         if(!in_array($account_title_1,$account_title_titles)){
           $errorBag[] = (object) [
-            "error_type" => "unregistered account title",
+            "error_type" => "unregistered",
             "line" => $index,
             "description" => "Account Title 1: ".$account_title_1. " is not registered."
           ];
@@ -262,7 +203,7 @@ class BankController extends Controller
       if (!empty($account_title_2)) {
         if(!in_array($account_title_2,$account_title_titles)){
           $errorBag[] = (object) [
-            "error_type" => "unregistered account title",
+            "error_type" => "unregistered",
             "line" => $index,
             "description" => "Account Title 2: ".$account_title_2. " is not registered."
           ];
@@ -291,7 +232,7 @@ class BankController extends Controller
 
       }else{
         $errorBag[] = [
-          "error_type" => "excel duplicate",
+          "error_type" => "duplicate",
           "line" => (string) $duplicate_lines,
           "description" =>  $data_validation_fields[$firstDuplicateLine]['code'].' code has a duplicate in your excel file.'
         ];
@@ -312,7 +253,7 @@ class BankController extends Controller
       if((empty($data_validation_fields[$line]['branch']))){
       }else{
         $errorBag[] = [
-          "error_type" => "excel duplicate",
+          "error_type" => "duplicate",
           "line" => (string) $duplicate_lines,
           "description" =>  $data_validation_fields[$firstDuplicateLine]['branch'].' Branch has a duplicate in your excel file.'
         ];
@@ -336,7 +277,7 @@ class BankController extends Controller
       if((empty($data_validation_fields[$line]['account_no']))){
       }else{
         $errorBag[] = [
-          "error_type" => "excel duplicate",
+          "error_type" => "duplicate",
           "line" => (string) $duplicate_lines,
           "description" =>  $data_validation_fields[$firstDuplicateLine]['account_no'].' Account Number has a duplicate in your excel file.'
         ];

@@ -36,7 +36,7 @@ class GenericMethod{
     }
 
     public static function countTableById($table,$id){
-        $table = DB::table($table)->where('id', $id)->where('is_active', 1);
+        $table = DB::table($table)->where('id', $id);
         return $table->count();
     }
 
@@ -322,7 +322,6 @@ class GenericMethod{
         $user_details = User::find($id);
 
         $document_details = DB::select( DB::raw('SELECT documents.id AS "masterlist_id",
-        categories.is_active,
         documents.document_type AS "document_name",
         IFNULL(categories.id,"no category")  AS "masterlist_category_id",
         categories.name AS "category_name",
@@ -338,11 +337,6 @@ class GenericMethod{
         ON document_categories.id = user_document_category.id AND document_categories.category_id = user_document_category.category_id
         LEFT JOIN users
         ON user_document_category.user_id = users.id
-        -- WHERE  documents.is_active = 1
-        -- AND document_categories.is_active = 1
-        WHERE  IFNULL(categories.is_active,0) = (IF((IFNULL(categories.id,"no category")) = "no category",0, 1))
-        -- AND user_document_category.is_active = 1
-        -- AND users.is_active = 1
         ORDER by documents.id,categories.id') );
 
         $user_document_details = collect();
@@ -443,8 +437,7 @@ class GenericMethod{
             "position"=> $user_details->position,
             "permissions"=> $user_details->permissions,
             "document_types"=> $document_types,
-            "username"=> $user_details->username,
-            "is_active"=> 1,
+            "username"=> $user_details->username
         ]);
 
         $result = $user_document_details;
@@ -463,7 +456,7 @@ class GenericMethod{
         $get_category_ids = DB::select
         ( DB::raw("SELECT user_id,document_id,category_id
         FROM `user_document_category`
-        WHERE `user_id` = '$user_id' AND `document_id` = '$id' AND `is_active` = 1
+        WHERE `user_id` = '$user_id' AND `document_id` = '$id'
          ORDER BY `id` ASC") );
 
         return $get_category_ids;
@@ -490,7 +483,6 @@ class GenericMethod{
             'user_id' =>$user_id,
             'document_id' =>$document_id,
             'category_id' =>$category_id,
-            'is_active' => 1,
         ]);
 
 

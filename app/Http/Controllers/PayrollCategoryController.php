@@ -14,7 +14,7 @@ class PayrollCategoryController extends Controller
   public function index(Request $request)
   {
     $status =  $request['status'];
-    $rows =  (empty($request['rows']))?10:$request['rows'];
+    $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
     
     $payroll_category = PayrollCategory::withTrashed()
@@ -69,8 +69,7 @@ class PayrollCategoryController extends Controller
     $payroll_category = PayrollCategory::withTrashed()->find($id);
     if(!empty($payroll_category) == true){
       $payroll_category->category = $fields['category'];
-      $payroll_category->save();
-      return $this->result(200,"Payroll Category has been updated",$payroll_category);
+      return $this->validateIfNothingChangeThenSave($payroll_category,'Payroll Category');
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }
@@ -78,7 +77,7 @@ class PayrollCategoryController extends Controller
   public function change_status(Request $request,$id){
     $status = $request['status'];
     $model = new PayrollCategory();
-    return $this->change_masterlist_status($status,$model,$id);
+    return $this->change_masterlist_status($status,$model,$id,'Payroll Category');
   }
 
 }

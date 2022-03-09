@@ -15,6 +15,7 @@ class AccountTitle extends Model
 
   protected $table = 'account_titles';
   protected $fillable = ['code','title','category'];
+  protected $hidden = ['created_at'];
 
   public function getCreatedAtAttribute($value){
     $date = Carbon::parse($value);

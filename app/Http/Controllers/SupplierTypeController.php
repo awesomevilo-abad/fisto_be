@@ -14,7 +14,7 @@ class SupplierTypeController extends Controller
     public function index(Request $request)
     {
         $status =  $request['status'];
-        $rows =  (empty($request['rows']))?10:$request['rows'];
+        $rows =  (empty($request['rows']))?10:(int)$request['rows'];
         $search =  $request['search'];
         
         $supplier_types = SupplierType::withTrashed()
@@ -101,19 +101,14 @@ class SupplierTypeController extends Controller
             }
             $specific_supplier_type->type = $request->get('type');
             $specific_supplier_type->transaction_days = $request->get('transaction_days');
-            $specific_supplier_type->save();
-            $code =200;
-            $message = "Supplier type has been updated.";
-            $data = $specific_supplier_type;
+            return $this->validateIfNothingChangeThenSave($specific_supplier_type,'Supplier Type');
         }
-        return $this->result($code,$message,$data);
-
     }
 
     public function change_status(Request $request,$id){
         $status = $request['status'];
         $model = new SupplierType();
-        return $this->change_masterlist_status($status,$model,$id);
+        return $this->change_masterlist_status($status,$model,$id,'Supplier Type');
     }
     
 

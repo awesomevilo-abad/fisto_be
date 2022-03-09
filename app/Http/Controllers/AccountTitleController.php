@@ -14,7 +14,7 @@ class AccountTitleController extends Controller
   {
     
     $status =  $request['status'];
-    $rows =  (empty($request['rows']))?10:$request['rows'];
+    $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
     
     $account_titles = AccountTitle::withTrashed()
@@ -118,15 +118,7 @@ class AccountTitleController extends Controller
       $account_title->code = $fields['code'];
       $account_title->title = $fields['title'];
       $account_title->category = $fields['category'];
-      $account_title->save();
-
-      $result = [
-        "code" => 200,
-        "message" => "Account title has been updated.",
-        "result" => $account_title
-      ];
-          
-      return response($result);
+      return $this->validateIfNothingChangeThenSave($account_title,'Account Title');
     }
     else
       throw new FistoException("No records found.", 404, NULL, []);
@@ -136,7 +128,7 @@ class AccountTitleController extends Controller
   {
     $status = $request['status'];
     $model = new AccountTitle();
-    return $this->change_masterlist_status($status,$model,$id);
+    return $this->change_masterlist_status($status,$model,$id,'Account Title');
   }
 
   public function import(Request $request)

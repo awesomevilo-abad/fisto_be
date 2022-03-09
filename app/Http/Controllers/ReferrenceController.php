@@ -13,18 +13,18 @@ class ReferrenceController extends Controller
     public function index(Request $request)
     {
         $status =  $request['status'];
-        $rows =  (empty($request['rows']))?10:$request['rows'];
+        $rows =  (empty($request['rows']))?10:(int)$request['rows'];
         $search =  $request['search'];
 
         $referrences = Referrence::withTrashed()
-        ->select(['id','referrence_type as type','referrence_description as description','updated_at','deleted_at'])
+        ->select(['id','type','description','updated_at','deleted_at'])
         ->where(function ($query) use ($status) {
             if ($status == true) $query->whereNull('deleted_at');
             else  $query->whereNotNull('deleted_at');
         })
         ->where(function ($query) use ($search) {
-            $query->where('referrence_type', 'like', '%' . $search . '%')
-                ->orWhere('referrence_description', 'like', '%' . $search . '%');
+            $query->where('type', 'like', '%' . $search . '%')
+                ->orWhere('description', 'like', '%' . $search . '%');
         })
         ->latest('updated_at')
         ->paginate($rows);
@@ -42,7 +42,7 @@ class ReferrenceController extends Controller
             'description' => 'required|string'
         ]);
 
-       $duplicateValues= GenericMethod::validateDuplicateByIdAndTable($fields['type'],'referrence_type','referrences');
+       $duplicateValues= GenericMethod::validateDuplicateByIdAndTable($fields['type'],'type','referrences');
 
        if(count($duplicateValues)>0) {
             $code =403;
@@ -52,8 +52,8 @@ class ReferrenceController extends Controller
         }
 
         $new_referrence = Referrence::create([
-            'referrence_type' => $fields['type']
-            , 'referrence_description' => $fields['description']
+            'type' => $fields['type']
+            , 'description' => $fields['description']
         ]);
 
         if (!$new_referrence->count() == 0) {
@@ -104,7 +104,7 @@ class ReferrenceController extends Controller
 
         } else {
 
-            $validateDuplicateInUpdate =  GenericMethod::validateDuplicateInUpdate($fields['type'],'referrence_type','referrences',$id);
+            $validateDuplicateInUpdate =  GenericMethod::validateDuplicateInUpdate($fields['type'],'type','referrences',$id);
             if(count($validateDuplicateInUpdate)>0) {
                 $code =403;
                 $message = "Referrence type already registered in other referrence type";
@@ -112,22 +112,15 @@ class ReferrenceController extends Controller
                 return $this->result($code,$message,$data);
             }
 
-            $specific_referrence->referrence_type = $request->get('type');
-            $specific_referrence->referrence_description = $request->get('description');
-            $specific_referrence->save();
-
-            $code =200;
-            $message = "Succefully Updated";
-            $data = $specific_referrence;
-
+            $specific_referrence->type = $request->get('type');
+            $specific_referrence->description = $request->get('description');
+            return $this->validateIfNothingChangeThenSave($specific_referrence,'Reference');
         }
-
-        return $this->result($code,$message,$data);
     }
     public function change_status(Request $request,$id)
     {
         $status = $request['status'];
         $model = new Referrence();
-        return $this->change_masterlist_status($status,$model,$id);
+        return $this->change_masterlist_status($status,$model,$id,'Reference');
     }
 }

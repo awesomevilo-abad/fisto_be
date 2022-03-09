@@ -12,7 +12,7 @@ class PayrollClientController extends Controller
   public function index(Request $request)
   {
     $status =  $request['status'];
-    $rows =  (empty($request['rows']))?10:$request['rows'];
+    $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
     
     $payroll_client = PayrollClient::withTrashed()
@@ -61,7 +61,7 @@ class PayrollClientController extends Controller
   public function change_status(Request $request,$id){
     $status = $request['status'];
     $model = new PayrollClient();
-    return $this->change_masterlist_status($status,$model,$id);
+    return $this->change_masterlist_status($status,$model,$id,'Payroll Client');
   }
 
   public function update(Request $request, $id)
@@ -73,8 +73,7 @@ class PayrollClientController extends Controller
     $payroll_client = PayrollClient::withTrashed()->find($id);
     if(!empty($payroll_client) == true){
       $payroll_client->client = $fields['client'];
-      $payroll_client->save();
-      return $this->result(200,"Payroll Client has been updated",$payroll_client);
+      return $this->validateIfNothingChangeThenSave($payroll_client,'Payroll Client');
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }

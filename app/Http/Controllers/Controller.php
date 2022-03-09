@@ -78,7 +78,7 @@ class Controller extends BaseController
         });
         if ($duplicateAccountNo->count() > 0)
           $duplicates[] = (object) [
-            "error_type" => "duplicate",
+            "error_type" => "existing",
             "line" => (string) $index,
             "description" => "Category: ".$param2_description. ", Account No.: ".$param1. " is already registered."
           ];
@@ -95,7 +95,7 @@ class Controller extends BaseController
         });
         if ($existingLocations->count() == 0)
           $existings[] = (object) [
-            "error_type" => "unregistered location",
+            "error_type" => "unregistered",
             "line" =>(string) $index,
             "description" => "Location: ".$param1. " is not registered."
           ];
@@ -111,7 +111,7 @@ class Controller extends BaseController
         });
         if ($existingLocations->count() == 0)
           $existings[] = (object) [
-            "error_type" => "unregistered category",
+            "error_type" => "unregistered",
             "line" =>(string) $index,
             "description" => "Category: ".$param1. " is not registered."
           ];
@@ -123,11 +123,11 @@ class Controller extends BaseController
       $existings=[];
       if (!empty($param1)) {
         $existingSuppliers = $table->filter(function ($query) use ($param1){
-          return (strtolower($query["supplier_name"]) == strtolower($param1)); 
+          return (strtolower($query["name"]) == strtolower($param1)); 
         });
         if ($existingSuppliers->count() == 0)
           $existings[] = (object) [
-            "error_type" => "unregistered supplier",
+            "error_type" => "unregistered",
             "line" =>(string) $index,
             "description" => "Supplier: ".$param1. " is not registered."
           ];
@@ -168,7 +168,7 @@ class Controller extends BaseController
         if((empty($object[$line]['account_no'])) || (empty($object[$line]['category']))){
         }else{
           $excelDuplicates[] = [
-            "error_type" => "excel duplicate",
+            "error_type" => "duplicate",
             "line" => (string) $duplicate_lines,
             "description" =>  $object[$firstDuplicateLine]['account_no'].' with '.strtolower($object[$firstDuplicateLine]['category']).' category has a duplicate in your excel file.'
           ];

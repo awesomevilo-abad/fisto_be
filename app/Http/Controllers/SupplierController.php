@@ -27,8 +27,8 @@ class SupplierController extends Controller
         else  $query->whereNotNull('suppliers.deleted_at');
       })
       ->where(function ($query) use ($search) {
-        $query->where('suppliers.supplier_code', 'like', '%'.$search.'%')
-          ->orWhere('suppliers.supplier_name', 'like', '%'.$search.'%')
+        $query->where('suppliers.code', 'like', '%'.$search.'%')
+          ->orWhere('suppliers.name', 'like', '%'.$search.'%')
           ->orWhere('suppliers.terms', 'like', '%'.$search.'%');
       })
       ->latest('suppliers.updated_at')
@@ -47,8 +47,8 @@ class SupplierController extends Controller
       ->join('supplier_types', 'suppliers.supplier_type_id', 'supplier_types.id')
       ->select([
         'suppliers.id',
-        'suppliers.supplier_code as code',
-        'suppliers.supplier_name as name',
+        'suppliers.code',
+        'suppliers.name',
         'suppliers.terms',
         'suppliers.supplier_type_id',
         'supplier_types.type as supplier_type',
@@ -66,21 +66,21 @@ class SupplierController extends Controller
   public function store(Request $request)
   {
     $fields = $request->validate([
-      'supplier_code' => ['required','string'],
-      'supplier_name' => ['required','string'],
+      'code' => ['required','string'],
+      'name' => ['required','string'],
       'terms' => ['required','string'],
       'supplier_type_id' => ['required','numeric'],
       'references' => ['required','array']
     ]);
 
-    $supplier_validateDuplicateCode = Supplier::withTrashed()->firstWhere('supplier_code', $fields['supplier_code']);
+    $supplier_validateDuplicateCode = Supplier::withTrashed()->firstWhere('code', $fields['code']);
 
     if (!empty($supplier_validateDuplicateCode))
       throw new FistoException("Supplier code already registered.", 409, NULL, [
         "error_field" => "code"
       ]);
 
-    $supplier_validateDuplicateName = Supplier::withTrashed()->firstWhere('supplier_name', $fields['supplier_name']);
+    $supplier_validateDuplicateName = Supplier::withTrashed()->firstWhere('name', $fields['name']);
 
     if (!empty($supplier_validateDuplicateName))
       throw new FistoException("Supplier name already registered.", 409, NULL, [
@@ -98,38 +98,35 @@ class SupplierController extends Controller
     $supplier = Supplier::withTrashed()->find($id);
 
     $fields = $request->validate([
-      'supplier_code' => ['required','string'],
-      'supplier_name' => ['required','string'],
+      'code' => ['required','string'],
+      'name' => ['required','string'],
       'terms' => ['required','string'],
       'supplier_type_id' => ['required','numeric'],
       'references' => ['required','array']
     ]);
 
     if (!empty($supplier)) {
-      $supplier_validateDuplicateCode = Supplier::withTrashed()->firstWhere([['id', '<>', $id],['supplier_code', $fields['supplier_code']]]);
+      $supplier_validateDuplicateCode = Supplier::withTrashed()->firstWhere([['id', '<>', $id],['code', $fields['code']]]);
 
       if (!empty($supplier_validateDuplicateCode))
         throw new FistoException("Supplier code already registered.", 409, NULL, [
           "error_field" => "code"
         ]);
 
-      $supplier_validateDuplicateName = Supplier::withTrashed()->firstWhere([['id', '<>', $id],['supplier_name', $fields['supplier_name']]]);
+      $supplier_validateDuplicateName = Supplier::withTrashed()->firstWhere([['id', '<>', $id],['name', $fields['name']]]);
 
       if (!empty($supplier_validateDuplicateName))
         throw new FistoException("Supplier name already registered.", 409, NULL, [
           "error_field" => "name"
         ]);
 
-      $supplier->supplier_code = $fields['supplier_code'];
-      $supplier->supplier_name = $fields['supplier_name'];
+      $supplier->code = $fields['code'];
+      $supplier->name = $fields['name'];
       $supplier->terms = $fields['terms'];
       $supplier->supplier_type_id = $fields['supplier_type_id'];
-
       $supplier->referrences()->detach();
       $supplier->referrences()->attach(array_unique($fields['references']));
-
-      $supplier->save();
-      return $this->result(200,"Supplier has been updated",$supplier);
+      return $this->validateIfNothingChangeThenSave($supplier,'Supplier');
     }
     else
       throw new FistoException("No records found.", 404, NULL, []);
@@ -142,6 +139,7 @@ class SupplierController extends Controller
     $date = date("Y-m-d H:i:s", strtotime('now'));
     $errorBag = [];
     $data = $request->all();
+    $data_validation_fields = $request->all();
     $index = 2;
     $supplier_type_list = SupplierType::withTrashed()->get();
     $referrence_list = Referrence::withTrashed()->get();
@@ -150,8 +148,8 @@ class SupplierController extends Controller
     $referrence_list_no_trash = Referrence::get();
     
     $template = [
-      "supplier_code",
-      "supplier_name",
+      "code",
+      "name",
       "terms",
       "supplier_type",
       "referrences"
@@ -162,8 +160,8 @@ class SupplierController extends Controller
       throw new FistoException("Invalid excel template, it should be Supplier Code, Supplier Name, Terms, Supplier Type, Referrences", 406, NULL, []);
 
     foreach ($data as $supplier) {
-      $supplier_code = $supplier['supplier_code'];
-      $supplier_name = $supplier['supplier_name'];
+      $code = $supplier['code'];
+      $name = $supplier['name'];
       $supplier_type = $supplier['supplier_type'];
       $supplier_references = $supplier['referrences'];
 
@@ -195,37 +193,84 @@ class SupplierController extends Controller
                   ];
               }
           }
-          if (!empty($supplier_code)) {
-              $duplicateSupplierCode = $supplier_list->filter(function ($supplier) use ($supplier_code){return strtolower($supplier['supplier_code']) == strtolower($supplier_code);});
+          if (!empty($code)) {
+              $duplicateSupplierCode = $supplier_list->filter(function ($supplier) use ($code){return strtolower($supplier['code']) == strtolower($code);});
               if ($duplicateSupplierCode->count() > 0)
               $errorBag[] = (object) [
-                  "error_type" => "duplicate",
+                  "error_type" => "existing",
                   "line" => $index,
-                  "description" => $supplier_code . " is already registered."
+                  "description" => $code . " is already registered."
                   ];
           }
-          if (!empty($supplier_name)) {
-              $duplicateSupplierName =$supplier_list->filter(function ($supplier) use ($supplier_name){return strtolower($supplier['supplier_name']) == strtolower($supplier_name);});
+          if (!empty($name)) {
+              $duplicateSupplierName =$supplier_list->filter(function ($supplier) use ($name){return strtolower($supplier['name']) == strtolower($name);});
               if ($duplicateSupplierName->count() > 0)
               $errorBag[] = (object) [
-                  "error_type" => "duplicate",
+                  "error_type" => "existing",
                   "line" => $index,
-                  "description" => $supplier_name . " is already registered."
+                  "description" => $name . " is already registered."
                   ];
           }
           $index++;
+    }
 
+
+    $original_lines = array_keys($data_validation_fields);
+    
+    $duplicate_code = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'code'))));
+
+    foreach($duplicate_code as $line){
+      $input_code = $data_validation_fields[$line]['code'];
+      $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_code){
+        return ($query['code'] == $input_code);
+      }); 
+      $duplicate_lines =  implode(",",array_map(function($query){
+        return $query+2;
+      },array_keys($duplicate_data)));
+      $firstDuplicateLine =  array_key_first($duplicate_data);
+
+      if((empty($data_validation_fields[$line]['code']))){
+
+      }else{
+        $errorBag[] = [
+          "error_type" => "duplicate",
+          "line" => (string) $duplicate_lines,
+          "description" =>  $data_validation_fields[$firstDuplicateLine]['code'].' code has a duplicate in your excel file.'
+        ];
+      }
+    }
+    
+    $duplicate_name = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'name'))));
+
+    foreach($duplicate_name as $line){
+      $input_name = $data_validation_fields[$line]['name'];
+      $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_name){
+        return ($query['name'] == $input_name);
+      }); 
+      $duplicate_lines =  implode(",",array_map(function($query){
+        return $query+2;
+      },array_keys($duplicate_data)));
+      $firstDuplicateLine =  array_key_first($duplicate_data);
+
+      if((empty($data_validation_fields[$line]['code']))){
+
+      }else{
+        $errorBag[] = [
+          "error_type" => "duplicate",
+          "line" => (string) $duplicate_lines,
+          "description" =>  $data_validation_fields[$firstDuplicateLine]['code'].' code has a duplicate in your excel file.'
+        ];
+      }
     }
 
     if (empty($errorBag)) {
       foreach ($data as $supplier) {
           $supplier_type = $supplier['supplier_type'];
         $fields = [
-          'supplier_code' => $supplier['supplier_code'],
-          'supplier_name' => $supplier['supplier_name'],
+          'code' => $supplier['code'],
+          'name' => $supplier['name'],
           'terms' => $supplier['terms'],
           'supplier_type_id' => SupplierType::where('type',$supplier_type)->first()->id,
-          'is_active' => 1,
           'created_at' => $date,
           'updated_at' => $date,
         ];
@@ -241,7 +286,7 @@ class SupplierController extends Controller
       {
         $new_supplier = DB::table('suppliers')->insert($specific_chunk->toArray());
         foreach($specific_chunk->toArray() as $chunk){
-          $supplier= Supplier::where('supplier_code',$chunk)->first();
+          $supplier= Supplier::where('code',$chunk)->first();
           $supplier->referrences()->attach($references_ids);
         }
       }
@@ -254,6 +299,6 @@ class SupplierController extends Controller
   {
     $status = $request['status'];
     $model = new Supplier();
-    return $this->change_masterlist_status($status,$model,$id);
+    return $this->change_masterlist_status($status,$model,$id,'Supplier');
   }
 }

@@ -13,9 +13,8 @@ class Supplier extends Model
   use SoftDeletes;
   
   protected $table = 'suppliers';
-  protected $fillable = ['supplier_code', 'supplier_name', 'terms', 'supplier_type_id', 'referrences'];
-  protected $attributes = ['is_active' => 1];
-  protected $hidden = ['pivot','is_active','supplier_type_id'];
+  protected $fillable = ['code', 'name', 'terms', 'supplier_type_id', 'referrences'];
+  protected $hidden = ['pivot','supplier_type_id','created_at'];
   protected $cast = [
     "referrences" => 'array',
   ];

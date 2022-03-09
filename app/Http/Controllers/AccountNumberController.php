@@ -18,7 +18,7 @@ class AccountNumberController extends Controller
   public function index(Request $request)
   {
     $status =  $request['status'];
-    $rows =  (empty($request['rows']))?10:$request['rows'];
+    $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
     
     $account_number = AccountNumber::withTrashed()
@@ -32,7 +32,7 @@ class AccountNumberController extends Controller
       $query->where('account_no', 'like', '%'.$search.'%')
       ->orWhereHas ('locations',function($q)use($search){$q->where('location', 'like', '%'.$search.'%');})
       ->orWhereHas ('categories',function($q)use($search){$q->where('category', 'like', '%'.$search.'%');})
-      ->orWhereHas ('suppliers',function($q)use($search){$q->where('supplier_name', 'like', '%'.$search.'%');});
+      ->orWhereHas ('suppliers',function($q)use($search){$q->where('name', 'like', '%'.$search.'%');});
     })
     ->latest('updated_at')
     ->paginate($rows);
@@ -42,52 +42,12 @@ class AccountNumberController extends Controller
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }
-
     
   public function show(Request $request,$id)
   {
     $account_number = AccountNumber::find($id);
     if (!empty($account_number)) {
       return $this->result(200,"Account number has been fetched.",$account_number);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
-  }
-
-  public function search(Request $request,bool $status,int $rows)
-  {
-    $value = $request['value'];
-
-    $account_numbers = DB::table('account_numbers as AN')
-      ->join('utility_locations as UL', 'AN.location_id', 'UL.id')
-      ->join('utility_categories as UC', 'AN.category_id', 'UC.id')
-      ->join('suppliers as SU', 'AN.supplier_id', 'SU.id')
-      ->select(
-        'AN.id',
-        'AN.account_no',
-        'AN.location_id',
-        'UL.location as location_name',
-        'AN.category_id',
-        'UC.category as category_name',
-        'AN.supplier_id',
-        'SU.supplier_name',
-        'AN.updated_at',
-        'AN.deleted_at'
-      )
-      ->where(function ($query) use ($status) {
-        ($status == true)? $query->whereNull('AN.deleted_at'):$query->whereNotNull('AN.deleted_at');
-      })
-      ->where(function ($query) use ($value) {
-        $query->where('AN.account_no', 'like', '%'.$value.'%')
-        ->orWhere('UL.location', 'like', '%'.$value.'%')
-        ->orWhere('UC.category', 'like', '%'.$value.'%')
-        ->orWhere('SU.supplier_name', 'like', '%'.$value.'%');
-      })
-      ->latest('AN.updated_at')
-      ->paginate($rows);
-
-    if (count($account_numbers) == true) {
-      return $this->result(200,"Account number has been fetched.",$account_numbers);
     }
     else
       throw new FistoException("No records found.", 404, NULL, []);
@@ -118,8 +78,7 @@ class AccountNumberController extends Controller
         $account_number->location_id = $fields['location_id'];
         $account_number->category_id = $fields['category_id'];
         $account_number->supplier_id = $fields['supplier_id'];
-        $account_number->save();
-        return $this->result(200,"Account number has been updated.",$account_number);
+        return $this->validateIfNothingChangeThenSave($account_number,'Account Number');
       }
       else
         throw new FistoException("Account number already registered.", 409, NULL, []);
@@ -131,7 +90,7 @@ class AccountNumberController extends Controller
   public function change_status(Request $request,$id){
     $status = $request['status'];
     $model = new AccountNumber();
-    return $this->change_masterlist_status($status,$model,$id);
+    return $this->change_masterlist_status($status,$model,$id,'Account Number');
 }
 
   public function import(Request $request)
@@ -193,7 +152,7 @@ class AccountNumberController extends Controller
           return (strtolower($query['category']) == strtolower($inputted_category)); 
         })->first()['id'];
         $supplier = $supplier_masterlist->filter(function ($query) use ($inputted_supplier){
-          return (strtolower($query['supplier_name']) == strtolower($inputted_supplier)); 
+          return (strtolower($query['name']) == strtolower($inputted_supplier)); 
         })->first()['id'];
 
         $fields = [

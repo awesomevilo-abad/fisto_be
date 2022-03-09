@@ -13,7 +13,7 @@ class SupplierType extends Model
     use SoftDeletes;
     protected $table = 'supplier_types';
     protected $fillable = ['type', 'transaction_days'];
-    protected $attributes = ['is_active'=>1];
+    protected $hidden = ['created_at'];
 
     public function suppliers()
     {
