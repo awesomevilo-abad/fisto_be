@@ -148,16 +148,15 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::patch('users/{id}', [UserController::class, 'change_status']);
         Route::patch('users/reset/{id}', [UserController::class, 'reset']);
         Route::resource('users', UserController::class);
+        
+        //MASTERLIST GENERIC METHOD
+        Route::get('dropdown/document',[MasterlistController::class,'documentDropdown']);
+        Route::get('dropdown/category',[MasterlistController::class,'categoryDropdown']);
+        Route::get('dropdown/supplier-reference',[MasterlistController::class,'supplierRefDropdown']);
+        Route::get('dropdown/location-category-supplier',[MasterlistController::class,'loccatsupDropdown']);
+        Route::get('dropdown/location-category',[MasterlistController::class,'loccatDropdown']);
+        Route::get('dropdown/account-title',[MasterlistController::class,'accountTitleDropdown']);
     });
-
-    //MASTERLIST GENERIC METHOD
-    Route::get('suppliers/dropdown/{status}', [MasterlistController::class, 'suppliersDropdown']);
-    Route::get('account-number/dropdown/{status}', [MasterlistController::class, 'accountNumberDropdown']);
-    Route::get('account-title/dropdown/{status}', [MasterlistController::class, 'accountTitlesDropdown']);
-    Route::get('masterlist/getDocumentCategoryByUser',[MasterlistController::class,'getUserDocumentCategory']);
-    Route::post('masterlist/restore',[MasterlistController::class,'restore']);
-    Route::post('masterlist/category-document',[MasterlistController::class,'categoryPerDocument']);
-    Route::resource('masterlist', MasterlistController::class);
 
 
     // TRANSACTION

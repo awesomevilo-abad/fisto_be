@@ -4,14 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\FistoException;
 
-use App\Models\Masterlist;
-
+use App\Models\Document;
+use App\Models\Category;
+use App\Models\Supplier;
 use App\Models\SupplierType;
 use App\Models\Referrence;
-
 use App\Models\UtilityLocation;
 use App\Models\UtilityCategory;
-use App\Models\Supplier;
 
 use App\Models\AccountTitle;
 
@@ -20,65 +19,43 @@ use Illuminate\Support\Facades\DB;
 
 class MasterlistController extends Controller
 {
-  public function suppliersDropdown()
-  {
-    $supplier_types = SupplierType::orderBy('supplier_type')->get(['id as supplier_type_id','type as supplier_type']);
-    $references = Referrence::orderBy('referrence_type')->get(['id as reference_id','referrence_type']);
-
-    if (count($supplier_types) == true || count($references) == true) {
-      return response([
-        "code" => 200,
-        "message" => "Supplier types and references has been fetched.",
-        "result" => [
-          "supplier_types" => $supplier_types,
-          "references" => $references
-        ]
-      ]);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
+  public function documentDropdown(){
+    $data =  array("documents"=>Document::whereNull('deleted_at')->with('categories')->get(['id','type','description']));
+    return $this->result(200,'Documents has been fetched.',$data);
   }
 
-  public function accountNumberDropdown()
-  {
-    $utility_locations = UtilityLocation::orderBy('location_name')->get(['id as location_id','location as location_name']);
-    $utility_categories = UtilityCategory::orderBy('category_name')->get(['id as category_id','category as category_name']);
-    $suppliers = Supplier::orderBy('supplier_name')->get(['id as supplier_id','supplier_name']);
+  public function categoryDropdown(){
+    $data =  array("categories"=>Category::whereNull('deleted_at')->get(['id','name']));
+    return $this->result(200,'Category has been fetched.',$data);
 
-    if (count($utility_locations) == true || count($utility_categories) == true || count($suppliers) == true) {
-      return response([
-        "code" => 200,
-        "message" => "Location, category and supplier has been fetched.",
-        "result" => [
-          "locations" => $utility_locations,
-          "categories" => $utility_categories,
-          "suppliers" => $suppliers
-        ]
-      ]);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
   }
 
-  
-  public function accountTitlesDropdown()
-  {
-    $account_titles = AccountTitle::orderBy('account_title')->get(['id as account_title_id','title as account_title']);
-
-    if (count($account_titles) == true) {
-      return response([
-        "code" => 200,
-        "message" => "Account titles has been fetched.",
-        "result" => [
-          "account_titles" => $account_titles
-        ]
-      ]);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
+  public function supplierRefDropdown(){
+    $data =  array(
+      "supplier_types"=>SupplierType::whereNull('deleted_at')->get(['id','type']),
+      "references"=>Referrence::whereNull('deleted_at')->get(['id','type']));
+      return $this->result(200,'Category has been fetched.',$data);
   }
 
-  // public function categoryPerDocument(){
-  //   return "sample";
-  // }
+  public function loccatsupDropdown(){
+    $data =  array(
+      "locations"=>SupplierType::whereNull('deleted_at')->get(['id','type']),
+      "categories"=>Referrence::whereNull('deleted_at')->get(['id','type']),
+      "suppliers"=>Supplier::whereNull('deleted_at')->get(['id','name']));
+      return $this->result(200,'Location, Category and Supplier has been fetched.',$data);
+  }
+
+  public function loccatDropdown(){
+    $data =  array(
+      "locations"=>SupplierType::whereNull('deleted_at')->get(['id','type']),
+      "categories"=>Referrence::whereNull('deleted_at')->get(['id','type']));
+      return $this->result(200,'Location and Category has been fetched.',$data);
+  }
+
+  public function accountTitleDropdown(){
+    $data =  array(
+      "account_titles"=>AccountTitle::whereNull('deleted_at')->get(['id','title']));
+      return $this->result(200,'Account Title has been fetched.',$data);
+  }
+
 }

@@ -16,7 +16,7 @@ class SupplierController extends Controller
   public function index(Request $request)
   {
     $status =  $request['status'];
-    $rows =  (empty($request['rows']))?10:$request['rows'];
+    $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
 
     $suppliers = Supplier::withTrashed()
@@ -184,7 +184,7 @@ class SupplierController extends Controller
           }
           if (!empty($supplier_references)) {
               foreach (explode(",", $supplier_references) as $reference_type) {
-                  $unregisterSupplierReference = $referrence_list->filter(function ($referrence) use ($reference_type){return strtolower($referrence['referrence_type']) == strtolower($reference_type);});
+                  $unregisterSupplierReference = $referrence_list->filter(function ($referrence) use ($reference_type){return strtolower($referrence['type']) == strtolower($reference_type);});
                   if ($unregisterSupplierReference->count() == 0)
                   $errorBag[] = (object) [
                       "error_type" => "unregistered",
@@ -277,7 +277,7 @@ class SupplierController extends Controller
 
         $inputted_fields[] = $fields;
         $references = explode(",", $supplier['referrences']);
-        $references_ids = Referrence::whereIn('referrence_type', $references)->pluck('id');
+        $references_ids = Referrence::whereIn('type', $references)->pluck('id');
       }
       $inputted_fields = collect($inputted_fields);
       $chunks = $inputted_fields->chunk(1000);
