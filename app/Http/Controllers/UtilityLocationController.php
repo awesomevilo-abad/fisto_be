@@ -13,7 +13,7 @@ class UtilityLocationController extends Controller
   public function index(Request $request)
   {
     $status =  $request['status'];
-    $rows =  (empty($request['rows']))?10:$request['rows'];
+    $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
     
     $utility_locations= UtilityLocation::withTrashed()
@@ -80,14 +80,13 @@ class UtilityLocationController extends Controller
       }
       else {
         $specific_utility_location->location = $request->get('location');
-        $specific_utility_location->save();
-        return $this->result(200,"Utility location has been updated.",$specific_utility_location);
+        return $this->validateIfNothingChangeThenSave($specific_utility_location,'Utility Location');
       }
     }
   }
   public function change_status(Request $request,$id){
     $status = $request['status'];
     $model = new UtilityLocation();
-    return $this->change_masterlist_status($status,$model,$id);
+    return $this->change_masterlist_status($status,$model,$id,'Utility Location');
   }
 }

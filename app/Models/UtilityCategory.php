@@ -15,7 +15,7 @@ class UtilityCategory extends Model
 
   protected $table = 'utility_categories';
   protected $fillable = ['category'];
-  protected $hidden = ['pivot'];
+  protected $hidden = ['pivot','created_at'];
 
   public function getCreatedAtAttribute($value){
     $date = Carbon::parse($value);

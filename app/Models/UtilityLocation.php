@@ -16,7 +16,7 @@ class UtilityLocation extends Model
   protected $table = 'utility_locations';
   protected $dates = ['deleted_at'];
   protected $fillable = ['location'];
-  protected $hidden = ['pivot'];
+  protected $hidden = ['pivot','created_at'];
 
   public function getCreatedAtAttribute($value){
     $date = Carbon::parse($value);

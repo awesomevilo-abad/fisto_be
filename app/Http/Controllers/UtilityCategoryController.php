@@ -14,7 +14,7 @@ class UtilityCategoryController extends Controller
     public function index(Request $request)
     {
       $status =  $request['status'];
-      $rows =  (empty($request['rows']))?10:$request['rows'];
+      $rows =  (empty($request['rows']))?10:(int)$request['rows'];
       $search =  $request['search'];
       
       $utility_categories = UtilityCategory::withTrashed()
@@ -79,14 +79,13 @@ class UtilityCategoryController extends Controller
         }
         else {
           $specific_utility_category->category = $request->get('category');
-          $specific_utility_category->save();
-          return $this->result(200,"Utility category has been updated.",$specific_utility_category);
+          return $this->validateIfNothingChangeThenSave($specific_utility_category,'Utility Category');
         }
       }
     }
     public function change_status(Request $request,$id){
       $status = $request['status'];
       $model = new UtilityCategory();
-      return $this->change_masterlist_status($status,$model,$id);
+      return $this->change_masterlist_status($status,$model,$id,'Utility Category');
     }
 }

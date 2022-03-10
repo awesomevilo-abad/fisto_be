@@ -18,7 +18,7 @@ class CreditCardController extends Controller
     public function index(Request $request)
     {
       $status =  $request['status'];
-      $rows =  (empty($request['rows']))?10:$request['rows'];
+      $rows =  (empty($request['rows']))?10:(int)$request['rows'];
       $search =  $request['search'];
       
       $credit_card= CreditCard::with(['utility_categories','utility_locations'])->withTrashed()
@@ -75,13 +75,11 @@ class CreditCardController extends Controller
 
         $credit_card->name = $fields['name'];
         $credit_card->account_no = $fields['account_no'];
-        $credit_card->save();
         $credit_card->utility_categories()->detach();
         $credit_card->utility_categories()->attach($fields['categories']);
         $credit_card->utility_locations()->detach();
         $credit_card->utility_locations()->attach($fields['locations']);
-
-        return $this->result(200,"Credit Card has been updated",$credit_card);
+        return $this->validateIfNothingChangeThenSave($credit_card,'Credit Card');
       }
       throw new FistoException("No records found.", 404, NULL, []);
 

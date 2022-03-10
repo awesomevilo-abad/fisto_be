@@ -21,6 +21,29 @@ class Controller extends BaseController
         return response($arrayResponse,$code);
     }
 
+    public function validateIfObjectExist($model,$param,$modelName){
+      $modelObject = $model::where('id',$param)->whereNull('deleted_at')->first();
+      if(empty($modelObject)){
+          throw new FistoException($modelName." not registered or inactive.",404,NULL,$modelName." ID: ".$param);
+      }
+      return $modelObject;
+    }
+
+    public function validateIfObjectsExist($model,$arrParam,$modelName){
+      
+      $unregisteredObjects = [];
+      foreach($arrParam as $param){
+        $modelObject = $model::withTrashed()->whereNull('deleted_at')->where('id',$param)->first();
+        if(empty($modelObject)){
+            $unregisteredObjects[] = $param;
+        }
+      }
+
+      if(!empty($unregisteredObjects)){
+        throw new FistoException($modelName." not registered or inactive.",404,NULL,$modelName." IDs: ".implode(',',$unregisteredObjects));
+      }
+    }
+
     public function validateIfNothingChangeThenSave($model,$modelName){
       if($model->isClean()){
         return $this->result(200,"Nothing has changed.",[]);

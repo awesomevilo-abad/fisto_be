@@ -29,7 +29,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $status =  $request['status'];
-        $rows =  (empty($request['rows']))?10:$request['rows'];
+        $rows =  (empty($request['rows']))?10:(int)$request['rows'];
         $search =  $request['search'];
 
         $categories = Category::all();
@@ -121,14 +121,21 @@ class UserController extends Controller
         $document_types =  $fields['document_types'];
         $document_ids = array_column($document_types,'document_id');
         $fields['password'] = bcrypt(strtolower($fields['username']));
-        $new_user = User::create($fields);
-        $new_user->documents()->attach($document_ids);
+        
         foreach($document_types as $document_type)
         {
-           $categories= $document_type['category_ids'];
-           $document_type_object = Document::where('id',$document_type['document_id'])->first();
-           $document_type_object->document_categories()->attach($categories,['user_id' => $new_user->id]);
+            $document_model = new Document();
+            $category_model = new Category();
+            $document_type_object= $this->validateIfObjectExist($document_model,$document_type['document_id'],'Document');
+
+            $categories= $document_type['category_ids'];
+            $this->validateIfObjectsExist($category_model,$categories,'Category');
+
+            $new_user = User::create($fields);
+            $new_user->documents()->attach($document_ids);
+            $document_type_object->document_categories()->attach($categories,['user_id' => $new_user->id]);
         }
+        
         return $this->result(201,"New user has been saved.",$new_user);
     }
 
@@ -153,12 +160,9 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        $user = User::withTrashed()
-        ->where('id',$id)
-        ->update([
-            'permissions'=>$request['permissions'],
-            'document_types'=>$request['document_types'],
-        ]);
+        
+        $user = User::withTrashed()->find($id);
+
         if (!$user) {
             throw new FistoException("No records found.", 404, NULL, []);     
         }         
@@ -173,36 +177,27 @@ class UserController extends Controller
         $new_user->documents()->attach($document_ids);
         foreach($document_types as $document_type)
         {
-           $categories= $document_type['category_ids'];
-           $document_type_object = Document::where('id',$document_type['document_id'])->first();
-           $document_type_object->document_categories()->detach();
-           $document_type_object->document_categories()->attach($categories,['user_id' => $new_user->id]);
+            $document_model = new Document();
+            $category_model = new Category();
+            $document_type_object= $this->validateIfObjectExist($document_model,$document_type['document_id'],'Document');
+
+            $categories= $document_type['category_ids'];
+            $this->validateIfObjectsExist($category_model,$categories,'Category');
+
+            $document_type_object->document_categories()->detach();
+            $document_type_object->document_categories()->attach($categories,['user_id' => $new_user->id]);
         }
 
-        return $this->result(200,"User has been updated.",$new_user);
-    }
+        $user->permissions = $specific_user['permissions'];
+        $user->document_types = $specific_user['document_types'];
+        return $this->validateIfNothingChangeThenSave($user,'User');
+}
 
-    public function archive(Request $request,$id)
-    {
-      $softDeleteSupplier = User::where('id', $id)->delete();
-      if ($softDeleteSupplier == true) {
-        return $this->result(200,"User has been archived",[]);
-      }
-      else
-        throw new FistoException("No records found.", 404, NULL, []);
-    }
-    
-    public function restore(Request $request, $id)
-    {
-        if(!User::onlyTrashed()->find($id)){
-            throw new FistoException("No records found.", 404, NULL, []);
-        }
-        $restoreSoftDelete = User::onlyTrashed()->find($id)->restore();
-        if ($restoreSoftDelete == 1) {
-            return $this->result(200,"Succefully Restored",[]);
-        }
-    }
-    
+    public function change_status(Request $request,$id){
+    $status = $request['status'];
+    $model = new User();
+    return $this->change_masterlist_status($status,$model,$id,'User');
+  }
     public function change_password(Request $request)
     {
         $fields = $request->validate([
@@ -307,10 +302,5 @@ class UserController extends Controller
            return $this->result(200,"User's default password has been restored.",[]);
         }  
         throw new FistoException("You don't have the proper credentials to perform this action.", 401, NULL, []);
-    }
-    public function change_status(Request $request,$id){
-      $status = $request['status'];
-      $model = new User();
-      return $this->change_masterlist_status($status,$model,$id);
     }
 }

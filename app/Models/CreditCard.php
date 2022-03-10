@@ -12,6 +12,7 @@ class CreditCard extends Model
     use SoftDeletes;
 
     protected $fillable = ['name','account_no'];
+    protected $hidden = ['created_at'];
 
     public function utility_categories()
     {
