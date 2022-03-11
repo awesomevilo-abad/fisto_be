@@ -68,23 +68,25 @@ class AccountNumberController extends Controller
     
   public function update(AccountNumberRequest $request,$id)
   {
+    $model = new AccountNumber();
     $account_number = AccountNumber::find($id);
     $fields = $request->validated();
 
-    if (!empty($account_number)) {
-      $account_number_validateDuplicate = AccountNumber::withTrashed()->firstWhere([['id', '<>', $id],['account_no', $fields['account_no']],['category_id', $fields['category_id']]]);
-      if (empty($account_number_validateDuplicate)) {
-        $account_number->account_no = $fields['account_no'];
-        $account_number->location_id = $fields['location_id'];
-        $account_number->category_id = $fields['category_id'];
-        $account_number->supplier_id = $fields['supplier_id'];
-        return $this->validateIfNothingChangeThenSave($account_number,'Account Number');
-      }
-      else
-        throw new FistoException("Account number already registered.", 409, NULL, []);
-    }
-    else
+    if (empty($account_number)) 
       throw new FistoException("No records found.", 404, NULL, []);
+      
+      $is_unique = $this->isUnique($model,'Account Number',['account_no','category_id'],[$fields['account_no'],$fields['category_id']],$id);
+
+      $account_number_validateDuplicate = AccountNumber::withTrashed()->firstWhere([['id', '<>', $id],['account_no', $fields['account_no']],['category_id', $fields['category_id']]]);
+      if (!empty($account_number_validateDuplicate)) 
+        throw new FistoException("Account number already registered.", 409, NULL, []);
+      
+      $account_number->account_no = $fields['account_no'];
+      $account_number->location_id = $fields['location_id'];
+      $account_number->category_id = $fields['category_id'];
+      $account_number->supplier_id = $fields['supplier_id'];
+
+      return $this->validateIfNothingChangeThenSave($account_number,'Account Number');
   }
 
   public function change_status(Request $request,$id){

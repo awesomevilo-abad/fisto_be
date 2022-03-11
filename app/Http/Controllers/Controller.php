@@ -207,12 +207,36 @@ class Controller extends BaseController
             return $this->result(200,$modelName." has been archived.",[]);
         }
         throw new FistoException("No records found.", 404, NULL, []);
-    }else {
-        $restore = $model::onlyTrashed()->where('id',$id)->restore();
-        if($restore == 1){
-            return $this->result(200,$modelName." has been restored.",[]);
-        }
-        throw new FistoException("No records found.", 404, NULL, []);
+      }else {
+          $restore = $model::onlyTrashed()->where('id',$id)->restore();
+          if($restore == 1){
+              return $this->result(200,$modelName." has been restored.",[]);
+          }
+          throw new FistoException("No records found.", 404, NULL, []);
+     }
     }
+    
+
+    public function isUnique($model,$modelName,$params,$fields,$id)
+    {
+      $param_is_exist = [];
+      if(count($params) != count($fields)){
+        throw new FistoException($modelName. ": field count and paramater count are not equal.", 202, NULL, []);
+      }else{
+        $query = $model->withTrashed()->get();
+        foreach($fields as $k=>$v){
+         $count =  $query->firstWhere("$params[$k]", $fields[$k]);
+         if($count){
+          $param_is_exist["$params[$k]"] =  1;
+         }else{
+          $param_is_exist["$params[$k]"] =  0;
+         }
+        
+        }
+        $duplicate_params = array_keys(array_filter($param_is_exist, function($param){return $param !== 0;}));
+        if(count($param_is_exist) == array_sum($param_is_exist))
+            
+            throw new FistoException(ucfirst(strtolower($modelName)). " already registered.", 409, NULL, []);
+      }
     }
 }

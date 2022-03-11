@@ -66,11 +66,13 @@ class PayrollClientController extends Controller
 
   public function update(Request $request, $id)
   {
+    $model = new PayrollClient();
     $fields = $request->validate([
       'client' => ['required','string']
     ]);
 
     $payroll_client = PayrollClient::withTrashed()->find($id);
+    $is_unique = $this->isUnique($model,'Payroll Client',['client'],[$fields['client']],$id);
     if(!empty($payroll_client) == true){
       $payroll_client->client = $fields['client'];
       return $this->validateIfNothingChangeThenSave($payroll_client,'Payroll Client');

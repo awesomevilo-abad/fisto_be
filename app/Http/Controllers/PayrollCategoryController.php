@@ -62,11 +62,14 @@ class PayrollCategoryController extends Controller
 
   public function update(Request $request, $id)
   {
+    $model = new PayrollCategory();
     $fields = $request->validate([
       'category' => ['required','string']
     ]);
     
     $payroll_category = PayrollCategory::withTrashed()->find($id);
+    $is_unique = $this->isUnique($model,'Payroll Category',['category'],[$fields['category']],$id);
+
     if(!empty($payroll_category) == true){
       $payroll_category->category = $fields['category'];
       return $this->validateIfNothingChangeThenSave($payroll_category,'Payroll Category');
