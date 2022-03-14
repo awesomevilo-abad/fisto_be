@@ -44,8 +44,8 @@ class Controller extends BaseController
       }
     }
 
-    public function validateIfNothingChangeThenSave($model,$modelName){
-      if($model->isClean()){
+    public function validateIfNothingChangeThenSave($model,$modelName,$is_reference_modified=0){
+      if($model->isClean() && $is_reference_modified == 0){
         return $this->result(200,"Nothing has changed.",[]);
       }else{
           $model->save();

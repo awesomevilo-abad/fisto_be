@@ -106,8 +106,8 @@ class SupplierController extends Controller
     ]);
 
     if (!empty($supplier)) {
-      $supplier_validateDuplicateCode = Supplier::withTrashed()->firstWhere([['id', '<>', $id],['code', $fields['code']]]);
 
+      $supplier_validateDuplicateCode = Supplier::withTrashed()->firstWhere([['id', '<>', $id],['code', $fields['code']]]);
       if (!empty($supplier_validateDuplicateCode))
         throw new FistoException("Supplier code already registered.", 409, NULL, [
           "error_field" => "code"
@@ -120,13 +120,18 @@ class SupplierController extends Controller
           "error_field" => "name"
         ]);
 
+      
+      $supp_ref =  $supplier->referrences()->get();
+      $prev_supp_ref = array_column($supp_ref->toArray(),'id');
+      $is_reference_modified = count(array_merge(array_diff($prev_supp_ref, $fields['references']), array_diff($fields['references'], $prev_supp_ref)));
+      
       $supplier->code = $fields['code'];
       $supplier->name = $fields['name'];
       $supplier->terms = $fields['terms'];
       $supplier->supplier_type_id = $fields['supplier_type_id'];
       $supplier->referrences()->detach();
       $supplier->referrences()->attach(array_unique($fields['references']));
-      return $this->validateIfNothingChangeThenSave($supplier,'Supplier');
+      return $this->validateIfNothingChangeThenSave($supplier,'Supplier',$is_reference_modified);
     }
     else
       throw new FistoException("No records found.", 404, NULL, []);
