@@ -252,17 +252,17 @@ class SupplierController extends Controller
       },array_keys($duplicate_data)));
       $firstDuplicateLine =  array_key_first($duplicate_data);
 
-      if((empty($data_validation_fields[$line]['code']))){
+      if((empty($data_validation_fields[$line]['name']))){
 
       }else{
         $errorBag[] = [
           "error_type" => "duplicate",
           "line" => (string) $duplicate_lines,
-          "description" =>  $data_validation_fields[$firstDuplicateLine]['code'].' code has a duplicate in your excel file.'
+          "description" =>  $data_validation_fields[$firstDuplicateLine]['name'].' name has a duplicate in your excel file.'
         ];
       }
     }
-
+    $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
     if (empty($errorBag)) {
       foreach ($data as $supplier) {
           $supplier_type = $supplier['supplier_type'];
