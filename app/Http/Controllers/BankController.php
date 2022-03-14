@@ -34,7 +34,7 @@ class BankController extends Controller
     ->paginate($rows);
     
     if(count($banks)==true){
-      return $this->result(200,"Bank has been fetched.",$banks);
+      return $this->result(200,"Banks has been fetched.",$banks);
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }
@@ -85,15 +85,16 @@ class BankController extends Controller
       $specific_bank = Bank::find($id);
 
       $fields = $request->validate([
-          'code' => ['unique:banks,code,' . $id],
+          'code' => ['required'],
           'name' => ['required'],
-          'branch' => ['unique:banks,branch,' . $id],
-          'account_no' => ['unique:banks,account_no,' . $id],
+          'branch' => ['required'],
+          'account_no' => ['required'],
           'location' => ['required'],
           'account_title_1' => ['required'],
           'account_title_2' => ['required']
       ]);
 
+     
       if (!$specific_bank) {
           $response = [
               "code" => 404,
@@ -101,6 +102,12 @@ class BankController extends Controller
               "data" => $specific_bank,
           ];
       } else {
+
+          $model = new Bank();
+          $this->isUnique($model,'Bank',['code'],[$fields['code']],$id,1);
+          $this->isUnique($model,'Bank',['branch'],[$fields['branch']],$id,1);
+          $this->isUnique($model,'Bank',['account_no'],[$fields['account_no']],$id,1);
+
           $specific_bank->code = $request->get('code');
           $specific_bank->name = $request->get('name');
           $specific_bank->branch = $request->get('branch');
@@ -306,7 +313,7 @@ class BankController extends Controller
       {
         Bank::insert($chunk->toArray()) ;
       }
-      return $this->result(201,'Bank has been imported.',$inputted_fields);
+      return $this->result(201,'Banks has been imported.',$inputted_fields);
     }
     else
       throw new FistoException("No Banks were imported. Kindly check the errors!.", 409, NULL, $errorBag);

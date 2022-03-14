@@ -28,7 +28,7 @@ class ReasonController extends Controller
       ->paginate($rows);
       
       if(count($reasons)==true){
-        return $this->result(200,"Reason has been fetched.",$reasons);
+        return $this->result(200,"Reasons has been fetched.",$reasons);
       }
       throw new FistoException("No records found.", 404, NULL, []);
     }

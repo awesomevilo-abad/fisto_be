@@ -29,7 +29,7 @@ class User extends Authenticatable
     ];
 
     protected $hidden = [
-        'password', 'remember_token','pivot'
+        'password', 'remember_token','pivot','created_at'
     ];
 
     protected $casts = [

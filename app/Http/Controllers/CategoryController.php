@@ -81,12 +81,17 @@ class CategoryController extends Controller
         $specific_category = Category::find($id);
 
         $fields = $request->validate([
-            'name' => ['unique:categories,name,' . $id],
+            'name' => ['required'],
         ]);
+        
 
         if (!$specific_category) {
             throw new FistoException("No records found.", 404, NULL, []);
         } else {
+            
+            $model = new Category();
+            $this->isUnique($model,'Category',['name'],[$fields['name']],$id);
+            
             $specific_category->name = $request->get('name');
             return $this->validateIfNothingChangeThenSave($specific_category,'Category');
         }

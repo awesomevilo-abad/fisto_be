@@ -90,7 +90,7 @@ class Controller extends BaseController
 
 
     public function getCategoryId($category,$masterlist){
-      return $category_id = $masterlist->firstWhere('category',$category)['id'];
+      return $catego11ry_id = $masterlist->firstWhere('category',$category)['id'];
     }
 
     public function validateDuplicateInDBFrom2Params($param1,$param2_id,$param2_description,$table,$index){
@@ -217,7 +217,7 @@ class Controller extends BaseController
     }
     
 
-    public function isUnique($model,$modelName,$params,$fields,$id)
+    public function isUnique($model,$modelName,$params,$fields,$id,$per_field=0)
     {
       $param_is_exist = [];
       if(count($params) != count($fields)){
@@ -236,7 +236,11 @@ class Controller extends BaseController
         $duplicate_params = array_keys(array_filter($param_is_exist, function($param){return $param !== 0;}));
         if(count($param_is_exist) == array_sum($param_is_exist))
             
-            throw new FistoException(ucfirst(strtolower($modelName)). " already registered.", 409, NULL, []);
+            if($per_field == 0){
+              throw new FistoException(ucfirst(strtolower($modelName)). " already registered.", 409, NULL, []);
+            }else{
+              throw new FistoException(ucfirst(strtolower(implode(",",$params))). " already registered.", 409, NULL, []);
+            }
       }
     }
 }

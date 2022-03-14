@@ -29,7 +29,7 @@ class SupplierTypeController extends Controller
         ->paginate($rows);
         
         if(count($supplier_types)==true){
-          return $this->result(200,"Supplier Type has been fetched.",$supplier_types);
+          return $this->result(200,"Supplier types has been fetched.",$supplier_types);
         }
         throw new FistoException("No records found.", 404, NULL, []);
     }
@@ -101,14 +101,14 @@ class SupplierTypeController extends Controller
             }
             $specific_supplier_type->type = $request->get('type');
             $specific_supplier_type->transaction_days = $request->get('transaction_days');
-            return $this->validateIfNothingChangeThenSave($specific_supplier_type,'Supplier Type');
+            return $this->validateIfNothingChangeThenSave($specific_supplier_type,'Supplier type');
         }
     }
 
     public function change_status(Request $request,$id){
         $status = $request['status'];
         $model = new SupplierType();
-        return $this->change_masterlist_status($status,$model,$id,'Supplier Type');
+        return $this->change_masterlist_status($status,$model,$id,'Supplier type');
     }
     
 

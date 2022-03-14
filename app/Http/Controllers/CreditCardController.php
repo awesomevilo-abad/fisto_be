@@ -33,7 +33,7 @@ class CreditCardController extends Controller
       ->paginate($rows);
   
       if(count($credit_card) == true)
-        return $this->result(200,'Credit Card has been fetched.',$credit_card);
+        return $this->result(200,'Credit cards has been fetched.',$credit_card);
       else
         throw new FistoException("No records found.",404,NULL,[]);
     }
@@ -50,7 +50,7 @@ class CreditCardController extends Controller
           $credit_card = CreditCard::create($fields);
           $credit_card->utility_categories()->attach($fields['categories']);
           $credit_card->utility_locations()->attach($fields['locations']);
-          return $this->result(201,"Credit Card has been saved.",$credit_card);
+          return $this->result(201,"Credit card has been saved.",$credit_card);
     }
     
     public function show($id)
@@ -60,7 +60,7 @@ class CreditCardController extends Controller
       ->get();
 
       if(count($credit_card)==true){
-        return $this->result(200,"Credit Card has been fetched",$credit_card);
+        return $this->result(200,"Credit card has been fetched",$credit_card);
       }
       throw new FistoException("No records found.", 404, NULL, []);
     }
@@ -79,7 +79,7 @@ class CreditCardController extends Controller
         $credit_card->utility_categories()->attach($fields['categories']);
         $credit_card->utility_locations()->detach();
         $credit_card->utility_locations()->attach($fields['locations']);
-        return $this->validateIfNothingChangeThenSave($credit_card,'Credit Card');
+        return $this->validateIfNothingChangeThenSave($credit_card,'Credit card');
       }
       throw new FistoException("No records found.", 404, NULL, []);
 

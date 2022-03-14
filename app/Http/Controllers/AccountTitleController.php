@@ -30,7 +30,7 @@ class AccountTitleController extends Controller
     ->paginate($rows);
     
     if(count($account_titles)==true){
-      return $this->result(200,"Account Title has been fetched.",$account_titles);
+      return $this->result(200,"Account titles has been fetched.",$account_titles);
     }
     throw new FistoException("No records found.", 404, NULL, []);
     
@@ -283,7 +283,7 @@ class AccountTitleController extends Controller
       {
         AccountTitle::insert($chunk->toArray()) ;
       }
-      return $this->result(201,'Account Title has been imported.',$inputted_fields);
+      return $this->result(201,'Account titles has been imported.',$inputted_fields);
     }
     else
       throw new FistoException("No Account Title were imported. Kindly check the errors!.", 409, NULL, $errorBag);

@@ -26,7 +26,7 @@ class PayrollCategoryController extends Controller
     ->paginate($rows);
     
     if(count($payroll_category)==true){
-      return $this->result(200,"Payroll Category has been fetched.",$payroll_category);
+      return $this->result(200,"Payroll category has been fetched.",$payroll_category);
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }
@@ -38,7 +38,7 @@ class PayrollCategoryController extends Controller
     ->get();
 
     if(count($payroll_category)==true){
-      return $this->result(200,"Payroll Category has been fetched",$payroll_category);
+      return $this->result(200,"Payroll category has been fetched",$payroll_category);
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }  
@@ -52,11 +52,11 @@ class PayrollCategoryController extends Controller
       $validateDuplicatePayrollCategory = PayrollCategory::withTrashed()->firstWhere('category', $fields['category']);
 
       if (!empty($validateDuplicatePayrollCategory))
-        throw new FistoException("Payroll Category already registered.", 409, NULL, [
+        throw new FistoException("Payroll category already registered.", 409, NULL, [
           "error_field" => "category"
         ]);
         $payroll_category = PayrollCategory::create($fields);
-        return $this->result(201,"Payroll Category has been saved.",$payroll_category);
+        return $this->result(201,"Payroll category has been saved.",$payroll_category);
 
   }
 
@@ -68,11 +68,11 @@ class PayrollCategoryController extends Controller
     ]);
     
     $payroll_category = PayrollCategory::withTrashed()->find($id);
-    $is_unique = $this->isUnique($model,'Payroll Category',['category'],[$fields['category']],$id);
+    $is_unique = $this->isUnique($model,'Payroll category',['category'],[$fields['category']],$id);
 
     if(!empty($payroll_category) == true){
       $payroll_category->category = $fields['category'];
-      return $this->validateIfNothingChangeThenSave($payroll_category,'Payroll Category');
+      return $this->validateIfNothingChangeThenSave($payroll_category,'Payroll category');
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }
@@ -80,7 +80,7 @@ class PayrollCategoryController extends Controller
   public function change_status(Request $request,$id){
     $status = $request['status'];
     $model = new PayrollCategory();
-    return $this->change_masterlist_status($status,$model,$id,'Payroll Category');
+    return $this->change_masterlist_status($status,$model,$id,'Payroll category');
   }
 
 }

@@ -158,7 +158,7 @@ class DocumentController extends Controller
 
         $validateDuplicateDocumentTypeInUpdate =  GenericMethod::validateDuplicateDocumentTypeInUpdate($fields['type'],$id);
         if(count($validateDuplicateDocumentTypeInUpdate)>0) {
-            throw new FistoException("Category already registered.", 409, NULL, []);
+            throw new FistoException("Document already registered.", 409, NULL, []);
         }
 
         if (!$specific_document) {
@@ -167,6 +167,7 @@ class DocumentController extends Controller
             $data = [];
             return $this->result($code,$message,$data);
         }
+        
 
         $specific_document->type = $request->get('type');
         $specific_document->description = $request->get('description');

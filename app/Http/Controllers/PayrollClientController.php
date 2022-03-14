@@ -24,7 +24,7 @@ class PayrollClientController extends Controller
     ->paginate($rows);
     
     if(count($payroll_client)==true){
-      return $this->result(200,"Payroll Client has been fetched.",$payroll_client);
+      return $this->result(200,"Payroll client has been fetched.",$payroll_client);
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }
@@ -36,7 +36,7 @@ class PayrollClientController extends Controller
     ->get();
 
     if(count($payroll_client)==true){
-      return $this->result(200,"Payroll Client has been fetched",$payroll_client);
+      return $this->result(200,"Payroll client has been fetched",$payroll_client);
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }
@@ -50,18 +50,18 @@ class PayrollClientController extends Controller
       $validateDuplicatePayrollClient = PayrollClient::withTrashed()->firstWhere('client', $fields['client']);
 
       if (!empty($validateDuplicatePayrollClient))
-        throw new FistoException("Payroll Client already registered.", 409, NULL, [
+        throw new FistoException("Payroll client already registered.", 409, NULL, [
           "error_field" => "client"
         ]);
         $payroll_client = PayrollClient::create($fields);
-        return $this->result(201,"Payroll Client has been saved.",$payroll_client);
+        return $this->result(201,"Payroll client has been saved.",$payroll_client);
 
   }
 
   public function change_status(Request $request,$id){
     $status = $request['status'];
     $model = new PayrollClient();
-    return $this->change_masterlist_status($status,$model,$id,'Payroll Client');
+    return $this->change_masterlist_status($status,$model,$id,'Payroll client');
   }
 
   public function update(Request $request, $id)
@@ -72,10 +72,10 @@ class PayrollClientController extends Controller
     ]);
 
     $payroll_client = PayrollClient::withTrashed()->find($id);
-    $is_unique = $this->isUnique($model,'Payroll Client',['client'],[$fields['client']],$id);
+    $is_unique = $this->isUnique($model,'Payroll client',['client'],[$fields['client']],$id);
     if(!empty($payroll_client) == true){
       $payroll_client->client = $fields['client'];
-      return $this->validateIfNothingChangeThenSave($payroll_client,'Payroll Client');
+      return $this->validateIfNothingChangeThenSave($payroll_client,'Payroll client');
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }

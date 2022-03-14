@@ -38,7 +38,7 @@ class AccountNumberController extends Controller
     ->paginate($rows);
     
     if(count($account_number)==true){
-      return $this->result(200,"Account Number has been fetched.",$account_number);
+      return $this->result(200,"Account numbers has been fetched.",$account_number);
     }
     throw new FistoException("No records found.", 404, NULL, []);
   }
@@ -74,8 +74,7 @@ class AccountNumberController extends Controller
 
     if (empty($account_number)) 
       throw new FistoException("No records found.", 404, NULL, []);
-      
-      $is_unique = $this->isUnique($model,'Account Number',['account_no','category_id'],[$fields['account_no'],$fields['category_id']],$id);
+      $is_unique = $this->isUnique($model,'Account number',['account_no','category_id'],[$fields['account_no'],$fields['category_id']],$id);
 
       $account_number_validateDuplicate = AccountNumber::withTrashed()->firstWhere([['id', '<>', $id],['account_no', $fields['account_no']],['category_id', $fields['category_id']]]);
       if (!empty($account_number_validateDuplicate)) 
@@ -86,13 +85,13 @@ class AccountNumberController extends Controller
       $account_number->category_id = $fields['category_id'];
       $account_number->supplier_id = $fields['supplier_id'];
 
-      return $this->validateIfNothingChangeThenSave($account_number,'Account Number');
+      return $this->validateIfNothingChangeThenSave($account_number,'Account number');
   }
 
   public function change_status(Request $request,$id){
     $status = $request['status'];
     $model = new AccountNumber();
-    return $this->change_masterlist_status($status,$model,$id,'Account Number');
+    return $this->change_masterlist_status($status,$model,$id,'Account number');
 }
 
   public function import(Request $request)
@@ -174,9 +173,9 @@ class AccountNumberController extends Controller
       {
         AccountNumber::insert($chunk->toArray()) ;
       }
-      return $this->result(201,'Account Number has been imported.',$inputted_fields);
+      return $this->result(201,'Account numbers has been imported.',$inputted_fields);
     }
     else
-      throw new FistoException("No Account Number were imported. Kindly check the errors!.", 409, NULL, $errorBag);
+      throw new FistoException("No Account number were imported. Kindly check the errors!.", 409, NULL, $errorBag);
   }
 }

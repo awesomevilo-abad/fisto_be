@@ -14,6 +14,6 @@ class PayrollCategory extends Model
     protected $dates = ['deleted_at'];
     protected $table = 'payroll_categories';
     protected $fillable = ['category'];
-    protected $attributes = ['is_active' => 1];
+    protected $hidden = ['created_at','is_active'];
 
 }

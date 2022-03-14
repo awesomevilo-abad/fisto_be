@@ -35,7 +35,7 @@ class SupplierController extends Controller
       ->paginate($rows);
 
     if (count($suppliers) == true) {
-      return $this->result(200,"Suppliers has been fetched",$suppliers);
+      return $this->result(200,"Suppliers has been fetched.",$suppliers);
     }
     else
       throw new FistoException("No records found.", 404, NULL, []);
@@ -58,7 +58,7 @@ class SupplierController extends Controller
       ->get();
 
     if (!empty($supplier)) {
-      return $this->result(200,"Supplier has been fetched",$supplier);
+      return $this->result(200,"Suppliers has been fetched.",$supplier);
     }
     else
       throw new FistoException("No records found.", 404, NULL, []);
@@ -157,7 +157,7 @@ class SupplierController extends Controller
     $keys = array_keys(current($data));
 
     if (count(array_diff($template, $keys)))
-      throw new FistoException("Invalid excel template, it should be Supplier Code, Supplier Name, Terms, Supplier Type, Referrences", 406, NULL, []);
+      throw new FistoException("Invalid excel template, it should be Supplier Code, Supplier Name, Terms, Supplier Type, Referrences.", 406, NULL, []);
 
     foreach ($data as $supplier) {
       $code = $supplier['code'];
