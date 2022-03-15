@@ -106,7 +106,10 @@ class Controller extends BaseController
 
 
     public function getCategoryId($category,$masterlist){
-      return $catego11ry_id = $masterlist->firstWhere('category',$category)['id'];
+       $category_id = $masterlist->filter(function ($query) use ($category){
+        return (strtolower($query["category"]) == strtolower($category)); 
+      });
+      return $category_id[0]['id'];
     }
 
     public function validateDuplicateInDBFrom2Params($param1,$param2_id,$param2_description,$table,$index){
@@ -115,6 +118,7 @@ class Controller extends BaseController
         $duplicateAccountNo = $table->filter(function ($query) use ($param1,$param2_id){
           return (($query['account_no'] == $param1) && ($query['category_id'] ==  $param2_id)); 
         });
+
         if ($duplicateAccountNo->count() > 0)
           $duplicates[] = (object) [
             "error_type" => "existing",
