@@ -25,15 +25,15 @@ class AccountNumber extends Model
     return $date->format('Y-m-d H:i');
   }
 
-  public function locations()
+  public function location()
   {
     return $this->hasOne(UtilityLocation::class,'id', 'location_id')->select(['id','location']);
   }
-  public function categories()
+  public function category()
   {
     return $this->hasOne(UtilityCategory::class,'id', 'category_id')->select(['id','category']);
   }
-  public function suppliers()
+  public function supplier()
   {
     return $this->hasOne(Supplier::class,'id', 'supplier_id')->select(['id','name']);
   }

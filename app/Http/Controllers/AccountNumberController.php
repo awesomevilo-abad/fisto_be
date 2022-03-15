@@ -22,17 +22,17 @@ class AccountNumberController extends Controller
     $search =  $request['search'];
     
     $account_number = AccountNumber::withTrashed()
-    ->with('locations')
-    ->with('categories')
-    ->with('suppliers')
+    ->with('location')
+    ->with('category')
+    ->with('supplier')
     ->where(function ($query) use ($status){
       return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
     })
     ->where(function ($query) use ($search) {
       $query->where('account_no', 'like', '%'.$search.'%')
-      ->orWhereHas ('locations',function($q)use($search){$q->where('location', 'like', '%'.$search.'%');})
-      ->orWhereHas ('categories',function($q)use($search){$q->where('category', 'like', '%'.$search.'%');})
-      ->orWhereHas ('suppliers',function($q)use($search){$q->where('name', 'like', '%'.$search.'%');});
+      ->orWhereHas ('location',function($q)use($search){$q->where('location', 'like', '%'.$search.'%');})
+      ->orWhereHas ('category',function($q)use($search){$q->where('category', 'like', '%'.$search.'%');})
+      ->orWhereHas ('supplier',function($q)use($search){$q->where('name', 'like', '%'.$search.'%');});
     })
     ->latest('updated_at')
     ->paginate($rows);
