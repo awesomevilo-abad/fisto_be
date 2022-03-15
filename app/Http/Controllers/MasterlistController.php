@@ -39,16 +39,16 @@ class MasterlistController extends Controller
 
   public function loccatsupDropdown(){
     $data =  array(
-      "locations"=>SupplierType::whereNull('deleted_at')->get(['id','type']),
-      "categories"=>Referrence::whereNull('deleted_at')->get(['id','type']),
+      "locations"=>UtilityLocation::whereNull('deleted_at')->get(['id','location']),
+      "categories"=>UtilityCategory::whereNull('deleted_at')->get(['id','category']),
       "suppliers"=>Supplier::whereNull('deleted_at')->get(['id','name']));
       return $this->result(200,'Location, Category and Supplier has been fetched.',$data);
   }
 
   public function loccatDropdown(){
     $data =  array(
-      "locations"=>SupplierType::whereNull('deleted_at')->get(['id','type']),
-      "categories"=>Referrence::whereNull('deleted_at')->get(['id','type']));
+      "locations"=>UtilityLocation::whereNull('deleted_at')->get(['id','location']),
+      "categories"=>UtilityCategory::whereNull('deleted_at')->get(['id','category']));
       return $this->result(200,'Location and Category has been fetched.',$data);
   }
 
