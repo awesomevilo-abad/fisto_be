@@ -44,8 +44,24 @@ class Controller extends BaseController
       }
     }
 
-    public function validateIfNothingChangeThenSave($model,$modelName,$is_reference_modified=0){
-      if($model->isClean() && $is_reference_modified == 0){
+
+    public function isTaggedArrayModified($inpputedArrayField, $modelObject,$field){
+      $previousArray = array_column($modelObject->toArray(),$field);
+      $is_tagged_array_modified = count(array_merge(array_diff($previousArray, $inpputedArrayField), array_diff($inpputedArrayField, $previousArray)));
+      return $is_tagged_array_modified;
+    }
+
+    public function isMultipleTaggedArrayModified($tagged_array_1,$tagged_array_2){
+      if(($tagged_array_1 == 1) || ($tagged_array_2 == 1)){
+        $is_tagged_array_modified = 1;
+      }else{
+          $is_tagged_array_modified = 0;
+      }
+      return $is_tagged_array_modified;
+    }
+
+    public function validateIfNothingChangeThenSave($model,$modelName,$is_tagged_array_modified=0){
+      if($model->isClean() && $is_tagged_array_modified == 0){
         return $this->result(200,"Nothing has changed.",[]);
       }else{
           $model->save();

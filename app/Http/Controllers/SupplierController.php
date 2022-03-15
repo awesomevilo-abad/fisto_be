@@ -119,11 +119,8 @@ class SupplierController extends Controller
         throw new FistoException("Supplier name already registered.", 409, NULL, [
           "error_field" => "name"
         ]);
-
       
-      $supp_ref =  $supplier->referrences()->get();
-      $prev_supp_ref = array_column($supp_ref->toArray(),'id');
-      $is_reference_modified = count(array_merge(array_diff($prev_supp_ref, $fields['references']), array_diff($fields['references'], $prev_supp_ref)));
+      $is_reference_modified = $this->isTaggedArrayModified($fields['references'],  $supplier->referrences()->get(),'id');
       
       $supplier->code = $fields['code'];
       $supplier->name = $fields['name'];

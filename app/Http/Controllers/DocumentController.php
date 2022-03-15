@@ -171,11 +171,13 @@ class DocumentController extends Controller
 
         $specific_document->type = $request->get('type');
         $specific_document->description = $request->get('description');
-
         $category_ids = $request['categories'];
+        
+        $is_tagged_modified = $this->isTaggedArrayModified($category_ids,  $specific_document->categories()->get(),'id');
+
         $specific_document->categories()->detach();
         $specific_document->categories()->attach($category_ids);
-        return $this->validateIfNothingChangeThenSave($specific_document,'Document');
+        return $this->validateIfNothingChangeThenSave($specific_document,'Document',$is_tagged_modified);
     }
 
     public function change_status(Request $request,$id){

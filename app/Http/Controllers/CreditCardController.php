@@ -75,11 +75,16 @@ class CreditCardController extends Controller
 
         $credit_card->name = $fields['name'];
         $credit_card->account_no = $fields['account_no'];
+        
+        $is_tagged_array_modified_category = $this->isTaggedArrayModified($fields['categories'],  $credit_card->utility_categories()->get(),'id');
+        $is_tagged_array_modified_location = $this->isTaggedArrayModified($fields['locations'],  $credit_card->utility_locations()->get(),'id');
+        $is_tagged_array_modified = $this->isMultipleTaggedArrayModified($is_tagged_array_modified_category,$is_tagged_array_modified_location);
+
         $credit_card->utility_categories()->detach();
         $credit_card->utility_categories()->attach($fields['categories']);
         $credit_card->utility_locations()->detach();
         $credit_card->utility_locations()->attach($fields['locations']);
-        return $this->validateIfNothingChangeThenSave($credit_card,'Credit card');
+        return $this->validateIfNothingChangeThenSave($credit_card,'Credit card',$is_tagged_array_modified);
       }
       throw new FistoException("No records found.", 404, NULL, []);
 
