@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Routing\Controller as BaseController;
 use App\Exceptions\FistoException;
 
@@ -109,7 +110,7 @@ class Controller extends BaseController
        $category_id = $masterlist->filter(function ($query) use ($category){
         return (strtolower($query["category"]) == strtolower($category)); 
       });
-      return $category_id[0]['id'];
+      return $category_id;
     }
 
     public function validateDuplicateInDBFrom2Params($param1,$param2_id,$param2_description,$table,$index){
@@ -262,5 +263,89 @@ class Controller extends BaseController
               throw new FistoException(ucfirst(strtolower(implode(",",$params))). " already registered.", 409, NULL, []);
             }
       }
+    }
+    
+    public function ifExistInTable($modelName,$table,$id){
+      $table = DB::table("$table")->where('id', $id)->exists();
+      if(empty($table)){
+        return (ucfirst(strtolower($modelName))." not registered.");
+      }
+      
+    }
+
+    public function getMultipleFieldExist($modelNames,$tables,$fields,$errorMessages){
+      
+      if ((count($modelNames) != count($tables)) || (count($tables) != count($fields)) || (count($modelNames) != count($fields))) {
+        throw new FistoException("Model name, field and table counts are not equal.", 202, NULL, [array(
+          "Model name count: ".count($modelNames),"Table count: ".count($tables),"Field count: ".count($fields),)]);
+     }
+     foreach($modelNames as $k=>$v){
+       $errorMessage = $this->ifExistInTable("$modelNames[$k]","$tables[$k]",$fields[$k]);
+       if($errorMessage){
+         $errorMessages[] =$errorMessage;
+       }
+     }
+    
+     return $errorMessages;
+    }
+
+    public function getTransactionID($str)
+    {
+        $dep_initials = '';
+        foreach (explode(' ', $str) as $word) {
+            $dep_initials .= strtoupper($word[0]);
+        }
+
+        $transactions = DB::table('transactions')->where('transaction_id', 'like', '%' . $dep_initials . '%')
+            ->select('transaction_id')->orderBy('id', 'DESC')->first();
+        if (empty($transactions)) {
+            $transaction_id = 0;
+        } else {
+            $transaction_id = preg_replace('/[^0-9.]+/', '', ($transactions->transaction_id));
+
+        }
+        return ($transaction_id);
+    }
+    public function getTransactionCode($str, $transaction_id)
+    {
+        $dep_initials = '';
+        $transaction_no = '';
+        if ($str == trim($str) && strpos($str, ' ') !== false) {
+            // IF MORE THAN 1 WORD AND DEPARTMENT NAME (MANAGEMENT INFORMATION SYSTEMS)
+            foreach (explode(' ', $str) as $word) {
+                $dep_initials .= strtoupper($word[0]);
+            }
+
+            return $dep_initials . sprintf('%03d', ($transaction_id + 1));
+        } else {
+            // IF 1 WORD AND DEPARTMENT NAME (FINANCE)
+            $dep_initials = strtoupper(mb_substr($str, 0, 3));
+
+            $transactions = DB::table('transactions')->where('transaction_id', 'like', '%' . $dep_initials . '%')
+                ->select('transaction_id')->orderBy('id', 'desc')->first();
+
+            if (empty($transactions)) {
+                // IF WALANG LAMAN ANG KEYWORD DITO IREREGISTER ANG KEYWORD (FIN,MIS,AUD...)
+                $transaction_id = 0;
+                return $dep_initials . sprintf('%03d', ($transaction_id + 1));
+            } else {
+                // IF MAY LAMAN ANG EXISTING NA ANG KEYWORD DOON SA TRANSACTION (FIN,MIS,AUD...)
+                $transaction_code = preg_replace('/[^0-9.]+/', '', $transactions->transaction_id);
+
+                if (empty($transaction_code)) {
+                    return $dep_initials . sprintf('%03d', ($transaction_code + 1));
+                } else {
+                    $transaction_id = preg_replace('/[^0-9.]+/', '', ($transaction_code + 1));
+                }
+                return ($dep_initials . sprintf('%03d', ($transaction_id)));
+
+            }
+
+        }
+
+    }
+    
+    public function convertToFloat($amount){
+      return floatval(str_replace(',', '',$amount));
     }
 }

@@ -121,6 +121,7 @@ class AccountNumberController extends Controller
       $emptyCells= $this->validateEmptyCells($account_number,$index);
 
       $category_id = $this->getCategoryId($category,$utility_category_masterlist);
+      print_r($category_id->first());
       $duplicates = $this->validateDuplicateInDBFrom2Params($account_no,$category_id,$category,$account_number_masterlist,$index);
       $existingLocations = $this->validateExistingLocation($location,$utility_location_masterlist,$index);
       $existingCategories = $this->validateExistingCategory($category,$utility_category_masterlist,$index);

@@ -95,6 +95,6 @@ class CreditCardController extends Controller
   public function change_status(Request $request,$id){
     $status = $request['status'];
     $model = new CreditCard();
-    return $this->change_masterlist_status($status,$model,$id);
+    return $this->change_masterlist_status($status,$model,$id,'Credit card');
   }
 }

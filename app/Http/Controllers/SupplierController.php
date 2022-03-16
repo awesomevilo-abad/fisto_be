@@ -21,7 +21,7 @@ class SupplierController extends Controller
 
     $suppliers = Supplier::withTrashed()
       ->with('referrences')
-      ->with('supplier_types')
+      ->with('supplier_type')
       ->where(function ($query) use ($status) {
         if ($status == true) $query->whereNull('suppliers.deleted_at');
         else  $query->whereNotNull('suppliers.deleted_at');
