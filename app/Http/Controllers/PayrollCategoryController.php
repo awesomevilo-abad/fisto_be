@@ -26,22 +26,10 @@ class PayrollCategoryController extends Controller
     ->paginate($rows);
     
     if(count($payroll_category)==true){
-      return $this->result(200,"Payroll category has been fetched.",$payroll_category);
+      return $this->resultResponse('fetch','Payroll Category',$payroll_category);
     }
-    throw new FistoException("No records found.", 404, NULL, []);
+    return $this->resultResponse('not-found','Payroll Category',[]);
   }
-  
-  public function show(Request $request,$id)
-  {
-    $payroll_category = PayrollCategory::withTrashed()
-    ->where('id',$id)
-    ->get();
-
-    if(count($payroll_category)==true){
-      return $this->result(200,"Payroll category has been fetched",$payroll_category);
-    }
-    throw new FistoException("No records found.", 404, NULL, []);
-  }  
     
   public function store(Request $request)
   {
@@ -52,12 +40,9 @@ class PayrollCategoryController extends Controller
       $validateDuplicatePayrollCategory = PayrollCategory::withTrashed()->firstWhere('category', $fields['category']);
 
       if (!empty($validateDuplicatePayrollCategory))
-        throw new FistoException("Payroll category already registered.", 409, NULL, [
-          "error_field" => "category"
-        ]);
+        return $this->resultResponse('registered','Payroll Category',["error_field" => "category"]);
         $payroll_category = PayrollCategory::create($fields);
-        return $this->result(201,"Payroll category has been saved.",$payroll_category);
-
+        return $this->resultResponse('save','Payroll Category',$payroll_category);
   }
 
   public function update(Request $request, $id)
@@ -74,7 +59,7 @@ class PayrollCategoryController extends Controller
       $payroll_category->category = $fields['category'];
       return $this->validateIfNothingChangeThenSave($payroll_category,'Payroll category');
     }
-    throw new FistoException("No records found.", 404, NULL, []);
+    return $this->resultResponse('not-found','Payroll Category',[]);
   }
 
   public function change_status(Request $request,$id){

@@ -27,9 +27,9 @@ class CategoryController extends Controller
         ->paginate($rows);
         
         if(count($categories)==true){
-          return $this->result(200,"Category has been fetched.",$categories);
+            return $this->resultResponse('fetch','Category',$categories);
         }
-        throw new FistoException("No records found.", 404, NULL, []);
+        return $this->resultResponse('not-found','Category',[]);
     }
 
     public function store(Request $request)
@@ -49,31 +49,15 @@ class CategoryController extends Controller
             ->get();
 
         if ($duplicate_category->count()) {
-            throw new FistoException("Category already registered.", 409, NULL, []);
+            return $this->resultResponse('registered','Category',[]);
         } elseif ($duplicate_category_inactive->count()) {
-            throw new FistoException("Category already registered but inactive.", 409, NULL, []);
+            return $this->resultResponse('registered-inactive','Category',[]);
         }else{
             $new_category = Category::create([
                 'name' => $fields['name']
             ]);
-            return $this->result(201,"New category has been saved.",$new_category);
+            return $this->resultResponse('save','Category',$new_category);
         }
-    }
-
-    public function show($id)
-    {
-        $result = Category::find($id);
-        if (!$result) {
-            $code = 404;
-            $message = "Data Not Found";
-            $data = [];
-        }else{
-            $code = 200;
-            $message = "Succefully Retrieved";
-            $data = $result;
-        }
-
-        return $this->result($code,$message,$data);
     }
 
     public function update(Request $request, $id)
@@ -86,7 +70,7 @@ class CategoryController extends Controller
         
 
         if (!$specific_category) {
-            throw new FistoException("No records found.", 404, NULL, []);
+            return $this->resultResponse('not-found','Category',[]);
         } else {
             
             $model = new Category();

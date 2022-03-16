@@ -56,7 +56,7 @@ class UserController extends Controller
         ->paginate($rows);
         
         if(count($users)!=true){
-            throw new FistoException("No records found.", 404, NULL, []);
+            return $this->resultResponse('not-found','User',[]);
         }
 
         foreach($users as $user)
@@ -108,7 +108,7 @@ class UserController extends Controller
             }
             $user['document_types'] =  $new_document_types;
         }
-        return $this->result(200,"Users has been fetched.",$users);
+        return $this->resultResponse('fetch','User',$users);
     }
 
     public function store(UserControllerRequest $request)
@@ -116,7 +116,7 @@ class UserController extends Controller
         $fields = $request->validated();
         $existing_user =   User::withTrashed()->where('id_prefix',$fields['id_prefix'])->where('id_no',$fields['id_no'])->first();
         if(!empty($existing_user)){
-            throw new FistoException("User already registered.",409,NULL,$fields['id_prefix'].'-'.$fields['id_no']);
+            return $this->resultResponse('registered','User',$fields['id_prefix'].'-'.$fields['id_no']);
         }
         $document_types =  $fields['document_types'];
         $document_ids = array_column($document_types,'document_id');
@@ -135,8 +135,7 @@ class UserController extends Controller
             $new_user->documents()->attach($document_ids);
             $document_type_object->document_categories()->attach($categories,['user_id' => $new_user->id]);
         }
-        
-        return $this->result(201,"New user has been saved.",$new_user);
+        return $this->resultResponse('save','User',$new_user);
     }
 
     public function show($id)
@@ -150,12 +149,10 @@ class UserController extends Controller
             ,'position','permissions','document_types','username'
         ])
         ->get();
-
         if(count($user)!=true){
             throw new FistoException("No records found.", 404, NULL, []);
         }
-
-        return $this->result(200,"Users has been fetched.",$user);
+        return $this->resultResponse('fetch','User',$user);
     }
 
     public function update(Request $request, $id)
@@ -216,10 +213,10 @@ class UserController extends Controller
         if(Hash::check($fields['current'],$user->password)){
             $user->password =bcrypt(strtolower($fields['password']));
             $user->save();
-            return $this->result(200,"Password has been changed.",[]);
+            return $this->resultResponse('password-changed','User',[]);
         }
         else{
-            throw new FistoException('The Password you entered is incorrect',409,NULL,["error_field"=>"current_password"]);
+            return $this->resultResponse('password-incorrect','User',["error_field"=>"current_password"]);
         }
     }
 
@@ -235,7 +232,7 @@ class UserController extends Controller
             $response = [
                 "code"=>201,
                 "message"=>"Succesfully Login",
-                "data"=>$user,
+                "result"=>$user,
             ];
 
             $cookie = cookie('sanctum', $token, 3600);
@@ -248,8 +245,6 @@ class UserController extends Controller
             "message"=>"Invalid Username or Password.",
             "data"=>[],
         ], Response::HTTP_UNAUTHORIZED);
-
-
     }
 
     public function logout()
@@ -257,16 +252,10 @@ class UserController extends Controller
       $logout = auth()->user()->tokens()->delete();
 
       if ($logout == true) {
-        $result = [
-          "code" => 200,
-          "message" => "User has been logged out.",
-          "result" => []
-        ];
-        
-        return response($result);
+        return $this->resultResponse('logout','User',[]);
       }
       else
-        throw new FistoException("User is already logged out.", 401, NULL, []);
+        return $this->resultResponse('logout-again','User',[]);
     }
 
     public function username_validation(Request $request)
@@ -274,8 +263,10 @@ class UserController extends Controller
         $fields = $request->validate(['username'=>['required','string']]);
         $user = User::firstWhere('username',$fields['username']);
         if(!empty($user))
-        {throw new FistoException("Username is already registered.", 409, NULL, ["error_field" => "username"]);}
-        return $this->result(200,"Username is available.",[]);
+        {
+            return $this->resultResponse('registered','Username',["error_field" => "username"]);
+        }
+        return $this->resultResponse('available','Username',[]);
     }
 
     public function id_validation(Request $request)
@@ -292,9 +283,9 @@ class UserController extends Controller
 
         if(!empty($user))
         {
-            throw new FistoException("Employee ID is already registered.", 409, NULL, ["error_field" => "id_no"]);
+            return $this->resultResponse('registered','Employee ID',["error_field" => "id_no"]);
         }else{
-            return $this->result(200,"Employee ID is available.",[]);
+            return $this->resultResponse('available','Employee ID',[]);
         }
     }
 
@@ -306,8 +297,8 @@ class UserController extends Controller
            $user->password =bcrypt(strtolower($user->username));
            $user->save();
             
-           return $this->result(200,"User's default password has been restored.",[]);
+           return $this->resultResponse('password-reset','User',[]);
         }  
-        throw new FistoException("You don't have the proper credentials to perform this action.", 401, NULL, []);
+        return $this->resultResponse('password-error-cred','User',[]);
     }
 }

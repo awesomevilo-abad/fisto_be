@@ -28,10 +28,10 @@ class SupplierTypeController extends Controller
         ->latest('updated_at')
         ->paginate($rows);
         
-        if(count($supplier_types)==true){
-          return $this->result(200,"Supplier types has been fetched.",$supplier_types);
-        }
-        throw new FistoException("No records found.", 404, NULL, []);
+      if(count($supplier_types)==true){
+        return $this->resultResponse('fetch','Supplier Type',$supplier_types);
+      }
+      return $this->resultResponse('not-found','Supplier Type',[]);
     }
 
     public function store(Request $request)
@@ -41,14 +41,10 @@ class SupplierTypeController extends Controller
             'transaction_days' => 'required',
 
         ]);
-
         $duplicateValues= GenericMethod::validateDuplicateByIdAndTable($fields['type'],'type','supplier_types');
 
         if(count($duplicateValues)>0) {
-             $code =403;
-             $message = "Supplier type already registered.";
-             $data = [];
-             return $this->result($code,$message,$data);
+            return $this->resultResponse('registered','Supplier Type',[]);
          }
 
         $new_supplier_type = SupplierType::create([
@@ -56,28 +52,7 @@ class SupplierTypeController extends Controller
             , 'transaction_days' => $fields['transaction_days']
         ]);
 
-        return $response = [
-                "code" => 200,
-                "message" => "New supplier type has been saved.",
-                "result" => $new_supplier_type,
-            ];
-    }
-
-    public function show($id)
-    {
-        $result = SupplierType::find($id);
-
-        if (!$result) {
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = [];
-        } else {
-            $code = 200;
-            $message = "Succesfully Retrieved";
-            $data = $result;
-
-        }
-        return $this->result($code,$message,$data);
+        return $this->resultResponse('save','Supplier Type',$new_supplier_type);
     }
 
     public function update(Request $request, $id)
@@ -88,16 +63,11 @@ class SupplierTypeController extends Controller
         ]);
 
         if (!$specific_supplier_type) {
-            $code =404;
-            $message = "Data Not Found!";
-            $data = [];
+            return $this->resultResponse('not-found','Supplier Type',[]);
         } else {
             $validateDuplicateInUpdate =  GenericMethod::validateDuplicateInUpdate($fields['type'],'type','supplier_types',$id);
             if(count($validateDuplicateInUpdate)>0) {
-                $code =403;
-                $message = "Supplier type already registered.";
-                $data = [];
-                return $this->result($code,$message,$data);
+                return $this->resultResponse('registered','Supplier Type',[]);
             }
             $specific_supplier_type->type = $request->get('type');
             $specific_supplier_type->transaction_days = $request->get('transaction_days');

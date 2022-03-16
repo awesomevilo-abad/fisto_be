@@ -24,21 +24,12 @@ class UtilityLocationController extends Controller
     ->latest('updated_at')
     ->paginate($rows);
 
-    if(count($utility_locations) == true)
-      return $this->result(200,'Utility locations has been fetched.',$utility_locations);
-    else
-      throw new FistoException("No records found.",404,NULL,[]);
-  }
-  public function show($id)
-  {
-    $result = UtilityLocation::find($id);
-    if (!$result) {
-      throw new FistoException("No records found.",404,NULL,[]);
+    if(count($utility_locations)==true){
+      return $this->resultResponse('fetch','Utility Location',$utility_locations);
     }
-    else {
-      return $this->result(200,"Utility locations has been fetched.",$result);
-    }
+    return $this->resultResponse('not-found','Utility Location',[]);
   }
+
   public function store(Request $request)
   {
     $fields = $request->validate([
@@ -50,15 +41,16 @@ class UtilityLocationController extends Controller
       ->get();
     
     if (count($utility_location_validateDuplicate) > 0) {
-      throw new FistoException("Utility location already registered.",409,NULL,[]);
+      return $this->resultResponse('registered','Utility Location',[]);
     }
     else {
       $new_utility_location = UtilityLocation::create([
         'location' => $fields['location']
       ]);
-      return $this->result(200,"New utility location has been saved.",$new_utility_location);
+      return $this->resultResponse('save','Utility Location',$new_utility_location);
     }
   }
+
   public function update(Request $request,$id)
   {
     $fields = $request->validate([
@@ -67,7 +59,7 @@ class UtilityLocationController extends Controller
 
     $specific_utility_location = UtilityLocation::find($id);
     if (!$specific_utility_location) {
-      throw new FistoException("No records found.",404,NULL,[]);
+      return $this->resultResponse('not-found','Utility Location',[]);
     }
     else {
       $utility_location_validateDuplicate = DB::table('utility_locations')
@@ -76,7 +68,7 @@ class UtilityLocationController extends Controller
         ->get();
 
       if (count($utility_location_validateDuplicate) > 0) {
-        throw new FistoException("Utility location already registered.",409,NULL,[]);
+        return $this->resultResponse('registered','Utility Location',[]);
       }
       else {
         $specific_utility_location->location = $request->get('location');

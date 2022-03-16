@@ -29,11 +29,10 @@ class ReferrenceController extends Controller
         ->latest('updated_at')
         ->paginate($rows);
 
-        if (count($referrences) == true) {
-            return $this->result(200,"References has been fetched",$referrences);
-        }
-        else
-         throw new FistoException("No records found.", 404, NULL, []);
+        if(count($referrences)==true){
+            return $this->resultResponse('fetch','Reference',$referrences);
+          }
+          return $this->resultResponse('not-found','Reference',[]);
     }
     public function store(Request $request)
     {
@@ -45,10 +44,7 @@ class ReferrenceController extends Controller
        $duplicateValues= GenericMethod::validateDuplicateByIdAndTable($fields['type'],'type','referrences');
 
        if(count($duplicateValues)>0) {
-            $code =403;
-            $message = "Reference Already Registered";
-            $data = [];
-            return $this->result($code,$message,$data);
+        return $this->resultResponse('registered','Reference',[]);
         }
 
         $new_referrence = Referrence::create([
@@ -57,38 +53,11 @@ class ReferrenceController extends Controller
         ]);
 
         if (!$new_referrence->count() == 0) {
-            $response = [
-                "code" => 201,
-                "message" => "Succesfully Created!",
-                "data" => $new_referrence,
-
-            ];
-
+            return $this->resultResponse('save','Reference',$new_referrence);
         }
-
-        $code =    200;
-        $message = "Succefully Created";
-        $data = $new_referrence;
-
-        return $this->result($code,$message,$data);
-
     }
-    public function show($id)
-    {
-        $result = Referrence::find($id);
-
-        if (!$result) {
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = [];
-        } else {
-            $code = 200;
-            $message = "Succesfully Retrieved";
-            $data = $result;
-
-        }
-        return $this->result($code,$message,$data);
-    }
+    
+    
     public function update(Request $request, $id)
     {
         $specific_referrence = Referrence::find($id);
@@ -98,18 +67,13 @@ class ReferrenceController extends Controller
         ]);
 
         if (!$specific_referrence) {
-            $code =404;
-            $message = "Data Not Found!";
-            $data = [];
+            return $this->resultResponse('not-found','Reference',[]);
 
         } else {
 
             $validateDuplicateInUpdate =  GenericMethod::validateDuplicateInUpdate($fields['type'],'type','referrences',$id);
             if(count($validateDuplicateInUpdate)>0) {
-                $code =403;
-                $message = "Referrence type already registered in other referrence type";
-                $data = [];
-                return $this->result($code,$message,$data);
+                return $this->resultResponse('registered','Reference',[]);
             }
 
             $specific_referrence->type = $request->get('type');

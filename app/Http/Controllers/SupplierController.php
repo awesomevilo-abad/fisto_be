@@ -34,35 +34,12 @@ class SupplierController extends Controller
       ->latest('suppliers.updated_at')
       ->paginate($rows);
 
-    if (count($suppliers) == true) {
-      return $this->result(200,"Suppliers has been fetched.",$suppliers);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
+      if(count($suppliers)==true){
+        return $this->resultResponse('fetch','Supplier',$suppliers);
+      }
+      return $this->resultResponse('not-found','Supplier',[]);
   }
-  public function show($id)
-  {
-    $supplier = Supplier::with('referrences')
-      ->where('suppliers.id', $id)
-      ->join('supplier_types', 'suppliers.supplier_type_id', 'supplier_types.id')
-      ->select([
-        'suppliers.id',
-        'suppliers.code',
-        'suppliers.name',
-        'suppliers.terms',
-        'suppliers.supplier_type_id',
-        'supplier_types.type as supplier_type',
-        'suppliers.updated_at',
-        'suppliers.deleted_at'
-      ])
-      ->get();
 
-    if (!empty($supplier)) {
-      return $this->result(200,"Suppliers has been fetched.",$supplier);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
-  }
   public function store(Request $request)
   {
     $fields = $request->validate([
@@ -76,22 +53,17 @@ class SupplierController extends Controller
     $supplier_validateDuplicateCode = Supplier::withTrashed()->firstWhere('code', $fields['code']);
 
     if (!empty($supplier_validateDuplicateCode))
-      throw new FistoException("Supplier code already registered.", 409, NULL, [
-        "error_field" => "code"
-      ]);
+      return $this->resultResponse('registered','Supplier',["error_field" => "code"]);
 
     $supplier_validateDuplicateName = Supplier::withTrashed()->firstWhere('name', $fields['name']);
 
     if (!empty($supplier_validateDuplicateName))
-      throw new FistoException("Supplier name already registered.", 409, NULL, [
-        "error_field" => "name"
-      ]);
+      return $this->resultResponse('registered','Supplier',["error_field" => "name"]);
 
     $new_supplier = Supplier::create($fields);
     $new_supplier->referrences()
       ->attach($fields['references']);
-
-      return $this->result(200,"Supplier has been saved.",$new_supplier);
+    return $this->resultResponse('save','Supplier',$new_supplier);
   }
   public function update(Request $request, $id)
   {
@@ -109,16 +81,12 @@ class SupplierController extends Controller
 
       $supplier_validateDuplicateCode = Supplier::withTrashed()->firstWhere([['id', '<>', $id],['code', $fields['code']]]);
       if (!empty($supplier_validateDuplicateCode))
-        throw new FistoException("Supplier code already registered.", 409, NULL, [
-          "error_field" => "code"
-        ]);
+      return $this->resultResponse('registered','Supplier',["error_field" => "code"]);
 
       $supplier_validateDuplicateName = Supplier::withTrashed()->firstWhere([['id', '<>', $id],['name', $fields['name']]]);
 
       if (!empty($supplier_validateDuplicateName))
-        throw new FistoException("Supplier name already registered.", 409, NULL, [
-          "error_field" => "name"
-        ]);
+      return $this->resultResponse('registered','Supplier',["error_field" => "name"]);
       
       $is_reference_modified = $this->isTaggedArrayModified($fields['references'],  $supplier->referrences()->get(),'id');
       
@@ -131,7 +99,7 @@ class SupplierController extends Controller
       return $this->validateIfNothingChangeThenSave($supplier,'Supplier',$is_reference_modified);
     }
     else
-      throw new FistoException("No records found.", 404, NULL, []);
+      return $this->resultResponse('not-found','Supplier',[]);
   }
   public function import(Request $request)
   {
@@ -149,17 +117,10 @@ class SupplierController extends Controller
     $supplier_type_list_no_trash = SupplierType::get();
     $referrence_list_no_trash = Referrence::get();
     
-    $template = [
-      "code",
-      "name",
-      "terms",
-      "supplier_type",
-      "referrences"
-    ];
+    $headers = 'Supplier Code, Supplier Name, Terms, Supplier Type, Referrences';
+    $template = ["code","name","terms","supplier_type","referrences"];
     $keys = array_keys(current($data));
-
-    if (count(array_diff($template, $keys)))
-      throw new FistoException("Invalid excel template, it should be Supplier Code, Supplier Name, Terms, Supplier Type, Referrences.", 406, NULL, []);
+    $this->validateHeader($template,$keys,$headers);
 
     foreach ($data as $supplier) {
       $code = $supplier['code'];
@@ -292,10 +253,10 @@ class SupplierController extends Controller
           $supplier->referrences()->attach($references_ids);
         }
       }
-      return $this->result(201,"Suppliers has been imported",[]);
+      return $this->resultResponse('import','Supplier',$new_supplier);
     }
     else
-      throw new FistoException("No supplier were imported. Please correct the errors in the excel file.", 409, NULL, $errorBag);
+      return $this->resultResponse('import-error','Supplier',$errorBag);
   }
   public function change_status(Request $request,$id)
   {

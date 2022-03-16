@@ -34,26 +34,9 @@ class BankController extends Controller
     ->paginate($rows);
     
     if(count($banks)==true){
-      return $this->result(200,"Banks has been fetched.",$banks);
+      return $this->resultResponse('fetch','Bank',$banks);
     }
-    throw new FistoException("No records found.", 404, NULL, []);
-  }
-
-  public function show($id)
-  {
-    $bank = Bank::find($id);
-
-    if (!empty($bank)) {
-      $result = [
-        "code" => 200,
-        "message" => "Bank has been fetched.",
-        "result" => $bank
-      ];
-      
-      return response($result);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
+    return $this->resultResponse('not-found','Bank',[]);
   }
 
   public function store(Request $request)
@@ -74,10 +57,10 @@ class BankController extends Controller
 
     if (empty($bank_validateDuplicate)) {
       $new_bank = Bank::create($fields);
-      return $this->result(201,"New Bank has been saved.",$new_bank);
+      return $this->resultResponse('save','Bank',$new_bank);
     }
     else
-      throw new FistoException("Bank already registered.", 409, NULL, []);
+    return $this->resultResponse('registered','Bank',[]);
   }
     
   public function update(Request $request, $id)
@@ -313,9 +296,9 @@ class BankController extends Controller
       {
         Bank::insert($chunk->toArray()) ;
       }
-      return $this->result(201,'Banks has been imported.',$inputted_fields);
+      return $this->resultResponse('import','Bank',$inputted_fields);
     }
     else
-      throw new FistoException("No Banks were imported. Kindly check the errors!.", 409, NULL, $errorBag);
+      return $this->resultResponse('import-error','Bank',$errorBag);
   }
 }

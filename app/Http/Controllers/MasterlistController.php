@@ -21,12 +21,12 @@ class MasterlistController extends Controller
 {
   public function documentDropdown(){
     $data =  array("documents"=>Document::whereNull('deleted_at')->with('categories')->get(['id','type','description']));
-    return $this->result(200,'Documents has been fetched.',$data);
+    return $this->resultResponse('fetch','Document',$data);
   }
 
   public function categoryDropdown(){
     $data =  array("categories"=>Category::whereNull('deleted_at')->get(['id','name']));
-    return $this->result(200,'Category has been fetched.',$data);
+    return $this->resultResponse('fetch','Category',$data);
 
   }
 
@@ -34,7 +34,7 @@ class MasterlistController extends Controller
     $data =  array(
       "supplier_types"=>SupplierType::whereNull('deleted_at')->get(['id','type']),
       "references"=>Referrence::whereNull('deleted_at')->get(['id','type']));
-      return $this->result(200,'Category has been fetched.',$data);
+      return $this->resultResponse('fetch','Supplier and Reference',$data);
   }
 
   public function loccatsupDropdown(){
@@ -42,20 +42,20 @@ class MasterlistController extends Controller
       "locations"=>UtilityLocation::whereNull('deleted_at')->get(['id','location']),
       "categories"=>UtilityCategory::whereNull('deleted_at')->get(['id','category']),
       "suppliers"=>Supplier::whereNull('deleted_at')->get(['id','name']));
-      return $this->result(200,'Location, Category and Supplier has been fetched.',$data);
+      return $this->resultResponse('fetch','Location, Category and Supplier',$data);
   }
 
   public function loccatDropdown(){
     $data =  array(
       "locations"=>UtilityLocation::whereNull('deleted_at')->get(['id','location']),
       "categories"=>UtilityCategory::whereNull('deleted_at')->get(['id','category']));
-      return $this->result(200,'Location and Category has been fetched.',$data);
+      return $this->resultResponse('fetch','Location and Category',$data);
   }
 
   public function accountTitleDropdown(){
     $data =  array(
       "account_titles"=>AccountTitle::whereNull('deleted_at')->get(['id','title']));
-      return $this->result(200,'Account Title has been fetched.',$data);
+      return $this->resultResponse('fetch','Account Title',$data);
   }
 
 }

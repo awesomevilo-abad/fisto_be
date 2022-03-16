@@ -28,28 +28,11 @@ class ReasonController extends Controller
       ->paginate($rows);
       
       if(count($reasons)==true){
-        return $this->result(200,"Reasons has been fetched.",$reasons);
+        return $this->resultResponse('fetch','Reason',$reasons);
       }
-      throw new FistoException("No records found.", 404, NULL, []);
+      return $this->resultResponse('not-found','Reason',[]);
     }
 
-    public function show(Request $request,$id)
-    {
-      $reason = Reason::find($id);
-
-      if (!empty($reason)) {
-        $result = [
-          "code" => 200,
-          "message" => "Reason has been fetched.",
-          "result" => $reason
-        ];
-        
-        return response($result);
-      }
-      else
-        throw new FistoException("No records found.", 404, NULL, []);
-    }
-   
     public function store(Request $request)
     {
       $fields = $request->validate([
@@ -63,17 +46,10 @@ class ReasonController extends Controller
       
       if (count($reason_validateDuplicate) === 0) {
         $new_reason = Reason::create($fields);
-
-        $result = [
-          "code" => 200,
-          "message" => "New reason has been saved.",
-          "result" => $new_reason
-        ];
-        
-        return response($result);
+        return $this->resultResponse('save','Reason',$new_reason);
       }
       else
-        throw new FistoException("Reason already registered.", 409, NULL, []);
+      return $this->resultResponse('registered','Reason',[]);
     }
     
     public function update(Request $request, $id)
@@ -97,10 +73,10 @@ class ReasonController extends Controller
           return $this->validateIfNothingChangeThenSave($reason,'Reason');
         }
         else
-          throw new FistoException("Reason already registered.", 409, NULL, []);
+           return $this->resultResponse('registered','Reason',[]);
       }
       else
-        throw new FistoException("No records found.", 404, NULL, []);
+         return $this->resultResponse('not-found','Reason',[]);
     }
 
     public function change_status(Request $request,$id){

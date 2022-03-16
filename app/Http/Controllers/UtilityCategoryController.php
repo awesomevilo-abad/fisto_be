@@ -25,21 +25,12 @@ class UtilityCategoryController extends Controller
       ->latest('updated_at')
       ->paginate($rows);
 
-      if(count($utility_categories) == true)
-        return $this->result(200,'Utility categories has been fetched.',$utility_categories);
-      else
-        throw new FistoException("No records found.",404,NULL,[]);
-    }
-    public function show($id)
-    {
-      $result = UtilityCategory::find($id);
-      if (!empty($result)) {
-        return $this->result(200,"Utility category has been fetched",$result);
+      if(count($utility_categories)==true){
+        return $this->resultResponse('fetch','Utility Category',$utility_categories);
       }
-      else {
-        throw new FistoException("No records found.",404,NULL,[]);
-      }
+      return $this->resultResponse('not-found','Utility Category',[]);
     }
+
     public function store(Request $request)
     {
       $fields = $request->validate([
@@ -54,10 +45,10 @@ class UtilityCategoryController extends Controller
         $new_utility_category = UtilityCategory::create([
           'category' => $fields['category']
         ]);
-        return $this->result(201,"New utility category has been saved.",$new_utility_category);
+        return $this->resultResponse('save','Utility Category',$new_utility_category);
       }
       else {
-        throw new FistoException("Utility category already registered.",409,NULL,[]);
+        return $this->resultResponse('registered','Utility Category',[]);
       }
     }
     public function update(Request $request,$id)
@@ -67,7 +58,7 @@ class UtilityCategoryController extends Controller
       ]);
       $specific_utility_category = UtilityCategory::find($id);
       if (!$specific_utility_category) {
-        throw new FistoException("No records found.",404,NULL,[]);
+        return $this->resultResponse('not-found','Utility Category',[]);
       }
       else {
         $utility_category_validateDuplicate = DB::table('utility_categories')
@@ -75,7 +66,7 @@ class UtilityCategoryController extends Controller
           ->where('category', '=', $fields['category'])
           ->get();
         if (count($utility_category_validateDuplicate) > 0) {
-          throw new FistoException("Utility category already registered.",403,NULL,[]);
+          return $this->resultResponse('registered','Utility Category',[]);
         }
         else {
           $specific_utility_category->category = $request->get('category');

@@ -33,9 +33,9 @@ class CreditCardController extends Controller
       ->paginate($rows);
   
       if(count($credit_card) == true)
-        return $this->result(200,'Credit cards has been fetched.',$credit_card);
+        return $this->resultResponse('fetch','Credit Card',$credit_card);
       else
-        throw new FistoException("No records found.",404,NULL,[]);
+        return $this->resultResponse('not-found','Credit Card',[]);
     }
 
     public function store(CreditCardRequest $request)
@@ -44,27 +44,13 @@ class CreditCardController extends Controller
         $credit_card_validateDuplicateAccountNo = CreditCard::withTrashed()->firstWhere('account_no', $fields['account_no']);
 
         if (!empty($credit_card_validateDuplicateAccountNo))
-          throw new FistoException("Account no already registered.", 409, NULL, [
-            "error_field" => "account_no"
-          ]);
+          return $this->resultResponse('registered','Account number',["error_field" => "account_no"]);
           $credit_card = CreditCard::create($fields);
           $credit_card->utility_categories()->attach($fields['categories']);
           $credit_card->utility_locations()->attach($fields['locations']);
-          return $this->result(201,"Credit card has been saved.",$credit_card);
+          return $this->resultResponse('save','Credit Card',$credit_card);
     }
     
-    public function show($id)
-    {
-      $credit_card = CreditCard::with('utility_categories','utility_locations')->withTrashed()
-      ->where('id',$id)
-      ->get();
-
-      if(count($credit_card)==true){
-        return $this->result(200,"Credit card has been fetched",$credit_card);
-      }
-      throw new FistoException("No records found.", 404, NULL, []);
-    }
-
     public function update(CreditCardRequest $request, $id)
     {
       $fields = $request->validated();
@@ -86,15 +72,12 @@ class CreditCardController extends Controller
         $credit_card->utility_locations()->attach($fields['locations']);
         return $this->validateIfNothingChangeThenSave($credit_card,'Credit card',$is_tagged_array_modified);
       }
-      throw new FistoException("No records found.", 404, NULL, []);
-
-
-
+      return $this->resultResponse('not-found','Credit Card',[]);
     }
     
   public function change_status(Request $request,$id){
     $status = $request['status'];
     $model = new CreditCard();
-    return $this->change_masterlist_status($status,$model,$id,'Credit card');
+    return $this->change_masterlist_status($status,$model,$id,'Credit Card');
   }
 }

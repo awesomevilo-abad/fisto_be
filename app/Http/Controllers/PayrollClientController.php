@@ -24,23 +24,11 @@ class PayrollClientController extends Controller
     ->paginate($rows);
     
     if(count($payroll_client)==true){
-      return $this->result(200,"Payroll client has been fetched.",$payroll_client);
+      return $this->resultResponse('fetch','Payroll Client',$payroll_client);
     }
-    throw new FistoException("No records found.", 404, NULL, []);
+    return $this->resultResponse('not-found','Payroll Client',[]);
   }
-    
-  public function show(Request $request,$id)
-  {
-    $payroll_client = PayrollClient::withTrashed()
-    ->where('id',$id)
-    ->get();
-
-    if(count($payroll_client)==true){
-      return $this->result(200,"Payroll client has been fetched",$payroll_client);
-    }
-    throw new FistoException("No records found.", 404, NULL, []);
-  }
-    
+        
   public function store(Request $request)
   {
       $fields = $request->validate([
@@ -48,14 +36,11 @@ class PayrollClientController extends Controller
       ]);
 
       $validateDuplicatePayrollClient = PayrollClient::withTrashed()->firstWhere('client', $fields['client']);
-
       if (!empty($validateDuplicatePayrollClient))
-        throw new FistoException("Payroll client already registered.", 409, NULL, [
-          "error_field" => "client"
-        ]);
+        return $this->resultResponse('registered','Payroll Client',["error_field" => "client"]);
+        
         $payroll_client = PayrollClient::create($fields);
-        return $this->result(201,"Payroll client has been saved.",$payroll_client);
-
+        return $this->resultResponse('save','Payroll Client',$payroll_client);
   }
 
   public function change_status(Request $request,$id){
@@ -77,6 +62,6 @@ class PayrollClientController extends Controller
       $payroll_client->client = $fields['client'];
       return $this->validateIfNothingChangeThenSave($payroll_client,'Payroll client');
     }
-    throw new FistoException("No records found.", 404, NULL, []);
+    return $this->resultResponse('not-found','Payroll Client',[]);
   }
 }

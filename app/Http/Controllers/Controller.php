@@ -63,10 +63,10 @@ class Controller extends BaseController
 
     public function validateIfNothingChangeThenSave($model,$modelName,$is_tagged_array_modified=0){
       if($model->isClean() && $is_tagged_array_modified == 0){
-        return $this->result(200,"Nothing has changed.",[]);
+        return $this->resultResponse('nothing-has-changed',$modelName,[]);
       }else{
           $model->save();
-          return $this->result(200,$modelName." has been updated.",$model);
+          return $this->resultResponse('update',$modelName,[]);
       }
     }
     
@@ -87,7 +87,8 @@ class Controller extends BaseController
 
     public function validateHeader($template,$keys,$headers){
       if(count(array_diff($template,$keys))){
-        throw new FistoException("Invalid excel template, it should be ".$headers, 406, NULL, []);
+        return $this->resultResponse('import-format',$headers,[]);
+        // throw new FistoException("Invalid excel template, it should be ".$headers, 406, NULL, []);
       }
     }
 
@@ -117,14 +118,14 @@ class Controller extends BaseController
       $duplicates=[];
       if (!empty($param1)) {
         $duplicateAccountNo = $table->filter(function ($query) use ($param1,$param2_id){
-          return (($query['account_no'] == $param1) && ($query['category_id'] ==  $param2_id)); 
+          return (($query['account_no'] == $param1)  && ($query['category_id'] ==  $param2_id)); 
         });
 
         if ($duplicateAccountNo->count() > 0)
           $duplicates[] = (object) [
             "error_type" => "existing",
             "line" => (string) $index,
-            "description" => "Category: ".$param2_description. ", Account No.: ".$param1. " is already registered."
+            "description" => $param2_description. ", Account No.: ".$param1. " is already registered."
           ];
       }
       return $duplicates;
@@ -141,7 +142,7 @@ class Controller extends BaseController
           $existings[] = (object) [
             "error_type" => "unregistered",
             "line" =>(string) $index,
-            "description" => "Location: ".$param1. " is not registered."
+            "description" => $param1. " is not registered."
           ];
       }
       return $existings;
@@ -157,7 +158,7 @@ class Controller extends BaseController
           $existings[] = (object) [
             "error_type" => "unregistered",
             "line" =>(string) $index,
-            "description" => "Category: ".$param1. " is not registered."
+            "description" => $param1. " is not registered."
           ];
       }
       return $existings;
@@ -173,7 +174,7 @@ class Controller extends BaseController
           $existings[] = (object) [
             "error_type" => "unregistered",
             "line" =>(string) $index,
-            "description" => "Supplier: ".$param1. " is not registered."
+            "description" => $param1. " is not registered."
           ];
       }
       return $existings;
@@ -225,15 +226,15 @@ class Controller extends BaseController
       if($status == 1){
         $softDelete = $model::where('id',$id)->delete();
         if($softDelete == 1){
-            return $this->result(200,$modelName." has been archived.",[]);
+          return $this->resultResponse('archive',$modelName,[]);
         }
-        throw new FistoException("No records found.", 404, NULL, []);
+        return $this->resultResponse('not-found',$modelName,[]);
       }else {
           $restore = $model::onlyTrashed()->where('id',$id)->restore();
           if($restore == 1){
-              return $this->result(200,$modelName." has been restored.",[]);
+              return $this->resultResponse('restore',$modelName,[]);
           }
-          throw new FistoException("No records found.", 404, NULL, []);
+          return $this->resultResponse('not-found',$modelName,[]);
      }
     }
     
@@ -245,9 +246,16 @@ class Controller extends BaseController
         throw new FistoException($modelName. ": field count and paramater count are not equal.", 202, NULL, []);
       }else{
         $query = $model->withTrashed()->get();
+
         foreach($fields as $k=>$v){
-         $count =  $query->firstWhere("$params[$k]", $fields[$k]);
-         if($count){
+          $param1= $params[$k];
+          $field1 = $fields[$k];
+
+          $count = $query->filter(function ($q) use ($param1,$field1,$id){
+            return ((strtolower($q["$param1"]) == strtolower($field1)) && ($q['id'] != $id)); 
+           });
+
+         if($count->values()->first()){
           $param_is_exist["$params[$k]"] =  1;
          }else{
           $param_is_exist["$params[$k]"] =  0;
@@ -347,5 +355,102 @@ class Controller extends BaseController
     
     public function convertToFloat($amount){
       return floatval(str_replace(',', '',$amount));
+    }
+
+    public function resultResponse($action,$modelName,$data=[]){
+      $modelName = ucfirst(strtolower($modelName));
+      switch($action){
+        case('fetch'):
+          return $this->result(200,$modelName." has been fetched.",$data);
+        break;
+        
+        case('save'):
+          return $this->result(201,"New ".strtolower($modelName)." has been saved.",$data);
+        break;
+
+        case('import'):
+          return $this->result(201,$modelName." has been imported.",$data);
+        break;
+        
+        case('update'):
+          return $this->result(200,$modelName." has been updated.",$data);
+        break;
+        
+        case('archive'):
+          return $this->result(200,$modelName." has been archived.",$data);
+        break;
+
+        case('restore'):
+          return $this->result(200,$modelName." has been restored.",$data);
+        break;
+        
+        case('registered'):
+          throw new FistoException($modelName." already registered.", 409, NULL, $data);
+        break;
+        
+        case('not-registered'):
+          throw new FistoException($modelName." not registered.", 409, NULL, $data);
+        break;
+          
+        case('registered-inactive'):
+          throw new FistoException($modelName." already registered but inactive.", 409, NULL, $data);
+        break;
+          
+        case('exist'):
+          throw new FistoException($modelName." already exist.", 409, NULL, $data);
+        break;
+        
+        case('import-error'):
+          throw new FistoException("No ".$modelName." were imported. Kindly check the errors.", 409, NULL, $data);
+        break;
+        
+        case('import-format'):
+          throw new FistoException("Invalid excel template, it should be ".$modelName.".", 406, NULL, []);
+        break;
+        
+        case('nothing-has-changed'):
+          return $this->result(200,"Nothing has changed.",$data);
+        break;
+
+        case('not-found'):
+          throw new FistoException("No records found.", 404, NULL, $data);
+        break;
+
+        case('password-changed'):
+          return $this->result(200,"Password has been changed.",$data);
+        break;
+
+        case('password-incorrect'):
+          throw new FistoException("The password you entered is incorrect.", 409, NULL, $data);
+        break;
+
+        case('password-error-cred'):
+          throw new FistoException("You don't have the proper credentials to perform this action.", 401, NULL, $data);
+        break;
+
+        case('login'):
+          return $this->result(200,"Succesfully login.",$data);
+        break;
+
+        case('logout'):
+          return $this->result(200,"User has been logged out.",$data);
+        break;
+
+        case('logout-again'):
+          throw new FistoException("User is already logged out.", 401, NULL, []);
+        break;
+
+        case('login-error'):
+          throw new FistoException("Invalid username or password.", 409, NULL, $data);
+        break;
+
+        case('available'):
+          return $this->result(200,$modelName." is available.",$data);
+        break;
+
+        case('password-reset'):
+          return $this->result(200,"User's default password has been restored.",$data);
+        break;
+      }
     }
 }

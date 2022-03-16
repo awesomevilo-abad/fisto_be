@@ -38,21 +38,11 @@ class AccountNumberController extends Controller
     ->paginate($rows);
     
     if(count($account_number)==true){
-      return $this->result(200,"Account numbers has been fetched.",$account_number);
+      return $this->resultResponse('fetch','Account Number',$account_number);
     }
-    throw new FistoException("No records found.", 404, NULL, []);
+    return $this->resultResponse('not-found','Account Number',[]);
   }
     
-  public function show(Request $request,$id)
-  {
-    $account_number = AccountNumber::find($id);
-    if (!empty($account_number)) {
-      return $this->result(200,"Account number has been fetched.",$account_number);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
-  }
-
   public function store(AccountNumberRequest $request)
   {
     $fields = $request->validated();
@@ -60,10 +50,10 @@ class AccountNumberController extends Controller
     $account_number_validateDuplicate = AccountNumber::withTrashed()->firstWhere([['account_no', $fields['account_no']],['category_id', $fields['category_id']]]);
     if (empty($account_number_validateDuplicate)) {
       $new_account_numbers = AccountNumber::create($fields);
-      return $this->result(201,"New account number has been saved.",$new_account_numbers);
+      return $this->resultResponse('save','Account Number',$new_account_numbers);
     }
     else
-      throw new FistoException("Account number already registered.", 409, NULL, []);
+      return $this->resultResponse('registered','Account Number',[]);
   }
     
   public function update(AccountNumberRequest $request,$id)
@@ -73,12 +63,12 @@ class AccountNumberController extends Controller
     $fields = $request->validated();
 
     if (empty($account_number)) 
-      throw new FistoException("No records found.", 404, NULL, []);
+      return $this->resultResponse('not-found','Account Number',[]);
       $is_unique = $this->isUnique($model,'Account number',['account_no','category_id'],[$fields['account_no'],$fields['category_id']],$id);
 
       $account_number_validateDuplicate = AccountNumber::withTrashed()->firstWhere([['id', '<>', $id],['account_no', $fields['account_no']],['category_id', $fields['category_id']]]);
       if (!empty($account_number_validateDuplicate)) 
-        throw new FistoException("Account number already registered.", 409, NULL, []);
+      return $this->resultResponse('registered','Account Number',[]);
       
       $account_number->account_no = $fields['account_no'];
       $account_number->location_id = $fields['location_id'];
@@ -88,11 +78,12 @@ class AccountNumberController extends Controller
       return $this->validateIfNothingChangeThenSave($account_number,'Account number');
   }
 
-  public function change_status(Request $request,$id){
+  public function change_status(Request $request,$id)
+  {
     $status = $request['status'];
     $model = new AccountNumber();
     return $this->change_masterlist_status($status,$model,$id,'Account number');
-}
+  }
 
   public function import(Request $request)
   {
@@ -121,7 +112,6 @@ class AccountNumberController extends Controller
       $emptyCells= $this->validateEmptyCells($account_number,$index);
 
       $category_id = $this->getCategoryId($category,$utility_category_masterlist);
-      print_r($category_id->first());
       $duplicates = $this->validateDuplicateInDBFrom2Params($account_no,$category_id,$category,$account_number_masterlist,$index);
       $existingLocations = $this->validateExistingLocation($location,$utility_location_masterlist,$index);
       $existingCategories = $this->validateExistingCategory($category,$utility_category_masterlist,$index);
@@ -174,9 +164,9 @@ class AccountNumberController extends Controller
       {
         AccountNumber::insert($chunk->toArray()) ;
       }
-      return $this->result(201,'Account numbers has been imported.',$inputted_fields);
+      return $this->resultResponse('import','Account Number',$inputted_fields);
     }
     else
-      throw new FistoException("No Account number were imported. Kindly check the errors!.", 409, NULL, $errorBag);
+    return $this->resultResponse('import-error','Account Number',$errorBag);
   }
 }

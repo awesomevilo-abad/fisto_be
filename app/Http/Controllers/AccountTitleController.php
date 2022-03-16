@@ -30,27 +30,10 @@ class AccountTitleController extends Controller
     ->paginate($rows);
     
     if(count($account_titles)==true){
-      return $this->result(200,"Account titles has been fetched.",$account_titles);
+      return $this->resultResponse('fetch','Account Title',$account_titles);
     }
-    throw new FistoException("No records found.", 404, NULL, []);
+    return $this->resultResponse('not-found','Account Title',[]);
     
-  }
-    
-  public function show($id)
-  {
-    $account_title = AccountTitle::find($id);
-
-    if (!empty($account_title)) {
-      $result = [
-        "code" => 404,
-        "message" => "Account title has been fetched.",
-        "data" => $account_title,
-      ];
-    
-      return response($result);
-    }
-    else
-      throw new FistoException("No records found.", 404, NULL, []);
   }
 
   public function store(Request $request)
@@ -60,32 +43,19 @@ class AccountTitleController extends Controller
       'title' => ['required','string'],
       'category' => ['required','string']
     ]);
-
     $account_title_validateCodeDuplicate = AccountTitle::withTrashed()->firstWhere('code', $fields['code']);
 
     if (!empty($account_title_validateCodeDuplicate)) {
-      throw new FistoException("Code already registered.", 409, NULL, [
-        "error_field" => "code"
-      ]);
+      return $this->resultResponse('registered','Code',["error_field" => "code"]);
     }
-    
     $account_title_validateTitleDuplicate = AccountTitle::withTrashed()->firstWhere('title', $fields['title']);
 
     if (!empty($account_title_validateTitleDuplicate)) {
-      throw new FistoException("Title already registered.", 409, NULL, [
-        "error_field" => "title"
-      ]);
+      return $this->resultResponse('registered','Title',["error_field" => "title"]);
     }
     
     $new_account_title = AccountTitle::create($fields);
-
-    $result = [
-      "code" => 200,
-      "message" => "New account title has been saved.",
-      "result" => $new_account_title
-    ];
-    
-    return response($result);
+    return $this->resultResponse('save','Account Title',$new_account_title);
   }
 
   public function update(Request $request,$id)
@@ -102,17 +72,13 @@ class AccountTitleController extends Controller
       $account_title_validateCodeDuplicate = AccountTitle::withTrashed()->firstWhere([['id', '<>', $id],['code', $fields['code']]]);
 
       if (!empty($account_title_validateCodeDuplicate)) {
-        throw new FistoException("Code already registered.", 409, NULL, [
-          "error_field" => "code"
-        ]);
+        return $this->resultResponse('registered','Code',["error_field" => "code"]);
       }
       
       $account_title_validateTitleDuplicate = AccountTitle::withTrashed()->firstWhere([['id', '<>', $id],['title', $fields['title']]]);
 
       if (!empty($account_title_validateTitleDuplicate)) {
-        throw new FistoException("Title already registered.", 409, NULL, [
-          "error_field" => "title"
-        ]);
+        return $this->resultResponse('registered','Title',["error_field" => "title"]);
       }
 
       $account_title->code = $fields['code'];
@@ -121,7 +87,7 @@ class AccountTitleController extends Controller
       return $this->validateIfNothingChangeThenSave($account_title,'Account Title');
     }
     else
-      throw new FistoException("No records found.", 404, NULL, []);
+      return $this->resultResponse('not-found','Account Title',[]);
   }
     
   public function change_status(Request $request,$id)
@@ -171,7 +137,7 @@ class AccountTitleController extends Controller
           $errorBag[] = (object) [
             "error_type" => "existing",
             "line" => (string) $index,
-            "description" => "Account Code: ".$code. " is already registered."
+            "description" => $code. " is already registered."
           ];
       }
       if (!empty($title)) {
@@ -182,7 +148,7 @@ class AccountTitleController extends Controller
           $errorBag[] = (object) [
             "error_type" => "existing",
             "line" => (string) $index,
-            "description" => "Account Title: ".$title. " is already registered."
+            "description" => $title. " is already registered."
           ];
       }
       if (!empty($category)) {
@@ -190,7 +156,7 @@ class AccountTitleController extends Controller
           $errorBag[] = (object) [
             "error_type" => "unregistered",
             "line" => (string) $index,
-            "description" => "Category: ".$category. " is not registered."
+            "description" => $category. " is not registered."
           ];
         };
       }
@@ -283,9 +249,10 @@ class AccountTitleController extends Controller
       {
         AccountTitle::insert($chunk->toArray()) ;
       }
-      return $this->result(201,'Account titles has been imported.',$inputted_fields);
+      
+      return $this->resultResponse('import','Account Title',$inputted_fields);
     }
     else
-      throw new FistoException("No Account Title were imported. Kindly check the errors!.", 409, NULL, $errorBag);
+      return $this->resultResponse('import-error','Account Title',$errorBag);
   }
 }
