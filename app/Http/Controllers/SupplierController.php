@@ -53,12 +53,12 @@ class SupplierController extends Controller
     $supplier_validateDuplicateCode = Supplier::withTrashed()->firstWhere('code', $fields['code']);
 
     if (!empty($supplier_validateDuplicateCode))
-      return $this->resultResponse('registered','Supplier',["error_field" => "code"]);
+      return $this->resultResponse('registered','Code',["error_field" => "code"]);
 
     $supplier_validateDuplicateName = Supplier::withTrashed()->firstWhere('name', $fields['name']);
 
     if (!empty($supplier_validateDuplicateName))
-      return $this->resultResponse('registered','Supplier',["error_field" => "name"]);
+      return $this->resultResponse('registered','Name',["error_field" => "name"]);
 
     $new_supplier = Supplier::create($fields);
     $new_supplier->referrences()
@@ -81,12 +81,12 @@ class SupplierController extends Controller
 
       $supplier_validateDuplicateCode = Supplier::withTrashed()->firstWhere([['id', '<>', $id],['code', $fields['code']]]);
       if (!empty($supplier_validateDuplicateCode))
-      return $this->resultResponse('registered','Supplier',["error_field" => "code"]);
+      return $this->resultResponse('registered','Code',["error_field" => "code"]);
 
       $supplier_validateDuplicateName = Supplier::withTrashed()->firstWhere([['id', '<>', $id],['name', $fields['name']]]);
 
       if (!empty($supplier_validateDuplicateName))
-      return $this->resultResponse('registered','Supplier',["error_field" => "name"]);
+      return $this->resultResponse('registered','Name',["error_field" => "name"]);
       
       $is_reference_modified = $this->isTaggedArrayModified($fields['references'],  $supplier->referrences()->get(),'id');
       
