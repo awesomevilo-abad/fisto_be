@@ -50,17 +50,17 @@ class BankController extends Controller
       'account_title_1' => 'required|numeric',
       'account_title_2' => 'required|numeric'
     ]);
-    
-    $bank_validateCodeDuplicate = Bank::withTrashed()->where('code', $fields['code'])->where('id','!=',$id)->first();
+
+    $bank_validateCodeDuplicate = Bank::withTrashed()->where('code', $fields['code'])->first();
     if (!empty($bank_validateCodeDuplicate)) {
       return $this->resultResponse('registered','Code',["error_field" => "code"]);
     }
-    $bank_validateBranchDuplicate = Bank::withTrashed()->where('branch', $fields['branch'])->where('id','!=',$id)->first();
+    $bank_validateBranchDuplicate = Bank::withTrashed()->where('branch', $fields['branch'])->first();
 
     if (!empty($bank_validateBranchDuplicate)) {
       return $this->resultResponse('registered','Branch',["error_field" => "branch"]);
     }
-    $bank_validateAccountNoDuplicate = Bank::withTrashed()->where('account_no', $fields['account_no'])->where('id','!=',$id)->first();
+    $bank_validateAccountNoDuplicate = Bank::withTrashed()->where('account_no', $fields['account_no'])->first();
     if (!empty($bank_validateAccountNoDuplicate)) {
       return $this->resultResponse('registered','Account number',["error_field" => "account_no"]);
     }
@@ -92,16 +92,16 @@ class BankController extends Controller
               "data" => $specific_bank,
           ];
       } else {
-        $bank_validateCodeDuplicate = Bank::withTrashed()->where('code', $fields['code'])->where('id','!=',$id)->first();
+        $bank_validateCodeDuplicate = Bank::withTrashed()->where('code', $fields['code'])->first();
         if (!empty($bank_validateCodeDuplicate)) {
           return $this->resultResponse('registered','Code',["error_field" => "code"]);
         }
-        $bank_validateBranchDuplicate = Bank::withTrashed()->where('branch', $fields['branch'])->where('id','!=',$id)->first();
+        $bank_validateBranchDuplicate = Bank::withTrashed()->where('branch', $fields['branch'])->first();
     
         if (!empty($bank_validateBranchDuplicate)) {
           return $this->resultResponse('registered','Branch',["error_field" => "branch"]);
         }
-        $bank_validateAccountNoDuplicate = Bank::withTrashed()->where('account_no', $fields['account_no'])->where('id','!=',$id)->first();
+        $bank_validateAccountNoDuplicate = Bank::withTrashed()->where('account_no', $fields['account_no'])->first();
         if (!empty($bank_validateAccountNoDuplicate)) {
           return $this->resultResponse('registered','Account number',["error_field" => "account_no"]);
         }

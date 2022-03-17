@@ -115,9 +115,11 @@ class AccountNumberController extends Controller
         }
       }
 
+      $category_id= $utility_category_masterlist->where('category',$category)->first()['id'];
+
       if (!empty($account_no)) {
-        $duplicateAccountNo = $account_number_masterlist->filter(function ($query) use ($account_no){
-          return (strtolower($query['account_no']) == strtolower($account_no)) ; 
+        $duplicateAccountNo = $account_number_masterlist->filter(function ($query) use ($account_no,$category_id){
+          return ((strtolower($query['account_no']) == strtolower($account_no)) && (strtolower($query['category_id']) == strtolower($category_id))) ; 
         });
         if ($duplicateAccountNo->count() > 0)
           $errorBag[] = (object) [
@@ -150,7 +152,7 @@ class AccountNumberController extends Controller
       }
       if (!empty($supplier)) {
         $existingSupplier = $supplier_masterlist->filter(function ($query) use ($supplier){
-          return (strtolower($query['supplier_name']) == strtolower($supplier)); 
+          return (strtolower($query['name']) == strtolower($supplier)); 
         });
         if ($existingSupplier->count() == 0)
           $errorBag[] = (object) [
@@ -195,6 +197,7 @@ class AccountNumberController extends Controller
       }
     }
 
+    $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
     if(empty($errorBag)){
       foreach($data as $account_no){
         $inputted_supplier = $account_no['supplier'];
