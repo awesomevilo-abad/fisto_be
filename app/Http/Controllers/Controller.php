@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Routing\Controller as BaseController;
 use App\Exceptions\FistoException;
 
@@ -361,7 +362,7 @@ class Controller extends BaseController
       $modelName = ucfirst(strtolower($modelName));
       switch($action){
         case('fetch'):
-          return $this->result(200,$modelName." has been fetched.",$data);
+          return $this->result(200,Str::plural($modelName)." has been fetched.",$data);
         break;
         
         case('save'):
@@ -369,7 +370,7 @@ class Controller extends BaseController
         break;
 
         case('import'):
-          return $this->result(201,$modelName." has been imported.",$data);
+          return $this->result(201,Str::plural($modelName)." has been imported.",$data);
         break;
         
         case('update'):
@@ -401,7 +402,7 @@ class Controller extends BaseController
         break;
         
         case('import-error'):
-          throw new FistoException("No ".$modelName." were imported. Kindly check the errors.", 409, NULL, $data);
+          throw new FistoException("No ".Str::plural(strtolower($modelName))." were imported. Kindly check the errors.", 409, NULL, $data);
         break;
         
         case('import-format'):
