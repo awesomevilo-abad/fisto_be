@@ -136,6 +136,8 @@ class AccountNumberController extends Controller
             "description" => $category. ", with ".$account_no. " account number is already registered."
           ];
       }
+
+
       if (!empty($location)) {
         $existingLocation = $utility_location_masterlist->filter(function ($query) use ($location){
           return (strtolower($query['location']) == strtolower($location)); 
@@ -147,6 +149,8 @@ class AccountNumberController extends Controller
             "description" => $location. " is not registered."
           ];
       }
+
+
       if (!empty($category)) {
         $existingCagtegory= $utility_category_masterlist->filter(function ($query) use ($category){
           return (strtolower($query['category']) == strtolower($category)); 
@@ -158,6 +162,8 @@ class AccountNumberController extends Controller
             "description" => $category. " is not registered."
           ];
       }
+
+
       if (!empty($supplier)) {
         $existingSupplier = $supplier_masterlist->filter(function ($query) use ($supplier){
           return (strtolower($query['name']) == strtolower($supplier)); 
@@ -211,15 +217,38 @@ class AccountNumberController extends Controller
         $inputted_supplier = $account_no['supplier'];
         $inputted_location = $account_no['location'];
         $inputted_category = $account_no['category'];
+
         $location = $utility_location_masterlist->filter(function ($query) use ($inputted_location){
           return (strtolower($query['location']) == strtolower($inputted_location)); 
-        })->first()['id'];
+        });
+
+        if(count($location)>0){
+          $location = $location->first()->id;
+        }else{
+          $location  = 0;
+        }
+
         $category = $utility_category_masterlist->filter(function ($query) use ($inputted_category){
           return (strtolower($query['category']) == strtolower($inputted_category)); 
-        })->first()['id'];
+        });
+
+        if(count($category)>0){
+          $category = $category->first()->id;
+        }else{
+          $category  = 0;
+        }
+
         $supplier = $supplier_masterlist->filter(function ($query) use ($inputted_supplier){
-          return (strtolower($query['supplier_name']) == strtolower($inputted_supplier)); 
-        })->first()['id'];
+          return (strtolower($query['name']) == strtolower($inputted_supplier)); 
+        });
+
+        if(count($supplier)>0){
+          $supplier = $supplier->first()->id;
+        }else{
+          $supplier  = 0;
+        }
+
+
         $fields = [
           "account_no"=>$account_no['account_no'],
           "location_id"=>$location,
