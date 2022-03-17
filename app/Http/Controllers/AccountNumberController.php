@@ -116,10 +116,13 @@ class AccountNumberController extends Controller
       }
 
       $category_id = $utility_category_masterlist->filter(function ($query) use ($category){
-        return ((strtolower($query['category']) == strtolower($category))) ; 
+        return ((strtolower($query['category']) == strtolower($category))); 
       });
-      if(count($category_id) > 0){
-        $category_id = $category_id[0]['id'];
+
+      if(count($category_id)>0){
+        $category_id = $category_id->first()->id;
+      }else{
+        $category_id  = 0;
       }
 
       if (!empty($account_no)) {
