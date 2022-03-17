@@ -85,11 +85,20 @@ class BankController extends Controller
               "data" => $specific_bank,
           ];
       } else {
+        $bank_validateCodeDuplicate = Bank::withTrashed()->where('code', $fields['code'])->where('id','!=',$id)->first();
 
-          $model = new Bank();
-          $this->isUnique($model,'Bank',['code'],[$fields['code']],$id,1);
-          $this->isUnique($model,'Bank',['branch'],[$fields['branch']],$id,1);
-          $this->isUnique($model,'Bank',['account_no'],[$fields['account_no']],$id,1);
+        if (!empty($bank_validateCodeDuplicate)) {
+          return $this->resultResponse('registered','Bank',["error_field" => "code"]);
+        }
+        $bank_validateBranchDuplicate = Bank::withTrashed()->where('branch', $fields['branch'])->where('id','!=',$id)->first();
+    
+        if (!empty($bank_validateBranchDuplicate)) {
+          return $this->resultResponse('registered','Bank',["error_field" => "branch"]);
+        }
+        $bank_validateAccountNoDuplicate = Bank::withTrashed()->where('account_no', $fields['account_no'])->where('id','!=',$id)->first();
+        if (!empty($bank_validateAccountNoDuplicate)) {
+          return $this->resultResponse('registered','Bank',["error_field" => "account_no"]);
+        }
 
           $specific_bank->code = $request->get('code');
           $specific_bank->name = $request->get('name');

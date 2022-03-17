@@ -267,7 +267,7 @@ class Controller extends BaseController
         if(count($param_is_exist) == array_sum($param_is_exist))
             
             if($per_field == 0){
-              throw new FistoException(ucfirst(strtolower($modelName)). " already registered.", 409, NULL, []);
+              throw new FistoException(ucfirst(strtolower($modelName)). " already registered.", 409, NULL, ["error_field"=>"$params"]);
             }else{
               throw new FistoException(ucfirst(strtolower(implode(",",$params))). " already registered.", 409, NULL, []);
             }
