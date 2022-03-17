@@ -115,7 +115,12 @@ class AccountNumberController extends Controller
         }
       }
 
-      $category_id= $utility_category_masterlist->where('category',$category)->first()['id'];
+      $category_id = $utility_category_masterlist->filter(function ($query) use ($category){
+        return ((strtolower($query['category']) == strtolower($category))) ; 
+      });
+      if(count($category_id) > 0){
+        $category_id = $category_id[0]['id'];
+      }
 
       if (!empty($account_no)) {
         $duplicateAccountNo = $account_number_masterlist->filter(function ($query) use ($account_no,$category_id){
