@@ -86,11 +86,7 @@ class BankController extends Controller
 
      
       if (!$specific_bank) {
-          $response = [
-              "code" => 404,
-              "message" => "Data Not Found!",
-              "data" => $specific_bank,
-          ];
+        return $this->resultResponse('not-found','Bank',[]);
       } else {
         $bank_validateCodeDuplicate = Bank::withTrashed()->where('code', $fields['code'])->first();
         if (!empty($bank_validateCodeDuplicate)) {
@@ -168,7 +164,7 @@ class BankController extends Controller
           $errorBag[] = (object) [
             "error_type" => "existing",
             "line" => $index,
-            "description" => "Bank Code: ".$code. " is already registered."
+            "description" => $code. " is already registered."
           ];
       }
       if (!empty($branch)) {
@@ -179,7 +175,7 @@ class BankController extends Controller
           $errorBag[] = (object) [
             "error_type" => "existing",
             "line" => $index,
-            "description" => "Bank Branch: ".$branch. " is already registered."
+            "description" => $branch. " is already registered."
           ];
       }
       if (!empty($account_no)) {
@@ -190,7 +186,7 @@ class BankController extends Controller
           $errorBag[] = (object) [
             "error_type" => "existing",
             "line" => $index,
-            "description" => "Bank Account Number: ".$account_no. " is already registered."
+            "description" => $account_no. " is already registered."
           ];
       }
       
@@ -200,7 +196,7 @@ class BankController extends Controller
           $errorBag[] = (object) [
             "error_type" => "unregistered",
             "line" => $index,
-            "description" => "Account Title 1: ".$account_title_1. " is not registered."
+            "description" => $account_title_1. " is not registered."
           ];
         };
       }
@@ -210,31 +206,25 @@ class BankController extends Controller
           $errorBag[] = (object) [
             "error_type" => "unregistered",
             "line" => $index,
-            "description" => "Account Title 2: ".$account_title_2. " is not registered."
+            "description" => $account_title_2. " is not registered."
           ];
         };
       }
-
-      
       $index++;
     }
       
     $original_lines = array_keys($data_validation_fields);
-    
     $duplicate_code = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'code'))));
+
     foreach($duplicate_code as $line){
-      
       $input_code = $data_validation_fields[$line]['code'];
       $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_code){
         return ($query['code'] == $input_code);
       }); 
-      $duplicate_lines =  implode(",",array_map(function($query){
-        return $query+2;
-      },array_keys($duplicate_data)));
+      $duplicate_lines =  implode(",",array_map(function($query){return $query+2;},array_keys($duplicate_data)));
       $firstDuplicateLine =  array_key_first($duplicate_data);
 
       if((empty($data_validation_fields[$line]['code']))){
-
       }else{
         $errorBag[] = [
           "error_type" => "duplicate",

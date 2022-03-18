@@ -5,14 +5,15 @@ namespace App\Methods;
 use App\Methods\GenericMethod;
 use App\Models\Transaction;
 use App\Exceptions\FistoException;
+use App\Controllers\Validation\Validation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
-class TransactionValidationMethod
+class TransactionValidationMethod  extends Validation
  {
     public static function padValidation($fields,$date_requested,$transaction_id){
         
-        $status = "Pending";
+        $this->resultResponse('not-registered','Document details',[]);
        return $documentNoValidation = TransactionValidationMethod::documentNoValidation($fields['document']['no']);
         
         if(isset($documentNoValidation)){

@@ -38,10 +38,6 @@ class User extends Authenticatable
         'document_types' => 'array',
     ];
 
-    protected $attributes = [
-        "is_active"=>1
-    ];
-
     public function setUsernameAttribute($value)
     {
         $this->attributes['username']=strtolower($value);

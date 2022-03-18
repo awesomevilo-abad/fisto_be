@@ -248,7 +248,6 @@ class AccountNumberController extends Controller
           $supplier  = 0;
         }
 
-
         $fields = [
           "account_no"=>$account_no['account_no'],
           "location_id"=>$location,

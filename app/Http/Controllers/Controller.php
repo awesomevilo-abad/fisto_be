@@ -46,7 +46,6 @@ class Controller extends BaseController
       }
     }
 
-
     public function isTaggedArrayModified($inpputedArrayField, $modelObject,$field){
       $previousArray = array_column($modelObject->toArray(),$field);
       $is_tagged_array_modified = count(array_merge(array_diff($previousArray, $inpputedArrayField), array_diff($inpputedArrayField, $previousArray)));
@@ -106,7 +105,6 @@ class Controller extends BaseController
       }
       return $emptyCells;
     }
-
 
     public function getCategoryId($category,$masterlist){
        $category_id = $masterlist->filter(function ($query) use ($category){
@@ -239,7 +237,6 @@ class Controller extends BaseController
      }
     }
     
-
     public function isUnique($model,$modelName,$params,$fields,$id,$per_field=0)
     {
       $param_is_exist = [];
@@ -298,7 +295,7 @@ class Controller extends BaseController
      return $errorMessages;
     }
 
-    public function getTransactionID($str)
+    public function getTransactionNo($str)
     {
         $dep_initials = '';
         foreach (explode(' ', $str) as $word) {
@@ -315,6 +312,7 @@ class Controller extends BaseController
         }
         return ($transaction_id);
     }
+
     public function getTransactionCode($str, $transaction_id)
     {
         $dep_initials = '';
@@ -354,6 +352,10 @@ class Controller extends BaseController
 
     }
     
+    public  function getTransactionID($department){
+      $transaction_no = $this->getTransactionNo($department);
+      return $this->getTransactionCode($department, $transaction_no);
+    }
     public function convertToFloat($amount){
       return floatval(str_replace(',', '',$amount));
     }
