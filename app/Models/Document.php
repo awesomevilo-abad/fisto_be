@@ -38,6 +38,6 @@ class Document extends Model
 
     public function document_categories()
     {
-        return $this->belongsToMany(Category::class, 'user_document_category','document_id','category_id')->select('categories.id as category_id','categories.name as category_name');
+        return $this->belongsToMany(Category::class, 'user_document_category','document_id','category_id')->select('categories.id','categories.name');
     }
 }

@@ -67,8 +67,8 @@ class UserController extends Controller
             {
                 if(count(($permissions->where('id',$permission)))>0)
                 {
-                    $permission_list['permission_id'] = $permission;
-                    $permission_list['permission_description'] = $permissions->where('id',$permission)->first()->name;
+                    $permission_list['id'] = $permission;
+                    $permission_list['description'] = $permissions->where('id',$permission)->first()->name;
                     array_push($new_permissions,$permission_list);
                 }
             }
@@ -80,11 +80,11 @@ class UserController extends Controller
                 $new_category_list = [];
                 $new_categories = [];
 
-                if(count(($documents->where('id',$document_type['document_id'])))>0)
+                if(count($documents->where('id',$document_type['id']))>0)
                 {
                 
-                    $document_description = $documents->where('id',$document_type['document_id']);
-                    $category_ids = $document_type['category_ids'];
+                    $document_description = $documents->where('id',$document_type['id']);
+                    $category_ids = $document_type['categories'];
                     if(count($category_ids)>0)
                     {
                         foreach($category_ids as $category_id)
@@ -92,16 +92,16 @@ class UserController extends Controller
                             if(count(($categories->where('id',$category_id)))>0)
                             {
                                 $category_description = $categories->where('id',$category_id)->first()->name;
-                                $new_category_list['category_id'] = $category_id;
-                                $new_category_list['category_name'] = $category_description;
+                                $new_category_list['id'] = $category_id;
+                                $new_category_list['name'] = $category_description;
                                 array_push($new_categories,$new_category_list);
                             }
     
                         }
                     }
-                    $new_document_type_list['document_id'] = ($document_description->values()->first()->id);
-                    $new_document_type_list['document_description'] = ($document_description->values()->first()->document_type);
-                    $new_document_type_list['document_categories'] = $new_categories;
+                    $new_document_type_list['id'] = ($document_description->values()->first()->id);
+                    $new_document_type_list['type'] = ($document_description->values()->first()->document_type);
+                    $new_document_type_list['categories'] = $new_categories;
                     array_push($new_document_types,$new_document_type_list);
                 }
 
@@ -119,16 +119,16 @@ class UserController extends Controller
             return $this->resultResponse('registered','User',$fields['id_prefix'].'-'.$fields['id_no']);
         }
         $document_types =  $fields['document_types'];
-        $document_ids = array_column($document_types,'document_id');
+        $document_ids = array_column($document_types,'id');
         $fields['password'] = bcrypt(strtolower($fields['username']));
         
         foreach($document_types as $document_type)
         {
             $document_model = new Document();
             $category_model = new Category();
-            $document_type_object= $this->validateIfObjectExist($document_model,$document_type['document_id'],'Document');
+            $document_type_object= $this->validateIfObjectExist($document_model,$document_type['id'],'Document');
 
-            $categories= $document_type['category_ids'];
+            $categories= $document_type['categories'];
             $this->validateIfObjectsExist($category_model,$categories,'Category');
 
             $new_user = User::create($fields);
@@ -152,7 +152,7 @@ class UserController extends Controller
         if(count($user)!=true){
             throw new FistoException("No records found.", 404, NULL, []);
         }
-        return $this->resultResponse('fetch','User',$user);
+        return $this->resultResponse('fetch','User',$user[0]);
     }
 
     public function update(Request $request, $id)
@@ -171,25 +171,26 @@ class UserController extends Controller
         ->where('id',$id)
         ->first();
 
+        
         $is_tagged_array_modified_document = $this->isTaggedArrayModified($document_ids,  $new_user->documents()->get(),'document_id');
-
+        
         $new_user->documents()->detach();
         $new_user->documents()->attach($document_ids);
         foreach($document_types as $document_type)
         {
             $document_model = new Document();
             $category_model = new Category();
-            $document_type_object= $this->validateIfObjectExist($document_model,$document_type['document_id'],'Document');
-
-            $categories= $document_type['category_ids'];
+            $document_type_object= $this->validateIfObjectExist($document_model,$document_type['id'],'Document');
+            
+            $categories= $document_type['categories'];
             $this->validateIfObjectsExist($category_model,$categories,'Category');
-
-            $is_tagged_array_modified_category = $this->isTaggedArrayModified($document_type['category_ids'],  $document_type_object->document_categories()->get(),'category_id');
-
+            $is_tagged_array_modified_category = $this->isTaggedArrayModified($document_type['categories'],  $document_type_object->document_categories()->get(),'id');
+            
             $document_type_object->document_categories()->detach();
             $document_type_object->document_categories()->attach($categories,['user_id' => $new_user->id]);
         }
-
+        
+        $user->role = $specific_user['role'];
         $user->permissions = $specific_user['permissions'];
         $user->document_types = $specific_user['document_types'];
         
