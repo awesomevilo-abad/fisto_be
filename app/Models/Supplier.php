@@ -32,7 +32,7 @@ class Supplier extends Model
 
   public function referrences()
   {
-    return $this->belongsToMany(Referrence::class, 'supplier_referrences', 'supplier_id', 'referrence_id')->select(['referrences.id','referrences.type']);;
+    return $this->belongsToMany(Referrence::class, 'supplier_referrences', 'supplier_id', 'referrence_id')->select(['referrences.id','referrences.type']);
   }
 
   public function supplier_type()

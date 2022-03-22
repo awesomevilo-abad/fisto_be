@@ -100,7 +100,7 @@ class UserController extends Controller
                         }
                     }
                     $new_document_type_list['id'] = ($document_description->values()->first()->id);
-                    $new_document_type_list['type'] = ($document_description->values()->first()->document_type);
+                    $new_document_type_list['type'] = ($document_description->values()->first()->type);
                     $new_document_type_list['categories'] = $new_categories;
                     array_push($new_document_types,$new_document_type_list);
                 }

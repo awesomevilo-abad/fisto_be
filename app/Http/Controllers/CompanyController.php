@@ -3,261 +3,115 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use App\Exceptions\FistoException;
 
 class CompanyController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index(Request $request)
     {
-
-        $is_active = $request->get('is_active');
-
-        if ($is_active == 'true') {
-            $company = DB::table('companies')
-                ->where('is_active', '=', 1)
-                ->latest()
-                ->paginate(10);
-
-        } elseif ($is_active == 'false') {
-            $company = DB::table('companies')
-                ->where('is_active', '=', 0)
-                ->latest()
-                ->paginate(10);
-
-        } else {
-            $company = DB::table('companies')
-                ->latest()
-                ->paginate(10);
-        }
-
-        if (!$company || $company->isEmpty()) {
-            $response = [
-                "code" => 404,
-                "message" => "Data Not Found!",
-                "data" => $company,
-            ];
-        } else {
-            $response = [
-                "code" => 200,
-                "message" => "Succefully Retrieved",
-                "data" => $company,
-            ];
-
-        }
-        return response($response);
+      $status =  $request['status'];
+      $rows =  (empty($request['rows']))?10:(int)$request['rows'];
+      $search =  $request['search'];
+      
+      $companies = Company::withTrashed()
+      ->with('associates')
+      ->where(function ($query) use ($status){
+        return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
+      })->where(function ($query) use ($search) {
+        $query->where('code', 'like', '%' . $search . '%')
+        ->orWhere('company', 'like', '%' . $search . '%');
+     })
+      ->latest('updated_at')
+      ->paginate($rows);
+      
+      if(count($companies)==true){
+        return $this->resultResponse('fetch','Company',$companies);
+      }
+      return $this->resultResponse('not-found','Company',[]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
+        // $user_list = User::get();
         $fields = $request->validate([
-            'company_code' => 'required|string|unique:companies,company_code',
-            'company_description' => 'required|string|unique:companies,company_description',
-            'is_active' => 'required',
-
+            'code' => 'required',
+            'company' => 'required',
+            'ap_id' => 'required',
         ]);
 
-        $new_company = Company::create([
-            'company_code' => $fields['company_code']
-            , 'company_description' => $fields['company_description']
-            , 'is_active' => $fields['is_active'],
-        ]);
-
-        return [
-            $response = [
-                "code" => 200,
-                "message" => "Succefully Created",
-                "data" => $new_company,
-            ],
-        ];
-
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        $result = Company::find($id);
-
-        if (empty($result)) {
-            $response = [
-                "code" => 404,
-                "message" => "Data Not Found!",
-                "data" => $result,
-            ];
-        } else {
-            $response = [
-                "code" => 200,
-                "message" => "Succefully Retrieved",
-                "data" => $result,
-            ];
-
+        $company_validateCodeDuplicate = Company::withTrashed()->where('code', $fields['code'])->first();
+        if (!empty($company_validateCodeDuplicate)) {
+          return $this->resultResponse('registered','Code',["error_field" => "code"]);
         }
 
-        return response($response);
+        $company_validateDescriptionDuplicate = Company::withTrashed()->where('company', $fields['company'])->first();
+        if (!empty($company_validateDescriptionDuplicate)) {
+          return $this->resultResponse('registered','Description',["error_field" => "company"]);
+        }
+
+        $apExist = $this->validateIfObjectsExist(new User,$fields['ap_id'],'AP Associate');
+        if($apExist){
+            return $this->resultResponse('not-registered','AP Associate',[]);
+        }
+        $new_company = Company::create([
+            'code' => $fields['code']
+            , 'company' => $fields['company']
+        ]);
+        $new_company->associates()->attach($fields['ap_id']);
+
+        return $this->resultResponse('save','Company',$new_company);
+
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
-        $specific_company = Company::find($id);
-
+        $user =new User();
+        $specific_company = Company::withTrashed()->find($id);
         $fields = $request->validate([
-            'company_code' => ['unique:companies,company_code,' . $id],
-            'company_description' => ['unique:companies,company_description,' . $id,],
-
+            'code' => ['required'],
+            'company' => ['required'],
+            'ap_id' => ['required'],
         ]);
 
+
+        $company_validateCodeDuplicate = Company::withTrashed()->where('code', $fields['code'])->where('id','<>',$id)->first();
+        if (!empty($company_validateCodeDuplicate)) {
+          return $this->resultResponse('registered','Code',["error_field" => "code"]);
+        }
+
+        $company_validateDescriptionDuplicate = Company::withTrashed()->where('company', $fields['company'])->where('id','<>',$id)->first();
+        if (!empty($company_validateDescriptionDuplicate)) {
+          return $this->resultResponse('registered','Description',["error_field" => "company"]);
+        }
+
+        $apExist = $this->validateIfObjectsExist($user,$fields['ap_id'],'AP Associate');
+        if($apExist){
+            return $this->resultResponse('not-registered','AP Associate',[]);
+        }
+        
         if (!$specific_company) {
-            $response = [
-                "code" => 404,
-                "message" => "Data Not Found!",
-                "data" => $specific_company,
-            ];
+            return $this->resultResponse('not-found','Company',[]);
         } else {
 
-            $specific_company->company_code = $request->get('company_code');
-            $specific_company->company_description = $request->get('company_description');
-            $specific_company->save();
-
-            $response = [
-                "code" => 200,
-                "message" => "Succefully Updated",
-                "data" => $specific_company,
-            ];
-
+            $specific_company->associates()->get();
+            $is_associates_modified = $this->isTaggedArrayModified($fields['ap_id'],  $specific_company->associates()->get(),'id');
+      
+            $specific_company->code = $fields['code'];
+            $specific_company->company = $fields['company'];
+            $specific_company->associates()->detach();
+            $specific_company->associates()->attach(array_unique($fields['ap_id']));
+            return $this->validateIfNothingChangeThenSave($specific_company,'Company',$is_associates_modified);
+            
         }
-        return response($response);
     }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+    
+    public function change_status(Request $request,$id){
+            $status = $request['status'];
+            $model = new Company();
+            return $this->change_masterlist_status($status,$model,$id,'Company');
     }
-
-    #_________________________SPECIAL CASE________________________________
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function archive(Request $request, $id)
-    {
-        $specific_company = Company::find($id);
-
-        if (!$specific_company) {
-
-            $response = [
-                "code" => 404,
-                "message" => "Data Not Found",
-                "data" => $specific_company,
-            ];
-        } else {
-
-            $specific_company->is_active = 0;
-            $specific_company->save();
-
-            $response = [
-                "code" => 200,
-                "message" => "Succefully Archieved",
-                "data" => $specific_company,
-            ];
-        }
-
-        return response($response);
-
-    }
-
-    public function search(Request $request)
-    {
-        $value = $request['value'];
-
-        if (isset($request['is_active'])) {
-            if ($request['is_active'] == 'active') {
-
-                $is_active = 1;
-            } else {
-
-                $is_active = 0;
-            }
-        } else {
-            $is_active = 1;
-        }
-
-        $result = Company::where('is_active', $is_active)
-            ->where(function ($query) use ($value) {
-                $query->where('company_code', 'like', '%' . $value . '%')
-                    ->orWhere('company_description', 'like', '%' . $value . '%');
-            })
-            ->get();
-
-        if ($result->isEmpty()) {
-            $response = [
-                "code" => 404,
-                "message" => "Data Not Found!",
-                "data" => $result,
-            ];
-
-        } else {
-            $response = [
-                "code" => 200,
-                "message" => "Succefully Retrieved",
-                "data" => $result,
-            ];
-
-        }
-
-        return response($response);
-    }
-
 }

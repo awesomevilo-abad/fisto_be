@@ -3,232 +3,226 @@
 namespace App\Http\Controllers;
 
 use App\Models\Location;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class LocationController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    
+
     public function index(Request $request)
     {
-
-        $is_active = $request->get('is_active');
-
-        if ($is_active =='true') {
-            $locations = DB::table('locations')
-                ->where('is_active', '=', 1)
-                ->latest()
-                ->paginate(10);
-
-        } elseif ($is_active == 'false') {
-            $locations = DB::table('locations')
-                ->where('is_active', '=', 0)
-                ->latest()
-                ->paginate(10);
-
-        }
-
-        if(empty($is_active) == true){
-            $locations = DB::table('locations')
-            ->latest()
-            ->paginate(10);
-        }
-
-        $code = 200;
-        $message = "Succefully Retrieved";
-        $data = $locations;
-
-        if (!$locations || $locations->isEmpty()) {
-
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = $locations;
-        }
-
-        return $this->result($code,$message,$data);
+      $status =  $request['status'];
+      $rows =  (empty($request['rows']))?10:(int)$request['rows'];
+      $search =  $request['search'];
+      
+      $locations = Location::withTrashed()
+      ->with('Company')
+      ->where(function ($query) use ($status){
+        return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
+      })->where(function ($query) use ($search) {
+        $query->where('code', 'like', '%' . $search . '%')
+        ->orWhere('location', 'like', '%' . $search . '%');
+     })
+      ->latest('updated_at')
+      ->paginate($rows);
+      
+      if(count($locations)==true){
+        return $this->resultResponse('fetch','Location',$locations);
+      }
+      return $this->resultResponse('not-found','Location',[]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         $fields = $request->validate([
-            'code' => 'required|string|unique:locations,code',
-            'is_active' => 'required',
-            'location'=>'nullable',
-            'company'=>'nullable'
+            'code' => 'required',
+            'location' => 'required',
+            'company' => 'required'
         ]);
 
-        $validate_location_company = DB::table('locations')
-        ->where('location',$fields['location'])
-        ->where('company',$fields['company'])->get();
-
-        if(count($validate_location_company)>0){
-            return $this->result(403,'Either location or company already exist',null);
+        $department_validateCodeDuplicate = Location::withTrashed()->where('code', $fields['code'])->first();
+        if (!empty($department_validateCodeDuplicate)) {
+          return $this->resultResponse('registered','Code',["error_field" => "code"]);
         }
-
-        $new_location = Location::create([
+        $department_validateDescriptionDuplicate = Location::withTrashed()->where('location', $fields['location'])->first();
+        if (!empty($department_validateDescriptionDuplicate)) {
+          return $this->resultResponse('registered','Description',["error_field" => "location"]);
+        }
+        $companyExist = $this->validateIfObjectExist(new Company,$fields['company'],'Company');
+        if(!$companyExist){
+            return $this->resultResponse('not-found','Company',[]);
+        }
+        $new_department = Location::create([
             'code' => $fields['code']
             , 'location' => $fields['location']
             , 'company' => $fields['company']
-            , 'is_active' => $fields['is_active'],
         ]);
-
-        return $this->result(200,'Succefully Created',$new_location);
+        return $this->resultResponse('save','Location',$new_department);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Location  $location
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-
-        $location = Location::find($id);
-
-        $code = 200;
-        $message = "Succefully Retrieved";
-        $data = $location;
-
-        if (isset($location)==0) {
-
-            $code = 404;
-            $message = "Data Not Found!";
-            $data = $location;
-        }
-
-        return $this->result($code,$message,$data);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Location  $location
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Location $location)
-    {
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Location  $location
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
-        $specific_location = Location::find($id);
+        $specific_department = Location::find($id);
 
         $fields = $request->validate([
-            'code' => ['unique:locations,code,'.$id],
-            'location' =>['unique:locations,location,'.$id],
-            'company' => 'nullable',
+            'code' => 'required',
+            'location' => 'required',
+            'company' => 'required'
         ]);
 
-        if (!$specific_location) {
-            return $this->result(404,'Data Not Found',null);
-        }
-
-        $specific_location->code = $fields['code'];
-        $specific_location->location = $fields['location'];
-        $specific_location->company = $fields['company'];
-        $specific_location->save();
-
-        $response = [
-            "code" => 200,
-            "message" => "Succefully Updated",
-            "data" => $specific_location,
-        ];
-        return response($response);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Location  $location
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Location $location)
-    {
-        //
-    }
-
-    public function archive(Request $request, $id)
-    {
-        $specific_location = Location::find($id);
-
-        if(!$specific_location){
-
-            return $this->result(404,"Data Not Found", $specific_location);
-        }
-
-            $specific_location->is_active = 0;
-            $specific_location->save();
-
-            return $this->result(200,"Succesfully Archieved",$specific_location);
-    }
-
-    public function restore(Request $request, $id)
-    {
-        $specific_location = Location::find($id);
-
-        if(!$specific_location){
-
-            return $this->result(404,"Data Not Found", $specific_location);
-        }
-
-            $specific_location->is_active = 1;
-            $specific_location->save();
-
-            return $this->result(200,"Succesfully Restored",$specific_location);
-    }
-
-    public function search(Request $request)
-    {
-        $value = $request['value'];
-
-        if (isset($request['is_active'])) {
-            if ($request['is_active'] == 'active') {
-                $is_active = 1;
-            } else {
-                $is_active = 0;
-            }
+        if (!$specific_department) {
+            return $this->resultResponse('not-found','Location',[]);
         } else {
-            $is_active = 1;
+            $specific_department->code = $fields['code'];
+            $specific_department->location = $fields['location'];
+            $specific_department->company = $fields['company'];
+            return $this->validateIfNothingChangeThenSave($specific_department,'Location');
         }
+    }
+    
+    public function change_status(Request $request,$id){
+            $status = $request['status'];
+            $model = new Location();
+            return $this->change_masterlist_status($status,$model,$id,'Location');
+    }
 
-        $result = Location::where('code', 'like', '%' . $value . '%')
-            ->where('is_active', $is_active)
-            ->orWhere('code', 'like', '%' . $value . '%')
-            ->orWhere('location', 'like', '%' . $value . '%')
-            ->orWhere('company', 'like', '%' . $value . '%')
-            ->paginate(10);
+    public function import(Request $request)
+    {
+      $timezone = "Asia/Dhaka";
+      date_default_timezone_set($timezone);
+  
+      $date = date("Y-m-d H:i:s", strtotime('now'));
+      $errorBag = [];
+      $data = $request->all();
+      $data_validation_fields = $request->all();
+      $index = 2;
+      $location_list = Location::withTrashed()->get();
+      $company_list = Company::get();
 
-        if ($result->isEmpty()) {
-            return $this->result(404,"Data Not Found",null);
+      $headers = 'Code, Location, Company';
+      $template = ["code","location","company"];
+      $keys = array_keys(current($data));
+      $this->validateHeader($template,$keys,$headers);
+  
+      foreach ($data as $location) {
+            $code = $location['code'];
+            $department_name= $location['location'];
+            $company = $location['company'];
+    
+            foreach ($location as $key => $value) 
+            {
+            if (empty($value))
+                $errorBag[] = (object) [
+                "error_type" => "empty",
+                "line" => $index,
+                "description" => $key . " is empty."
+                ];
+            }
+
+            if (!empty($code)) {
+                $duplicatedepartmentCode = $location_list->filter(function ($location) use ($code){return strtolower($location['code']) == strtolower($code);});
+                if ($duplicatedepartmentCode->count() > 0)
+                $errorBag[] = (object) [
+                    "error_type" => "existing",
+                    "line" => $index,
+                    "description" => $code . " is already registered."
+                    ];
+            }
+            
+            if (!empty($department_name)) {
+                $duplicatedepartmentDepartment = $location_list->filter(function ($locations) use ($department_name){return strtolower($locations['location']) == strtolower($department_name);});
+                if ($duplicatedepartmentDepartment->count() > 0)
+                $errorBag[] = (object) [
+                    "error_type" => "existing",
+                    "line" => $index,
+                    "description" => $department_name . " is already registered."
+                    ];
+            }
+
+            if (!empty($company)) {
+                $unregistercompany = $company_list->filter(function ($query) use ($company){return strtolower($query['company']) == strtolower($company);});
+                if ($unregistercompany->count() == 0)
+                    $errorBag[] = (object) [
+                    "error_type" => "unregistered",
+                    "line" => $index,
+                    "description" => $company . " is not registered."
+                    ];
+            }
+            $index++;
+      }
+  
+  
+      $original_lines = array_keys($data_validation_fields);
+      $duplicate_code = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'code'))));
+  
+      foreach($duplicate_code as $line){
+        $input_code = $data_validation_fields[$line]['code'];
+        $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_code){
+          return ($query['code'] == $input_code);
+        }); 
+        $duplicate_lines =  implode(",",array_map(function($query){
+          return $query+2;
+        },array_keys($duplicate_data)));
+        $firstDuplicateLine =  array_key_first($duplicate_data);
+  
+        if((empty($data_validation_fields[$line]['code']))){
+  
+        }else{
+          $errorBag[] = [
+            "error_type" => "duplicate",
+            "line" => (string) $duplicate_lines,
+            "description" =>  $data_validation_fields[$firstDuplicateLine]['code'].' code has a duplicate in your excel file.'
+          ];
         }
-        return $this->result(200,"Search Result",$result);
+      }
+      
+      $duplicate_department = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'location'))));
+      foreach($duplicate_department as $line){
+        $input_name = $data_validation_fields[$line]['location'];
+        $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_name){
+          return ($query['location'] == $input_name);
+        }); 
+        $duplicate_lines =  implode(",",array_map(function($query){
+          return $query+2;
+        },array_keys($duplicate_data)));
+        $firstDuplicateLine =  array_key_first($duplicate_data);
+  
+        if((empty($data_validation_fields[$line]['location']))){
+  
+        }else{
+          $errorBag[] = [
+            "error_type" => "duplicate",
+            "line" => (string) $duplicate_lines,
+            "description" =>  $data_validation_fields[$firstDuplicateLine]['location'].' location has a duplicate in your excel file.'
+          ];
+        }
+      }
+      $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
+      if (empty($errorBag)) {
+        foreach ($data as $location) {
+          $fields = [
+            'code' => $location['code'],
+            'location' => $location['location'],
+            'company' => Company::where('company',$location['company'])->first()->id,
+            'created_at' => $date,
+            'updated_at' => $date,
+          ];
+  
+          $inputted_fields[] = $fields;
+        }
+        $count_upload = count($inputted_fields);
+        $inputted_fields = collect($inputted_fields);
+        $chunks = $inputted_fields->chunk(300);
+  
+        foreach ($chunks as $specific_chunk)
+        {
+          $new_department = DB::table('locations')->insert($specific_chunk->toArray());
+        }
+        return $this->resultResponse('import','location',$count_upload);
+      }
+      else
+        return $this->resultResponse('import-error','location',$errorBag);
     }
 }

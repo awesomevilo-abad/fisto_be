@@ -156,6 +156,24 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::get('dropdown/location-category-supplier',[MasterlistController::class,'loccatsupDropdown']);
         Route::get('dropdown/location-category',[MasterlistController::class,'loccatDropdown']);
         Route::get('dropdown/account-title',[MasterlistController::class,'accountTitleDropdown']);
+
+        // COMPANY
+        Route::get('companies/', [CompanyController::class, 'index']);
+        Route::patch('companies/{id}', [CompanyController::class, 'change_status']);
+        Route::resource('companies', CompanyController::class);
+         
+        // DEPARTMENT
+        Route::get('departments/', [DepartmentController::class, 'index']);
+        Route::post('departments/import',[DepartmentController::class,'import']);
+        Route::patch('departments/{id}', [DepartmentController::class, 'change_status']);
+        Route::resource('departments', DepartmentController::class);
+         
+        // LOCATION
+        Route::get('locations/', [LocationController::class, 'index']);
+        Route::post('locations/import',[LocationController::class,'import']);
+        Route::patch('locations/{id}', [LocationController::class, 'change_status']);
+        Route::resource('locations', LocationController::class);
+         
     });
 
 

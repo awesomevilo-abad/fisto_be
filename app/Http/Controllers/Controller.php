@@ -26,7 +26,7 @@ class Controller extends BaseController
     public function validateIfObjectExist($model,$param,$modelName){
       $modelObject = $model::where('id',$param)->whereNull('deleted_at')->first();
       if(empty($modelObject)){
-          throw new FistoException($modelName." not registered or inactive.",404,NULL,$modelName." ID: ".$param);
+        return $this->resultResponse('not-registered',$modelName,$modelName." ID: ".$param);
       }
       return $modelObject;
     }
@@ -40,7 +40,6 @@ class Controller extends BaseController
             $unregisteredObjects[] = $param;
         }
       }
-
       if(!empty($unregisteredObjects)){
         throw new FistoException($modelName." not registered or inactive.",404,NULL,$modelName." IDs: ".implode(',',$unregisteredObjects));
       }
@@ -62,6 +61,7 @@ class Controller extends BaseController
     }
 
     public function validateIfNothingChangeThenSave($model,$modelName,$is_tagged_array_modified=0){
+      // return $model->isClean().'&&'.$is_tagged_array_modified;
       if($model->isClean() && $is_tagged_array_modified == 0){
         return $this->resultResponse('nothing-has-changed',$modelName,[]);
       }else{
@@ -372,7 +372,7 @@ class Controller extends BaseController
         break;
 
         case('import'):
-          return $this->result(201,Str::plural($modelName)." has been imported.",$data);
+          return $this->result(201,Str::plural($modelName)." has been imported, ".$data.' rows has been saved',[]);
         break;
         
         case('update'):
