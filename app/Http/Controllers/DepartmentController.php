@@ -48,7 +48,7 @@ class DepartmentController extends Controller
         }
         $department_validateDescriptionDuplicate = Department::withTrashed()->where('department', $fields['department'])->first();
         if (!empty($department_validateDescriptionDuplicate)) {
-          return $this->resultResponse('registered','Description',["error_field" => "department"]);
+          return $this->resultResponse('registered','Department',["error_field" => "department"]);
         }
         $companyExist = $this->validateIfObjectExist(new Company,$fields['company'],'Company');
         if(!$companyExist){
@@ -71,6 +71,19 @@ class DepartmentController extends Controller
             'department' => 'required',
             'company' => 'required'
         ]);
+
+        $department_validateCodeDuplicate = Department::withTrashed()->where('code', $fields['code'])->where('id','<>',$id)->first();
+        if (!empty($department_validateCodeDuplicate)) {
+          return $this->resultResponse('registered','Code',["error_field" => "code"]);
+        }
+        $department_validateDescriptionDuplicate = Department::withTrashed()->where('department', $fields['department'])->where('id','<>',$id)->first();
+        if (!empty($department_validateDescriptionDuplicate)) {
+          return $this->resultResponse('registered','Department',["error_field" => "department"]);
+        }
+        $companyExist = DB::table('departments')->where('company','=',$fields['company'])->first();
+        if(!$companyExist){
+            return $this->resultResponse('not-registered','Company',[]);
+        }
 
         if (!$specific_department) {
             return $this->resultResponse('not-found','Department',[]);

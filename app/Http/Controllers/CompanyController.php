@@ -40,7 +40,7 @@ class CompanyController extends Controller
         $fields = $request->validate([
             'code' => 'required',
             'company' => 'required',
-            'ap_id' => 'required',
+            'associates' => 'required',
         ]);
 
         $company_validateCodeDuplicate = Company::withTrashed()->where('code', $fields['code'])->first();
@@ -50,10 +50,10 @@ class CompanyController extends Controller
 
         $company_validateDescriptionDuplicate = Company::withTrashed()->where('company', $fields['company'])->first();
         if (!empty($company_validateDescriptionDuplicate)) {
-          return $this->resultResponse('registered','Description',["error_field" => "company"]);
+          return $this->resultResponse('registered','Company',["error_field" => "company"]);
         }
 
-        $apExist = $this->validateIfObjectsExist(new User,$fields['ap_id'],'AP Associate');
+        $apExist = $this->validateIfObjectsExist(new User,$fields['associates'],'AP Associate');
         if($apExist){
             return $this->resultResponse('not-registered','AP Associate',[]);
         }
@@ -61,7 +61,7 @@ class CompanyController extends Controller
             'code' => $fields['code']
             , 'company' => $fields['company']
         ]);
-        $new_company->associates()->attach($fields['ap_id']);
+        $new_company->associates()->attach($fields['associates']);
 
         return $this->resultResponse('save','Company',$new_company);
 
@@ -74,7 +74,7 @@ class CompanyController extends Controller
         $fields = $request->validate([
             'code' => ['required'],
             'company' => ['required'],
-            'ap_id' => ['required'],
+            'associates' => ['required'],
         ]);
 
 
@@ -85,10 +85,10 @@ class CompanyController extends Controller
 
         $company_validateDescriptionDuplicate = Company::withTrashed()->where('company', $fields['company'])->where('id','<>',$id)->first();
         if (!empty($company_validateDescriptionDuplicate)) {
-          return $this->resultResponse('registered','Description',["error_field" => "company"]);
+          return $this->resultResponse('registered','Company',["error_field" => "company"]);
         }
 
-        $apExist = $this->validateIfObjectsExist($user,$fields['ap_id'],'AP Associate');
+        $apExist = $this->validateIfObjectsExist($user,$fields['associates'],'AP Associate');
         if($apExist){
             return $this->resultResponse('not-registered','AP Associate',[]);
         }
@@ -98,12 +98,12 @@ class CompanyController extends Controller
         } else {
 
             $specific_company->associates()->get();
-            $is_associates_modified = $this->isTaggedArrayModified($fields['ap_id'],  $specific_company->associates()->get(),'id');
+            $is_associates_modified = $this->isTaggedArrayModified($fields['associates'],  $specific_company->associates()->get(),'id');
       
             $specific_company->code = $fields['code'];
             $specific_company->company = $fields['company'];
             $specific_company->associates()->detach();
-            $specific_company->associates()->attach(array_unique($fields['ap_id']));
+            $specific_company->associates()->attach(array_unique($fields['associates']));
             return $this->validateIfNothingChangeThenSave($specific_company,'Company',$is_associates_modified);
             
         }

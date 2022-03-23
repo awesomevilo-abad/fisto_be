@@ -42,29 +42,31 @@ class LocationController extends Controller
             'company' => 'required'
         ]);
 
-        $department_validateCodeDuplicate = Location::withTrashed()->where('code', $fields['code'])->first();
-        if (!empty($department_validateCodeDuplicate)) {
+        $location_validateCodeDuplicate = Location::withTrashed()->where('code', $fields['code'])->first();
+        if (!empty($location_validateCodeDuplicate)) {
           return $this->resultResponse('registered','Code',["error_field" => "code"]);
         }
-        $department_validateDescriptionDuplicate = Location::withTrashed()->where('location', $fields['location'])->first();
-        if (!empty($department_validateDescriptionDuplicate)) {
-          return $this->resultResponse('registered','Description',["error_field" => "location"]);
+        $location_validateDescriptionDuplicate = Location::withTrashed()->where('location', $fields['location'])->first();
+        if (!empty($location_validateDescriptionDuplicate)) {
+          return $this->resultResponse('registered','Location',["error_field" => "location"]);
         }
         $companyExist = $this->validateIfObjectExist(new Company,$fields['company'],'Company');
         if(!$companyExist){
             return $this->resultResponse('not-found','Company',[]);
         }
-        $new_department = Location::create([
+        $new_location = Location::create([
             'code' => $fields['code']
             , 'location' => $fields['location']
             , 'company' => $fields['company']
         ]);
-        return $this->resultResponse('save','Location',$new_department);
+        return $this->resultResponse('save','Location',$new_location);
     }
 
     public function update(Request $request, $id)
     {
-        $specific_department = Location::find($id);
+      
+        $company =new Company();
+        $specific_location = Location::find($id);
 
         $fields = $request->validate([
             'code' => 'required',
@@ -72,13 +74,27 @@ class LocationController extends Controller
             'company' => 'required'
         ]);
 
-        if (!$specific_department) {
+        $location_validateCodeDuplicate = Location::withTrashed()->where('code', $fields['code'])->where('id','<>',$id)->first();
+        if (!empty($location_validateCodeDuplicate)) {
+          return $this->resultResponse('registered','Code',["error_field" => "code"]);
+        }
+        $location_validateDescriptionDuplicate = Location::withTrashed()->where('location', $fields['location'])->where('id','<>',$id)->first();
+        if (!empty($location_validateDescriptionDuplicate)) {
+          return $this->resultResponse('registered','Location',["error_field" => "location"]);
+        }
+        
+        $companyExist = DB::table('departments')->where('company','=',$fields['company'])->first();
+        if(!$companyExist){
+            return $this->resultResponse('not-registered','Company',[]);
+        }
+
+        if (!$specific_location) {
             return $this->resultResponse('not-found','Location',[]);
         } else {
-            $specific_department->code = $fields['code'];
-            $specific_department->location = $fields['location'];
-            $specific_department->company = $fields['company'];
-            return $this->validateIfNothingChangeThenSave($specific_department,'Location');
+            $specific_location->code = $fields['code'];
+            $specific_location->location = $fields['location'];
+            $specific_location->company = $fields['company'];
+            return $this->validateIfNothingChangeThenSave($specific_location,'Location');
         }
     }
     
@@ -108,7 +124,7 @@ class LocationController extends Controller
   
       foreach ($data as $location) {
             $code = $location['code'];
-            $department_name= $location['location'];
+            $location_name= $location['location'];
             $company = $location['company'];
     
             foreach ($location as $key => $value) 
@@ -122,8 +138,8 @@ class LocationController extends Controller
             }
 
             if (!empty($code)) {
-                $duplicatedepartmentCode = $location_list->filter(function ($location) use ($code){return strtolower($location['code']) == strtolower($code);});
-                if ($duplicatedepartmentCode->count() > 0)
+                $duplicatelocationCode = $location_list->filter(function ($location) use ($code){return strtolower($location['code']) == strtolower($code);});
+                if ($duplicatelocationCode->count() > 0)
                 $errorBag[] = (object) [
                     "error_type" => "existing",
                     "line" => $index,
@@ -131,13 +147,13 @@ class LocationController extends Controller
                     ];
             }
             
-            if (!empty($department_name)) {
-                $duplicatedepartmentDepartment = $location_list->filter(function ($locations) use ($department_name){return strtolower($locations['location']) == strtolower($department_name);});
-                if ($duplicatedepartmentDepartment->count() > 0)
+            if (!empty($location_name)) {
+                $duplicatelocationLocation = $location_list->filter(function ($locations) use ($location_name){return strtolower($locations['location']) == strtolower($location_name);});
+                if ($duplicatelocationLocation->count() > 0)
                 $errorBag[] = (object) [
                     "error_type" => "existing",
                     "line" => $index,
-                    "description" => $department_name . " is already registered."
+                    "description" => $location_name . " is already registered."
                     ];
             }
 
@@ -178,8 +194,8 @@ class LocationController extends Controller
         }
       }
       
-      $duplicate_department = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'location'))));
-      foreach($duplicate_department as $line){
+      $duplicate_location = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'location'))));
+      foreach($duplicate_location as $line){
         $input_name = $data_validation_fields[$line]['location'];
         $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_name){
           return ($query['location'] == $input_name);
@@ -218,7 +234,7 @@ class LocationController extends Controller
   
         foreach ($chunks as $specific_chunk)
         {
-          $new_department = DB::table('locations')->insert($specific_chunk->toArray());
+          $new_location = DB::table('locations')->insert($specific_chunk->toArray());
         }
         return $this->resultResponse('import','location',$count_upload);
       }

@@ -29,12 +29,11 @@ class Company extends Model
 
     public function associates()
     {
-       return $this->belongsToMany(User::class,'company_users','company_id','user_id')->select(['users.id',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS fullname")]);
+       return $this->belongsToMany(User::class,'company_users','company_id','user_id')->select(['users.id',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS name")]);
     }
 
-    public function department()
-    {
-        
+    public function charging()
+    { return $this->belongsToMany(Department::class,'departments','company','id')->select();
     }
 
     public function location()

@@ -16,7 +16,7 @@ class Department extends Model
     protected $hidden = ['created_at'];
 
     public function Company(){
-        return $this->hasOne(Company::class,'id','company')->select('id','company');
+        return $this->hasOne(Company::class,'id','company')->select('id','company as name');
     }
     
     public function getCreatedAtAttribute($value){
@@ -27,6 +27,11 @@ class Department extends Model
     public function getUpdatedAtAttribute($value){
         $date = Carbon::parse($value);
         return $date->format('Y-m-d H:i');
+    }
+    
+    public function companyCharging()
+    {
+        return $this->belongsTo(Company::class);
     }
     
 }

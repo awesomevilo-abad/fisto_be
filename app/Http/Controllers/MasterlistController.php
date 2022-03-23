@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\FistoException;
+use App\Http\Resources\ChargingResource; 
 
 use App\Models\User;
 use App\Models\Company;
+use App\Models\Department;
 use App\Models\Document;
 use App\Models\Category;
 use App\Models\Supplier;
@@ -69,9 +71,16 @@ class MasterlistController extends Controller
     $data =  array("associates"=>User::where('role','AP Associate')->whereNull('deleted_at')->get(['id',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS name")]));
     return $this->resultResponse('fetch','AP Associate',$data);
   }
+
+  
   public function chargingDropdown(){
-    $data =  array("charging"=>User::where('role','AP Associate')->whereNull('deleted_at')->get(['id',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS name")]));
-    return $this->resultResponse('fetch','AP Associate',$data);
+
+
+    $company =  DB::table('companies')
+    ->get(['id','company']);
+    $company =  ChargingResource::collection($company);
+    $company =  collect(['companies' => $company]);
+    return $this->resultResponse('fetch','Charging',$company);
   }
 
 }

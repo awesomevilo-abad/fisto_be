@@ -20,7 +20,7 @@ class Location extends Model
       ];
 
     public function Company(){
-        return $this->hasOne(Company::class,'id','company')->select('id','company');
+        return $this->hasOne(Company::class,'id','company')->select('id','company as name');
     }
     public function getCreatedAtAttribute($value){
         $date = Carbon::parse($value);
