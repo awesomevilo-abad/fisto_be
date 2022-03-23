@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\FistoException;
 
+use App\Models\User;
+use App\Models\Company;
 use App\Models\Document;
 use App\Models\Category;
 use App\Models\Supplier;
@@ -56,6 +58,20 @@ class MasterlistController extends Controller
     $data =  array(
       "account_titles"=>AccountTitle::whereNull('deleted_at')->get(['id','title']));
       return $this->resultResponse('fetch','Account Title',$data);
+  }
+
+  public function companyDropdown(){
+    $data =  array("companies"=>Company::whereNull('deleted_at')->get(['id','company']));
+    return $this->resultResponse('fetch','Company',$data);
+  }
+
+  public function associateDropdown(){
+    $data =  array("associates"=>User::where('role','AP Associate')->whereNull('deleted_at')->get(['id',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS name")]));
+    return $this->resultResponse('fetch','AP Associate',$data);
+  }
+  public function chargingDropdown(){
+    $data =  array("charging"=>User::where('role','AP Associate')->whereNull('deleted_at')->get(['id',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS name")]));
+    return $this->resultResponse('fetch','AP Associate',$data);
   }
 
 }

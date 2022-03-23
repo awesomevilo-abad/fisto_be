@@ -156,6 +156,9 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::get('dropdown/location-category-supplier',[MasterlistController::class,'loccatsupDropdown']);
         Route::get('dropdown/location-category',[MasterlistController::class,'loccatDropdown']);
         Route::get('dropdown/account-title',[MasterlistController::class,'accountTitleDropdown']);
+        Route::get('dropdown/company',[MasterlistController::class,'companyDropdown']);
+        Route::get('dropdown/associate',[MasterlistController::class,'associateDropdown']);
+        Route::get('dropdown/charging',[MasterlistController::class,'chargingDropdown']);
 
         // COMPANY
         Route::get('companies/', [CompanyController::class, 'index']);
