@@ -26,14 +26,12 @@ class TransactionPostRequest extends FormRequest
      */
     public function rules()
     {
-        // Validator::extend('po_duplicate', function ($attribute, $value) {
-
-        //     $transactions = DB::table('transactions')
-        //     ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
-        //     ->where('company_id',1)
-        //     ->where('po_no',1);
-        //     return $transactions->count();
-        // });
+        
+        $validateTransaction = $transactions = DB::table('transactions')
+        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
+        ->where('company_id',$request['document']['company']['id'])
+        ->where('po_no',$request['po_group'][0]['no']);
+       $validateTransactionCount = $transactions->count();
         
         return [
             "requestor.id" => 'required'

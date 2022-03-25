@@ -26,51 +26,16 @@ class TransactionController extends Controller
     public function store(TransactionPostRequest $request)
     {
 
-        $validateTransaction = $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
-        ->where('company_id',1)
-        ->where('po_no',10002);
-       $validateTransactionCount = $transactions->count();
+        $fields=$request->validated();
 
-        $fields=$request->validate([
-            "requestor.id" => 'required'
-            , "requestor.id_prefix" => 'required'
-            , "requestor.id_no" => 'required'
-            , "requestor.role" => 'required'
-            , "requestor.position" => 'required'
-            , "requestor.first_name" => 'required'
-            , "requestor.middle_name" => 'required'
-            , "requestor.last_name" => 'required'
-            , "requestor.suffix" => 'nullable'
-            , "requestor.department" => 'required'
-           
-            , "document.id" => 'required'
-            , "document.payment_type" => 'required'
-            , "document.no" => 'required|unique:transactions,document_no'
-            , "document.date" => 'required'
-            , "document.amount" => 'required|numeric'
-            , "document.remarks" => 'nullable'
-            , "document.company.id" => 'required'
-            , "document.company.name" => 'required'
-            , "document.department.id" => 'required'
-            , "document.department.name" => 'required'
-            , "document.location.id" => 'required'
-            , "document.location.name" => 'required'
-            , "document.supplier.id" => 'required'
-            , "document.supplier.name" => 'required'
-
-            , "po_group.*.no" => ['required','numeric', new PODuplicateFull($validateTransactionCount)]
-            , "po_group.*.amount" => 'required|numeric'
-            , "po_group.*.rr_no" => 'required',
-        ]);
         $transaction_id = $this->getTransactionID($fields['requestor']['department']);
-        
         $date_requested = date('Y-m-d H:i:s');
         $po_count = count($fields['po_group']);
         $po_total_amount = 0;
         $po_total_qty = 0;
         $tag_id = 3;
 
+        $insertPOBatch = $this->insertPOBatch($fields['requestor']['department']);
         for($i=0;$i<$po_count;$i++){
             $po_no = $fields['po_group'][$i]['no'];
             $po_amount = $fields['po_group'][$i]['amount'];

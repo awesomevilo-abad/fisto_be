@@ -360,7 +360,7 @@ class Controller extends BaseController
       return floatval(str_replace(',', '',$amount));
     }
 
-    public function resultResponse($action,$modelName,$data=[]){
+    public function resultResponse($action,$modelName,$data=[],$active=[],$inactive=[]){
       $modelName = ucfirst(strtolower($modelName));
       switch($action){
         case('fetch'):
@@ -372,7 +372,7 @@ class Controller extends BaseController
         break;
 
         case('import'):
-          return $this->result(201,Str::plural($modelName)." has been imported, ".$data.' rows has been saved',[]);
+          return $this->result(201,Str::plural($modelName)." has been imported, ".$active.' active rows and '.$inactive.' inactive rows were added.',[]);
         break;
         
         case('update'):
@@ -455,5 +455,12 @@ class Controller extends BaseController
           return $this->result(200,"User's default password has been restored.",$data);
         break;
       }
+    }
+
+    
+    public function getDuplicateInputs($object,$param,$dbfield){
+    return $duplicatelocationCode = $object->filter(function ($q) use ($dbfield,$param){
+        return strtolower((string)$q["$dbfield"]) === strtolower((string)$param);
+      });
     }
 }

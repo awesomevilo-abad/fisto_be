@@ -117,8 +117,8 @@ class LocationController extends Controller
       $location_list = Location::withTrashed()->get();
       $company_list = Company::get();
 
-      $headers = 'Code, Location, Company';
-      $template = ["code","location","company"];
+      $headers = 'Code, Location, Company, Status';
+      $template = ["code","location","company","status"];
       $keys = array_keys(current($data));
       $this->validateHeader($template,$keys,$headers);
   
@@ -138,7 +138,7 @@ class LocationController extends Controller
             }
 
             if (!empty($code)) {
-                $duplicatelocationCode = $location_list->filter(function ($location) use ($code){return strtolower($location['code']) == strtolower($code);});
+                $duplicatelocationCode = $this->getDuplicateInputs($location_list,$code,'code');
                 if ($duplicatelocationCode->count() > 0)
                 $errorBag[] = (object) [
                     "error_type" => "existing",
@@ -148,7 +148,7 @@ class LocationController extends Controller
             }
             
             if (!empty($location_name)) {
-                $duplicatelocationLocation = $location_list->filter(function ($locations) use ($location_name){return strtolower($locations['location']) == strtolower($location_name);});
+                $duplicatelocationLocation = $this->getDuplicateInputs($location_list,$location_name,'location');
                 if ($duplicatelocationLocation->count() > 0)
                 $errorBag[] = (object) [
                     "error_type" => "existing",
@@ -158,7 +158,7 @@ class LocationController extends Controller
             }
 
             if (!empty($company)) {
-                $unregistercompany = $company_list->filter(function ($query) use ($company){return strtolower($query['company']) == strtolower($company);});
+                $unregistercompany = $this->getDuplicateInputs($company_list,$company,'company');
                 if ($unregistercompany->count() == 0)
                     $errorBag[] = (object) [
                     "error_type" => "unregistered",
@@ -175,8 +175,9 @@ class LocationController extends Controller
   
       foreach($duplicate_code as $line){
         $input_code = $data_validation_fields[$line]['code'];
+        
         $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_code){
-          return ($query['code'] == $input_code);
+          return strtolower((string)$query["code"]) === strtolower((string)$input_code);
         }); 
         $duplicate_lines =  implode(",",array_map(function($query){
           return $query+2;
@@ -218,12 +219,14 @@ class LocationController extends Controller
       $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
       if (empty($errorBag)) {
         foreach ($data as $location) {
+          $status_date = (strtolower($location['status'])=="active"?NULL:$date);
           $fields = [
             'code' => $location['code'],
             'location' => $location['location'],
             'company' => Company::where('company',$location['company'])->first()->id,
             'created_at' => $date,
             'updated_at' => $date,
+            'deleted_at' => $status_date,
           ];
   
           $inputted_fields[] = $fields;
@@ -231,12 +234,20 @@ class LocationController extends Controller
         $count_upload = count($inputted_fields);
         $inputted_fields = collect($inputted_fields);
         $chunks = $inputted_fields->chunk(300);
+
+        $active =  $inputted_fields->filter(function ($q){
+          return $q['deleted_at']==NULL;
+        })->count();
+
+        $inactive =  $inputted_fields->filter(function ($q){
+          return $q['deleted_at']!=NULL;
+        })->count();
   
         foreach ($chunks as $specific_chunk)
         {
           $new_location = DB::table('locations')->insert($specific_chunk->toArray());
         }
-        return $this->resultResponse('import','location',$count_upload);
+        return $this->resultResponse('import','location',$count_upload,$active,$inactive,);
       }
       else
         return $this->resultResponse('import-error','location',$errorBag);

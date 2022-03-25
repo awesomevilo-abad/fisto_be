@@ -114,8 +114,8 @@ class DepartmentController extends Controller
       $department_list = Department::withTrashed()->get();
       $company_list = Company::get();
 
-      $headers = 'Code, Department, Company';
-      $template = ["code","department","company"];
+      $headers = 'Code, Department, Company, Status';
+      $template = ["code","department","company","status"];
       $keys = array_keys(current($data));
       $this->validateHeader($template,$keys,$headers);
   
@@ -135,7 +135,7 @@ class DepartmentController extends Controller
             }
 
             if (!empty($code)) {
-                $duplicatedepartmentCode = $department_list->filter(function ($department) use ($code){return strtolower($department['code']) == strtolower($code);});
+                $duplicatedepartmentCode = $this->getDuplicateInputs($department_list,$code,'code');
                 if ($duplicatedepartmentCode->count() > 0)
                 $errorBag[] = (object) [
                     "error_type" => "existing",
@@ -145,7 +145,7 @@ class DepartmentController extends Controller
             }
             
             if (!empty($department_name)) {
-                $duplicatedepartmentDepartment = $department_list->filter(function ($departments) use ($department_name){return strtolower($departments['department']) == strtolower($department_name);});
+               $duplicatedepartmentDepartment = $this->getDuplicateInputs($department_list,$department_name,'department');
                 if ($duplicatedepartmentDepartment->count() > 0)
                 $errorBag[] = (object) [
                     "error_type" => "existing",
@@ -155,7 +155,7 @@ class DepartmentController extends Controller
             }
 
             if (!empty($company)) {
-                $unregistercompany = $company_list->filter(function ($query) use ($company){return strtolower($query['company']) == strtolower($company);});
+               $unregistercompany = $this->getDuplicateInputs($company_list,$company,'company');
                 if ($unregistercompany->count() == 0)
                     $errorBag[] = (object) [
                     "error_type" => "unregistered",
@@ -215,12 +215,14 @@ class DepartmentController extends Controller
       $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
       if (empty($errorBag)) {
         foreach ($data as $department) {
+          $status_date = (strtolower($department['status'])=="active"?NULL:$date);
           $fields = [
             'code' => $department['code'],
             'department' => $department['department'],
             'company' => Company::where('company',$department['company'])->first()->id,
             'created_at' => $date,
             'updated_at' => $date,
+            'deleted_at' => $status_date,
           ];
   
           $inputted_fields[] = $fields;
@@ -228,12 +230,21 @@ class DepartmentController extends Controller
         $count_upload = count($inputted_fields);
         $inputted_fields = collect($inputted_fields);
         $chunks = $inputted_fields->chunk(300);
-  
+
+        $active =  $inputted_fields->filter(function ($q){
+          return $q['deleted_at']==NULL;
+        })->count();
+
+        $inactive =  $inputted_fields->filter(function ($q){
+          return $q['deleted_at']!=NULL;
+        })->count();
+        
+
         foreach ($chunks as $specific_chunk)
         {
           $new_department = DB::table('departments')->insert($specific_chunk->toArray());
         }
-        return $this->resultResponse('import','department',$count_upload);
+        return $this->resultResponse('import','department',$count_upload,$active,$inactive);
       }
       else
         return $this->resultResponse('import-error','department',$errorBag);

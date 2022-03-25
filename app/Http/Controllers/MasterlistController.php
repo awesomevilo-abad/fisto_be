@@ -74,8 +74,6 @@ class MasterlistController extends Controller
 
   
   public function chargingDropdown(){
-
-
     $company =  DB::table('companies')
     ->get(['id','company']);
     $company =  ChargingResource::collection($company);
