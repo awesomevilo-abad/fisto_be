@@ -21,7 +21,7 @@ class Transaction extends Model
         , 'suffix'
         , 'department_details'
         , 'transaction_id'
-        , 'tag_id'
+        , 'request_id'
         , 'document_id'
         , 'document_type'
         , 'document_date'

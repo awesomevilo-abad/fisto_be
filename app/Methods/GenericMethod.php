@@ -3,7 +3,6 @@
 namespace App\Methods;
 
 use App\Exceptions\FistoException;
-
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 // For Pagination with Collection
@@ -12,6 +11,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 
 use App\Models\User;
+use App\Models\POBatch;
+use App\Models\Transaction;
+
 use App\Models\UserDocumentCategory;
 use Illuminate\Routing\Route;
 
@@ -140,7 +142,7 @@ class GenericMethod{
 
     public static function generateTagNo(){
         $tag_no = DB::select(DB::raw('
-        SELECT MAX(tagging_tag_id) as max_tag_no FROM transactions'));
+        SELECT MAX(tagging_request_id) as max_tag_no FROM transactions'));
 
         return $tag_no[0]->max_tag_no;
     }
@@ -160,7 +162,7 @@ class GenericMethod{
 
     public static function validateIfPONoExist($payment_type,$company_id,$supplier_id,$po_no){
         $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         // ->where('payment_type',$payment_type)
         ->where('company_id',$company_id)
         ->where('supplier_id',$supplier_id)
@@ -239,7 +241,7 @@ class GenericMethod{
 
     public static function validateIfPONoExistInDifferentSupplierReceiptPartial($payment_type,$company_id,$supplier_id,$po_no){
         $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         ->where('transactions.company_id',$company_id)
         ->where('transactions.supplier_id',$supplier_id)
         ->where('transactions.balance_po_ref_amount','>',0)
@@ -252,7 +254,7 @@ class GenericMethod{
 
     public static function validateIfPONoExistInDifferentSupplier($payment_type,$company_id,$supplier_id,$po_no){
         $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         ->where('transactions.company_id',$company_id)
         ->where('transactions.supplier_id',$supplier_id)
         ->where('p_o_batches.po_no',$po_no);
@@ -261,8 +263,8 @@ class GenericMethod{
 
     public static function validateIfRefNoExist($payment_type,$company_id,$supplier_id,$ref_no){
         $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
-        ->leftJoin('referrence_batches','transactions.tag_id','=','referrence_batches.tag_id')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
+        ->leftJoin('referrence_batches','transactions.request_id','=','referrence_batches.request_id')
         // ->where('payment_type',$payment_type)
         ->where('company_id',$company_id)
         ->where('supplier_id',$supplier_id)
@@ -277,7 +279,7 @@ class GenericMethod{
 
     public static function getBalanceAmountOfRefPO($payment_type,$company_id,$supplier_id,$po_no,$document_amount){
         $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         ->where('transactions.company_id',$company_id)
         ->where('transactions.supplier_id',$supplier_id)
         ->where('p_o_batches.po_no',$po_no)
@@ -291,7 +293,7 @@ class GenericMethod{
 
     public static function getBalanceQtyOfRefPO($payment_type,$company_id,$supplier_id,$po_no,$ref_qty){
         $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         ->where('transactions.company_id',$company_id)
         ->where('transactions.supplier_id',$supplier_id)
         ->where('p_o_batches.po_no',$po_no)
@@ -305,7 +307,7 @@ class GenericMethod{
 
     public static function getUsedPO($payment_type,$company_id,$supplier_id,$po_no,$document_amount){
         $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         ->where('transactions.payment_type',$payment_type)
         ->where('transactions.company_id',$company_id)
         ->where('transactions.supplier_id',$supplier_id)
@@ -316,7 +318,7 @@ class GenericMethod{
 
     public static function getPOWithInsufficientAmont($payment_type,$company_id,$supplier_id,$po_no,$document_amount){
         $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         ->where('payment_type',$payment_type)
         ->where('company_id',$company_id)
         ->where('supplier_id',$supplier_id)
@@ -338,20 +340,20 @@ class GenericMethod{
         return $response;
     }
 
-    public static function validateIfPOExistInOtherDocNo($payment_type,$company_id,$supplier_id,$po_no,$used_tag_id){
+    public static function validateIfPOExistInOtherDocNo($payment_type,$company_id,$supplier_id,$po_no,$used_request_id){
         $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         ->where('transactions.company_id',$company_id)
         ->where('transactions.supplier_id',$supplier_id)
         ->where('p_o_batches.po_no',$po_no)
-        ->whereIn('transactions.tag_id',$used_tag_id);
+        ->whereIn('transactions.request_id',$used_request_id);
         return $transactions->count();
     }
 
     public static function getTagIDUsingPONo($payment_type,$company_id,$supplier_id,$po_no){
         $transactions = DB::table('transactions')
-        ->select('transactions.tag_id')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
+        ->select('transactions.request_id')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         ->where('transactions.company_id',$company_id)
         ->where('transactions.supplier_id',$supplier_id)
         ->where('p_o_batches.po_no',$po_no)
@@ -360,15 +362,15 @@ class GenericMethod{
             ->whereNotNull('transactions.balance_po_ref_amount')
             ->orWhere('transactions.balance_po_ref_amount','>',0);
         })
-        ->orderBy('transactions.tag_id','desc')
+        ->orderBy('transactions.request_id','desc')
         ->get();
         return $transactions;
     }
 
     public static function getUsedPOFromDB($payment_type,$company_id,$supplier_id,$po_no,$document_amount){
         $transactions = DB::table('p_o_batches')
-        ->where('tag_id', '=', function ($query) use ($po_no) {
-            $query->selectRaw('tag_id')->from('p_o_batches')
+        ->where('request_id', '=', function ($query) use ($po_no) {
+            $query->selectRaw('request_id')->from('p_o_batches')
             ->where('po_no',$po_no)
             ->orderByDesc('id')
             ->limit(1);
@@ -612,7 +614,7 @@ class GenericMethod{
 
                 $remarks = DB::table($table)
                 ->select('remarks')
-                ->where('tag_id',$transaction->tagging_tag_id)->orderBy('id', 'desc')->first();
+                ->where('request_id',$transaction->tagging_request_id)->orderBy('id', 'desc')->first();
 
             }
 
@@ -629,7 +631,7 @@ class GenericMethod{
             // PO & RR
             $po_group = collect();
             $get_po = DB::table('p_o_batches as PB')
-            ->where('PB.tag_id',$transaction->tag_id)
+            ->where('PB.request_id',$transaction->request_id)
             ->get();
 
             foreach($get_po as $specific_po){
@@ -658,7 +660,7 @@ class GenericMethod{
            // REFERRENCE
            $referrence_group = collect();
            $get_referrence = DB::table('referrence_batches')
-           ->where('tag_id','=',$transaction->tag_id)
+           ->where('request_id','=',$transaction->request_id)
            ->get();
 
            foreach($get_referrence as $specific_refference){
@@ -695,8 +697,8 @@ class GenericMethod{
                     'id'=>$transaction->id,
                     'date_requested'=>$date_requested,
                     'transaction_id'=>$transaction->transaction_id,
-                    'tag_id'=>$transaction->tag_id,
-                    'tagging_tag_id'=>$transaction->tagging_tag_id,
+                    'request_id'=>$transaction->request_id,
+                    'tagging_request_id'=>$transaction->tagging_request_id,
                     'document_id'=>$transaction->document_id,
                     'document_type'=>$transaction->document_type,
                     'category_id'=>$transaction->category_id,
@@ -775,4 +777,142 @@ class GenericMethod{
         return $result;
 
     }
+    
+    public static function getRequestID(){
+        $transactions = DB::table('transactions')->select('request_id')->orderBy('id', 'desc')->first();
+        return (empty($transactions))?0:$transactions->request_id+1;
+    }
+    
+    public static function getTransactionNo($str)
+    {
+        $dep_initials = '';
+        foreach (explode(' ', $str) as $word) {
+            $dep_initials .= strtoupper($word[0]);
+        }
+
+        $transactions = DB::table('transactions')->where('transaction_id', 'like', '%' . $dep_initials . '%')
+            ->select('transaction_id')->orderBy('id', 'DESC')->first();
+        if (empty($transactions)) {
+            $transaction_id = 0;
+        } else {
+            $transaction_id = preg_replace('/[^0-9.]+/', '', ($transactions->transaction_id));
+
+        }
+        return ($transaction_id);
+    }
+
+    public static function getTransactionCode($str, $transaction_id)
+    {
+        $dep_initials = '';
+        $transaction_no = '';
+        if ($str == trim($str) && strpos($str, ' ') !== false) {
+            // IF MORE THAN 1 WORD AND DEPARTMENT NAME (MANAGEMENT INFORMATION SYSTEMS)
+            foreach (explode(' ', $str) as $word) {
+                $dep_initials .= strtoupper($word[0]);
+            }
+
+            return $dep_initials . sprintf('%03d', ($transaction_id + 1));
+        } else {
+            // IF 1 WORD AND DEPARTMENT NAME (FINANCE)
+            $dep_initials = strtoupper(mb_substr($str, 0, 3));
+
+            $transactions = DB::table('transactions')->where('transaction_id', 'like', '%' . $dep_initials . '%')
+                ->select('transaction_id')->orderBy('id', 'desc')->first();
+
+            if (empty($transactions)) {
+                // IF WALANG LAMAN ANG KEYWORD DITO IREREGISTER ANG KEYWORD (FIN,MIS,AUD...)
+                $transaction_id = 0;
+                return $dep_initials . sprintf('%03d', ($transaction_id + 1));
+            } else {
+                // IF MAY LAMAN ANG EXISTING NA ANG KEYWORD DOON SA TRANSACTION (FIN,MIS,AUD...)
+                $transaction_code = preg_replace('/[^0-9.]+/', '', $transactions->transaction_id);
+
+                if (empty($transaction_code)) {
+                    return $dep_initials . sprintf('%03d', ($transaction_code + 1));
+                } else {
+                    $transaction_id = preg_replace('/[^0-9.]+/', '', ($transaction_code + 1));
+                }
+                return ($dep_initials . sprintf('%03d', ($transaction_id)));
+
+            }
+
+        }
+
+    }
+    
+    public static function getTransactionID($department){
+        $transaction_no = GenericMethod::getTransactionNo($department);
+        return GenericMethod::getTransactionCode($department, $transaction_no);
+    }
+
+    public static function insertPO($request_id,$po_group){
+        $po_count = count($po_group);
+        $po_total_amount = 0;
+        for($i=0;$i<$po_count;$i++){
+            $po_no = $po_group[$i]['no'];
+            $po_amount = $po_group[$i]['amount'];
+            $po_total_amount = $po_total_amount + $po_amount;
+
+            $insert_po_batch = POBatch::create([
+                'request_id' => $request_id,
+                'po_no' => $po_no,
+                'po_amount' => $po_amount
+            ]);
+
+        }
+
+        return $po_total_amount;
+    }
+    public static function resultLaravelFormat($column,$message){
+        return collect(["$column"=>$message]);
+    }
+    
+    public static function insertTransaction($transaction_id,$po_total_amount,
+    $request_id,$date_requested,$fields){
+        
+        $new_transaction = Transaction::create([
+            'transaction_id' => $transaction_id
+            , "users_id" => $fields['requestor']['id']
+            , "id_prefix" => $fields['requestor']['id_prefix']
+            , "id_no" => $fields['requestor']['id_no']
+            , "first_name" => $fields['requestor']['first_name']
+            , "middle_name" => $fields['requestor']['middle_name']
+            , "last_name" => $fields['requestor']['last_name']
+            , "suffix" => $fields['requestor']['suffix']
+            , "department_details" => $fields['requestor']['department']
+
+            , "document_id" => $fields['document']['id']
+            , "company_id" => $fields['document']['company']['id']
+            , "company" => $fields['document']['company']['name']
+            , "department_id" => $fields['document']['department']['id']
+            , "department" => $fields['document']['department']['name']
+            , "location_id" => $fields['document']['location']['id']
+            , "location" => $fields['document']['location']['name']
+            , "supplier_id" => $fields['document']['supplier']['id']
+            , "supplier" => $fields['document']['supplier']['name']
+            , "payment_type" => $fields['document']['payment_type']
+            , "document_no" => $fields['document']['no']
+            , "document_date" => $fields['document']['date']
+            , "document_amount" => $fields['document']['amount']
+            , "remarks" => $fields['document']['remarks']
+            , "document_type" => $fields['document']['name']
+
+            , "po_total_amount" => $po_total_amount
+
+            , "request_id" => $request_id
+            , "tagging_tag_id" => 0
+            , "date_requested" => $date_requested
+            , "status" => "Pending"
+
+       
+        ]);
+
+        return $new_transaction;
+        // if($new_transaction->count()>1){
+        //     return GenericMethod::resultLaravelFormat('po_group.no',"The PO number has already been taken.: ".$validateTransactionCount->pluck('po_no')->implode(','));
+        // }
+
+
+    }
+  
 }

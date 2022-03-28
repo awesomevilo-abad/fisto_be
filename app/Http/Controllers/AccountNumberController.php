@@ -214,6 +214,7 @@ class AccountNumberController extends Controller
     $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
     if(empty($errorBag)){
       foreach($data as $account_no){
+        $status_date = (strtolower($account_no['status'])=="active"?NULL:$date);
         $inputted_supplier = $account_no['supplier'];
         $inputted_location = $account_no['location'];
         $inputted_category = $account_no['category'];
@@ -254,7 +255,8 @@ class AccountNumberController extends Controller
           "category_id"=>$category,
           "supplier_id"=>$supplier,
           "created_at"=>\Carbon\Carbon::now(),
-          "updated_at"=>\Carbon\Carbon::now()
+          "updated_at"=>\Carbon\Carbon::now(),
+          'deleted_at' => $status_date
         ];
         $inputted_fields[] = $fields; 
       }

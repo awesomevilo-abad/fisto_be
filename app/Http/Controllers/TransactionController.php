@@ -3,15 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Methods\PADValidationMethod;
+use App\Methods\GenericMethod;
 use App\Models\Transaction;
-use App\Models\POGroupBatches;
-use App\Models\POBatch;
-use App\Exceptions\FistoException;
+
+
 use App\Http\Requests\TransactionPostRequest;
-use App\Methods\TransactionValidationMethod;
-use App\Http\Controllers\Validation\PadValidationController;
-use App\Rules\PODuplicateFull;
 
 class TransactionController extends Controller
 {
@@ -25,74 +22,24 @@ class TransactionController extends Controller
 
     public function store(TransactionPostRequest $request)
     {
-
         $fields=$request->validated();
-
-        $transaction_id = $this->getTransactionID($fields['requestor']['department']);
         $date_requested = date('Y-m-d H:i:s');
-        $po_count = count($fields['po_group']);
-        $po_total_amount = 0;
-        $po_total_qty = 0;
-        $tag_id = 3;
+        
+        $transaction_id = GenericMethod::getTransactionID($fields['requestor']['department']);
+        $request_id = GenericMethod::getRequestID();
+        $duplicatePO = PADValidationMethod::validatePOFull($fields['document']['company']['id'],$fields['po_group']);
 
-        $insertPOBatch = $this->insertPOBatch($fields['requestor']['department']);
-        for($i=0;$i<$po_count;$i++){
-            $po_no = $fields['po_group'][$i]['no'];
-            $po_amount = $fields['po_group'][$i]['amount'];
-            $po_total_amount = $po_total_amount + $po_amount;
+        if(isset($duplicatePO)){
+            return $this->resultResponse('invalid','Transaction',$duplicatePO);
+         }
 
-            $insert_po_group = POGroupBatches::create([
-                'tag_id' => $tag_id
-                , "po_no" => $po_no
-                , "po_total_amount" => $po_total_amount
-            ]);
+        $po_total_amount = GenericMethod::insertPO($request_id,$fields['po_group']);
+        $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
+        $request_id,$date_requested,$fields);
 
-            $insert_po_batch = POBatch::create([
-                'tag_id' => $tag_id,
-                'po_no' => $po_no
-                , "po_amount" => $po_amount
-            ]);
-
+        if(isset($transaction->transaction_id)){
+           return $this->resultResponse('save','Transaction',[]);
         }
-
-
-        $new_transaction = Transaction::create([
-            'transaction_id' => $transaction_id
-            , "users_id" => $fields['requestor']['id']
-            , "id_prefix" => $fields['requestor']['id_prefix']
-            , "id_no" => $fields['requestor']['id_no']
-            , "first_name" => $fields['requestor']['first_name']
-            , "middle_name" => $fields['requestor']['middle_name']
-            , "last_name" => $fields['requestor']['last_name']
-            , "suffix" => $fields['requestor']['suffix']
-            , "department_details" => $fields['requestor']['department']
-
-            , "document_id" => $fields['document']['id']
-            , "company_id" => $fields['document']['company']['id']
-            , "company" => $fields['document']['company']['name']
-            , "department_id" => $fields['document']['department']['id']
-            , "department" => $fields['document']['department']['name']
-            , "location_id" => $fields['document']['location']['id']
-            , "location" => $fields['document']['location']['name']
-            , "supplier_id" => $fields['document']['supplier']['id']
-            , "supplier" => $fields['document']['supplier']['name']
-            , "payment_type" => $fields['document']['payment_type']
-            , "document_no" => $fields['document']['no']
-            , "document_date" => $fields['document']['date']
-            , "document_amount" => $fields['document']['amount']
-            , "remarks" => $fields['document']['remarks']
-            , "document_type" => 'PAD'
-
-            , "po_total_amount" => $po_total_amount
-
-            , "tag_id" => $tag_id
-            , "tagging_tag_id" => 0
-            , "date_requested" => $date_requested
-            , "status" => "Pending"
-
-       
-        ]);
-        return $fields;
     }
 
 }

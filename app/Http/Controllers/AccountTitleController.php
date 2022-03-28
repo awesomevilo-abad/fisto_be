@@ -233,12 +233,14 @@ class AccountTitleController extends Controller
 
     if (empty($errorBag)) {
       foreach ($data as $account_title) {
+        $status_date = (strtolower($account_title['status'])=="active"?NULL:$date);
         $fields = [
           'code' => $account_title['code'],
           'title' => $account_title['title'],
           'category' => $account_title['category'],
           'created_at' => $date,
           'updated_at' => $date,
+          'deleted_at' => $status_date
         ];
 
         $inputted_fields[] = $fields;

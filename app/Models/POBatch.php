@@ -12,7 +12,7 @@ class POBatch extends Model
     protected $table = 'p_o_batches';
 
     protected $fillable = [
-        'tag_id',
+        'request_id',
         'po_no',
         'po_amount',
         'po_qty',

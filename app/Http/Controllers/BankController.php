@@ -157,9 +157,8 @@ class BankController extends Controller
         }
       }
       if (!empty($code)) {
-        $duplicateCode = $bank_masterlist->filter(function ($query) use ($code){
-          return ($query['code'] == $code) ; 
-        });
+        
+        $duplicateCode = $this->getDuplicateInputs($bank_masterlist,$code,'code');
         if ($duplicateCode->count() > 0)
           $errorBag[] = (object) [
             "error_type" => "existing",
@@ -168,9 +167,7 @@ class BankController extends Controller
           ];
       }
       if (!empty($branch)) {
-        $duplicateBranch = $bank_masterlist->filter(function ($query) use ($branch){
-          return ($query['branch'] == $branch) ; 
-        });
+        $duplicateBranch = $this->getDuplicateInputs($bank_masterlist,$branch,'branch');
         if ($duplicateBranch->count() > 0)
           $errorBag[] = (object) [
             "error_type" => "existing",
@@ -179,9 +176,7 @@ class BankController extends Controller
           ];
       }
       if (!empty($account_no)) {
-        $duplicateAccountNo = $bank_masterlist->filter(function ($query) use ($account_no){
-          return ($query['account_no'] == $account_no) ; 
-        });
+        $duplicateAccountNo = $this->getDuplicateInputs($bank_masterlist,$account_no,'account_no');
         if ($duplicateAccountNo->count() > 0)
           $errorBag[] = (object) [
             "error_type" => "existing",
@@ -281,6 +276,7 @@ class BankController extends Controller
 
     if (empty($errorBag)) {
       foreach ($data as $bank) {
+        $status_date = (strtolower($bank['status'])=="active"?NULL:$date);
         $fields = [
           'code' => $bank['code'],
           'name' => $bank['name'],
@@ -291,6 +287,7 @@ class BankController extends Controller
           'account_title_2' => AccountTitle::firstWhere('title',$bank['account_title_2'])->id,
           'created_at' => $date,
           'updated_at' => $date,
+          'deleted_at' => $status_date,
         ];
 
         $inputted_fields[] = $fields;

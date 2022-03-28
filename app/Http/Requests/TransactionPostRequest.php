@@ -28,9 +28,9 @@ class TransactionPostRequest extends FormRequest
     {
         
         $validateTransaction = $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
-        ->where('company_id',$request['document']['company']['id'])
-        ->where('po_no',$request['po_group'][0]['no']);
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
+        ->where('company_id',1)
+        ->where('po_no','10002');
        $validateTransactionCount = $transactions->count();
         
         return [
@@ -46,10 +46,12 @@ class TransactionPostRequest extends FormRequest
             , "requestor.department" => 'required'
            
             , "document.id" => 'required'
+            , "document.name" => 'required'
             , "document.payment_type" => 'required'
             , "document.no" => 'required|unique:transactions,document_no'
             , "document.date" => 'required'
             , "document.amount" => 'required|numeric'
+            , "document.remarks" => 'required'
             , "document.company.id" => 'required'
             , "document.company.name" => 'required'
             , "document.department.id" => 'required'
@@ -111,7 +113,7 @@ class TransactionPostRequest extends FormRequest
             // ,"balance_po_ref_amount"=> 'nullable'
             // ,"balance_po_ref_qty"=> 'nullable'
 
-            // ,"tagging_tag_id"=> 'nullable'
+            // ,"tagging_request_id"=> 'nullable'
             // ,"utilities_category"=> 'nullable'
             // ,"utilities_account_no"=> 'nullable'
             // ,"utilities_consumption"=> 'nullable'

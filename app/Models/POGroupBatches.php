@@ -12,7 +12,7 @@ class POGroupBatches extends Model
 
 
     protected $fillable = [
-        'tag_id',
+        'request_id',
         'po_no',
         'po_total_amount'
     ];

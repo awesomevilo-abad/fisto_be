@@ -25,10 +25,12 @@ class PODuplicateFull implements Rule
      */
     public function passes($attribute, $value)
     {
-        if ($value == 0){
-            return true;
-        }
-        return false;
+        $validateTransaction = $transactions = DB::table('transactions')
+        ->leftJoin('p_o_batches','transactions.tag_id','=','p_o_batches.tag_id')
+        ->where('company_id',1)
+        ->where('po_no','10002');
+       $validateTransactionCount = $transactions->count();
+        
     }
 
     /**

@@ -137,7 +137,7 @@ class SupplierController extends Controller
                   ];
           }
           if (!empty($supplier_type)) {
-              $unregisterSupplierType = $supplier_type_list->filter(function ($supplier) use ($supplier_type){return strtolower($supplier['type']) == strtolower($supplier_type);});
+            $unregisterSupplierType = $this->getDuplicateInputs($supplier_type_list,$supplier_type,'type');
               if ($unregisterSupplierType->count() == 0)
                   $errorBag[] = (object) [
                   "error_type" => "unregistered",
@@ -147,7 +147,7 @@ class SupplierController extends Controller
           }
           if (!empty($supplier_references)) {
               foreach (explode(",", $supplier_references) as $reference_type) {
-                  $unregisterSupplierReference = $referrence_list->filter(function ($referrence) use ($reference_type){return strtolower($referrence['type']) == strtolower($reference_type);});
+                  $unregisterSupplierReference = $this->getDuplicateInputs($referrence_list,$reference_type,'type');
                   if ($unregisterSupplierReference->count() == 0)
                   $errorBag[] = (object) [
                       "error_type" => "unregistered",
@@ -157,7 +157,7 @@ class SupplierController extends Controller
               }
           }
           if (!empty($code)) {
-              $duplicateSupplierCode = $supplier_list->filter(function ($supplier) use ($code){return strtolower($supplier['code']) == strtolower($code);});
+              $duplicateSupplierCode = $this->getDuplicateInputs($supplier_list,$code,'code');
               if ($duplicateSupplierCode->count() > 0)
               $errorBag[] = (object) [
                   "error_type" => "existing",
@@ -228,6 +228,7 @@ class SupplierController extends Controller
     $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
     if (empty($errorBag)) {
       foreach ($data as $supplier) {
+          $status_date = (strtolower($supplier['status'])=="active"?NULL:$date);
           $supplier_type = $supplier['supplier_type'];
         $fields = [
           'code' => $supplier['code'],
@@ -236,6 +237,7 @@ class SupplierController extends Controller
           'supplier_type_id' => SupplierType::where('type',$supplier_type)->first()->id,
           'created_at' => $date,
           'updated_at' => $date,
+          'deleted_at' => $status_date,
         ];
 
         $inputted_fields[] = $fields;
