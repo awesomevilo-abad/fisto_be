@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Routing\Controller as BaseController;
 use App\Exceptions\FistoException;
+use App\Exceptions\FistoLaravelException;
 
 class Controller extends BaseController
 {
@@ -344,7 +345,10 @@ class Controller extends BaseController
         break;
 
         case('invalid'):
-          throw new FistoException("The given data was invalid.", 422, NULL, $data);
+          throw new FistoLaravelException("The given data was invalid.", 422, NULL, $data);
+        break;
+        case('not-exist'):
+          throw new FistoLaravelException($modelName." does not exist.", 404, NULL, $data);
         break;
         
         case('import-error'):

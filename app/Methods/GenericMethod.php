@@ -844,30 +844,49 @@ class GenericMethod{
         $transaction_no = GenericMethod::getTransactionNo($department);
         return GenericMethod::getTransactionCode($department, $transaction_no);
     }
+    
+    public static function validatePOFull($company_id,$po_group){
+        $po_nos = array_column($po_group,'no');
+        
+        $transactions = DB::table('transactions')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
+        ->where('company_id',$company_id)
+        ->whereIn('po_no',$po_nos);
+       $validateTransactionCount = $transactions->get();
+       
+       if(count($validateTransactionCount)>0){
+            return GenericMethod::resultLaravelFormat('po_group_no',["PO ".$validateTransactionCount->pluck('po_no')->implode(', ')." has already been taken."]);
+        }
+    }
 
     public static function insertPO($request_id,$po_group){
         $po_count = count($po_group);
-        $po_total_amount = 0;
         for($i=0;$i<$po_count;$i++){
             $po_no = $po_group[$i]['no'];
             $po_amount = $po_group[$i]['amount'];
-            $po_total_amount = $po_total_amount + $po_amount;
-
             $insert_po_batch = POBatch::create([
                 'request_id' => $request_id,
                 'po_no' => $po_no,
                 'po_amount' => $po_amount
             ]);
-
         }
+    }
 
+    public static function getPOTotalAmount($request_id,$po_group){
+        $po_count = count($po_group);
+        $po_total_amount = 0;
+        for($i=0;$i<$po_count;$i++){
+            $po_amount = $po_group[$i]['amount'];
+            $po_total_amount = $po_total_amount + $po_amount;
+        }
         return $po_total_amount;
     }
+
     public static function resultLaravelFormat($column,$message){
         return collect(["$column"=>$message]);
     }
     
-    public static function insertTransaction($transaction_id,$po_total_amount,
+    public static function insertTransaction($transaction_id,$po_total_amount=0,
     $request_id,$date_requested,$fields){
         
         $new_transaction = Transaction::create([

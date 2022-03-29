@@ -25,14 +25,7 @@ class TransactionPostRequest extends FormRequest
      * @return array
      */
     public function rules()
-    {
-        
-        $validateTransaction = $transactions = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
-        ->where('company_id',1)
-        ->where('po_no','10002');
-       $validateTransactionCount = $transactions->count();
-        
+    {        
         return [
             "requestor.id" => 'required'
             , "requestor.id_prefix" => 'required'
