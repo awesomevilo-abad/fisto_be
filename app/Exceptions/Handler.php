@@ -51,6 +51,7 @@ class Handler extends ExceptionHandler
           "message" => $exception->getMessage(),
           "errors" => $exception->errors()
         ], 422);
+
       });
 
       $this->renderable(function (AuthenticationException $exception, $request) {

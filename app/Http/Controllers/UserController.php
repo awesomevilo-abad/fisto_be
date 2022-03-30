@@ -122,6 +122,8 @@ class UserController extends Controller
         $document_ids = array_column($document_types,'id');
         $fields['password'] = bcrypt(strtolower($fields['username']));
         
+        $new_user = User::create($fields);
+
         foreach($document_types as $document_type)
         {
             $document_model = new Document();
@@ -130,8 +132,6 @@ class UserController extends Controller
 
             $categories= $document_type['categories'];
             $this->validateIfObjectsExist($category_model,$categories,'Category');
-
-            $new_user = User::create($fields);
             $new_user->documents()->attach($document_ids);
             $document_type_object->document_categories()->attach($categories,['user_id' => $new_user->id]);
         }

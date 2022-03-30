@@ -137,6 +137,7 @@ class TransactionPostRequest extends FormRequest
             'requestor.department' => 'Department',
             
             'document.id' => 'Document id',
+            'document.name' => 'Document name',
             'document.company.id' => 'Company id',
             'document.company.name' => 'Company name',
             'document.department.id' => 'Department id',
