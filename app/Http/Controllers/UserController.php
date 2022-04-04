@@ -170,33 +170,37 @@ class UserController extends Controller
         ->with('documents.document_categories')
         ->where('id',$id)
         ->first();
-
-        
-        $is_tagged_array_modified_document = $this->isTaggedArrayModified($document_ids,  $new_user->documents()->get(),'document_id');
-        
-        $new_user->documents()->detach();
-        $new_user->documents()->attach($document_ids);
-        foreach($document_types as $document_type)
-        {
-            $document_model = new Document();
-            $category_model = new Category();
-            $document_type_object= $this->validateIfObjectExist($document_model,$document_type['id'],'Document');
-            
-            $categories= $document_type['categories'];
-            $this->validateIfObjectsExist($category_model,$categories,'Category');
-            $is_tagged_array_modified_category = $this->isTaggedArrayModified($document_type['categories'],  $document_type_object->document_categories()->get(),'id');
-            
-            $document_type_object->document_categories()->detach();
-            $document_type_object->document_categories()->attach($categories,['user_id' => $new_user->id]);
-        }
-        
+      
         $user->role = $specific_user['role'];
         $user->permissions = $specific_user['permissions'];
-        $user->document_types = $specific_user['document_types'];
-        
-        $is_tagged_array_modified = $this->isMultipleTaggedArrayModified($is_tagged_array_modified_document,$is_tagged_array_modified_category);
+        $user->document_types = [];
+        if((!in_array(1,$specific_user['permissions'])) && (!in_array(2,$specific_user['permissions']))  ){
+            $user->document_types = [];
+            $specific_user['document_types'] = [];
+        }
+        $is_tagged_array_modified = 0;
+        if(!empty($specific_user['document_types'])){
+            $is_tagged_array_modified_document = $this->isTaggedArrayModified($document_ids,  $new_user->documents()->get(),'document_id');
+            $new_user->documents()->detach();
+            $new_user->documents()->attach($document_ids);
+            foreach($document_types as $document_type)
+            {
+                $document_model = new Document();
+                $category_model = new Category();
+                $document_type_object= $this->validateIfObjectExist($document_model,$document_type['id'],'Document');
+                
+                $categories= $document_type['categories'];
+                $this->validateIfObjectsExist($category_model,$categories,'Category');
+                $is_tagged_array_modified_category = $this->isTaggedArrayModified($document_type['categories'],  $document_type_object->document_categories()->get(),'id');
+                
+                $document_type_object->document_categories()->detach();
+                $document_type_object->document_categories()->attach($categories,['user_id' => $new_user->id]);
+            }
+            $user->document_types = $specific_user['document_types'];
+            $is_tagged_array_modified = $this->isMultipleTaggedArrayModified($is_tagged_array_modified_document,$is_tagged_array_modified_category);
+        }
         return $this->validateIfNothingChangeThenSave($user,'User',$is_tagged_array_modified);
-}
+    }
 
     public function change_status(Request $request,$id){
     $status = $request['status'];

@@ -15,7 +15,7 @@ class CreateReferrenceGroupBatches extends Migration
     {
         Schema::create('referrence_group_batches', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('tag_id')->nullable();
+            $table->bigInteger('request_id')->nullable();
             $table->string('referrence_no')->nullable();
             $table->float('referrence_total_amount')->nullable();
             $table->timestamps();

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use App\Exceptions\FistoException;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
@@ -15,6 +16,7 @@ class CategoryController extends Controller
         $status =  $request['status'];
         $rows =  (empty($request['rows']))?10:(int)$request['rows'];
         $search =  $request['search'];
+        $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
         
         $categories = Category::withTrashed()
         ->where(function ($query) use ($status){
@@ -23,8 +25,14 @@ class CategoryController extends Controller
         ->where(function ($query) use ($search){
             return (isset($search))?$query->where('name', 'like', '%' . $search . '%'):$query;
         })
-        ->latest('updated_at')
+        ->latest('updated_at');
+        
+         if ($paginate == 1){
+        $categories = $categories
         ->paginate($rows);
+        }else if ($paginate == 0){
+          $categories = $categories->get(['id','name']);
+        }
         
         if(count($categories)==true){
             return $this->resultResponse('fetch','Category',$categories);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\FistoException;
 use App\Http\Resources\ChargingResource; 
+use App\Http\Resources\UserResource; 
 
 use App\Models\User;
 use App\Models\Company;
@@ -20,6 +21,7 @@ use App\Models\AccountTitle;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class MasterlistController extends Controller
 {
@@ -79,6 +81,59 @@ class MasterlistController extends Controller
     $company =  ChargingResource::collection($company);
     $company =  collect(['companies' => $company]);
     return $this->resultResponse('fetch','Charging',$company);
+  }
+
+  public function currentUser(){
+    
+    $categories = Category::all();
+    $documents = Document::all();
+    
+    $user = User::withTrashed()
+    ->select('id','id_prefix','id_no','role','position','first_name','middle_name','last_name','suffix','department','document_types')
+    ->where('id',Auth::id())
+    ->latest('updated_at')
+    ->first();
+    
+    $new_document_type_list = [];
+    $new_document_types = [];
+
+
+      foreach($user['document_types'] as $document_type)
+      {
+        $new_category_list = [];
+        $new_categories = [];
+
+            if(count($documents->where('id',$document_type['id']))>0)
+            {
+            
+                $document_description = $documents->where('id',$document_type['id']);
+                $category_ids = $document_type['categories'];
+                if(count($category_ids)>0)
+                {
+                    foreach($category_ids as $category_id)
+                    {
+                        if(count(($categories->where('id',$category_id)))>0)
+                        {
+                            $category_description = $categories->where('id',$category_id)->first()->name;
+                            $new_category_list['id'] = $category_id;
+                            $new_category_list['name'] = $category_description;
+                            array_push($new_categories,$new_category_list);
+                        }
+
+                    }
+                }
+                $new_document_type_list['id'] = ($document_description->values()->first()->id);
+                $new_document_type_list['type'] = ($document_description->values()->first()->type);
+                $new_document_type_list['categories'] = $new_categories;
+                array_push($new_document_types,$new_document_type_list);
+            }
+
+     }
+        $user['document_types'] =  $new_document_types;
+        return $this->resultResponse('fetch','User',$user);
+
+
+
   }
 
 }

@@ -14,38 +14,11 @@ use App\Http\Requests\TransactionPostRequest;
 
 class TransactionController extends Controller
 {
-    public function __construct(){
-        // $this->fields = $request->all();
-    }
-
-    public function getPODetails(PODetailsRequest $request){
-
-        $fields = $request->validated();
-        $po_details = DB::table('transactions')
-        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
-        ->where('transactions.company_id',$fields['company_id'])
-        ->where('p_o_batches.po_no',$fields['po_no'])
-        ->get(['po_no','po_amount']);
-        
-        if(count($po_details)>0){
-            if($fields['payment_type']=="FULL"){
-                $errorMessage = GenericMethod::resultLaravelFormat('po_group.no',["PO number already exist."]);
-                return $this->resultResponse('invalid','',$errorMessage);   
-            }
-            return $this->resultResponse('fetch','PO number',$po_details->first());   
-        }
-    }
-
-    public function validateDocumentNo(Request $request)
-    {
-       if (Transaction::where('document_no',$request['document_no'])->first()){
-            $errorMessage = GenericMethod::resultLaravelFormat('document.no',["Document number already exist."]);
-            return $this->resultResponse('invalid','',$errorMessage);   
-        }   
-    }
 
     public function index()
     {
+        $transactions = Transaction::select('id','date_requested','transaction_id','document_type','company','supplier','po_total_amount','referrence_total_amount','document_amount','payment_type','status')->latest('updated_at')->get();
+        return $this->resultResponse('fetch','Transaction',$transactions);
     }
 
     public function store(TransactionPostRequest $request)
@@ -59,6 +32,12 @@ class TransactionController extends Controller
             case 1: //PAD
             case 4: //Contractor's Billing
         
+                if (empty($fields['po_group']) ) 
+                {
+                    $errorMessage = GenericMethod::resultLaravelFormat('po_group',["PO group required"]);
+                    return $this->resultResponse('invalid','',$errorMessage);
+                }
+                
                 $duplicatePO = GenericMethod::validatePOFull($fields['document']['company']['id'],$fields['po_group']);
                 if(isset($duplicatePO)){
                     return $this->resultResponse('invalid','',$duplicatePO);
@@ -85,10 +64,84 @@ class TransactionController extends Controller
                    return $this->resultResponse('save','Transaction',[]);
                 }
             break;
+
+            case 7: //Utilities
+               return $fields;
+            break;
         }
 
         return $this->resultResponse('not-exist','Document number',[]);
+    }
+    
+    public function update (Request $request, $id){
         
+        $fields=$request->validated();
+
+        switch($fields['document']['id']){
+            case 1: //PAD
+            case 4: //Contractor's Billing
+        
+                if (empty($fields['po_group']) ) 
+                {
+                    $errorMessage = GenericMethod::resultLaravelFormat('po_group',["PO group required"]);
+                    return $this->resultResponse('invalid','',$errorMessage);
+                }
+                
+                $duplicatePO = GenericMethod::validatePOFullUpdate($fields['document']['company']['id'],$fields['po_group'],$id);
+                if(isset($duplicatePO)){
+                    return $this->resultResponse('invalid','',$duplicatePO);
+                }
+               
+                $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
+                if ($fields['document']['amount'] != $po_total_amount){
+                   $errorMessage = GenericMethod::resultLaravelFormat('po_group.amount',["Document amount (".$fields['document']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
+                   return $this->resultResponse('invalid','',$errorMessage);
+                }
+
+                // GenericMethod::insertPO($request_id,$fields['po_group']);
+                // $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
+                // $request_id,$date_requested,$fields);
+                // if(isset($transaction->transaction_id)){
+                //    return $this->resultResponse('save','Transaction',[]);
+                // }
+            break;
+
+            case 2: //PRM Common
+                $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
+                $request_id,$date_requested,$fields);
+                if(isset($transaction->transaction_id)){
+                   return $this->resultResponse('save','Transaction',[]);
+                }
+            break;
+        }
+
+        return $this->resultResponse('not-exist','Document number',[]);
     }
 
+    public function getPODetails(PODetailsRequest $request){
+
+        $fields = $request->validated();
+        $po_details = DB::table('transactions')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
+        ->where('transactions.company_id',$fields['company_id'])
+        ->where('p_o_batches.po_no',$fields['po_no'])
+        ->get(['po_no','po_amount','balance_document_po_amount as po_balance']);
+        
+        if(count($po_details)>0){
+            if($fields['payment_type']=="FULL"){
+                $errorMessage = GenericMethod::resultLaravelFormat('po_group.no',["PO number already exist."]);
+                return $this->resultResponse('invalid','',$errorMessage);   
+            }
+            return $this->resultResponse('fetch','PO number',$po_details->first());   
+        }
+        $this->resultResponse('no-content','',[]);  
+    }
+
+    public function validateDocumentNo(Request $request)
+    {
+       if (Transaction::where('document_no',$request['document_no'])->first()){
+            $errorMessage = GenericMethod::resultLaravelFormat('document.no',["Document number already exist."]);
+            return $this->resultResponse('invalid','',$errorMessage);   
+        }   
+    }
 }

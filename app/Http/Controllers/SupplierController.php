@@ -13,11 +13,13 @@ use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
 {
+  
   public function index(Request $request)
   {
     $status =  $request['status'];
     $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
+    $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
 
     $suppliers = Supplier::withTrashed()
       ->with('referrences')
@@ -31,8 +33,16 @@ class SupplierController extends Controller
           ->orWhere('suppliers.name', 'like', '%'.$search.'%')
           ->orWhere('suppliers.terms', 'like', '%'.$search.'%');
       })
-      ->latest('suppliers.updated_at')
-      ->paginate($rows);
+      ->latest('suppliers.updated_at');
+
+      if ($paginate == 1){
+        $suppliers = $suppliers
+        ->paginate($rows);
+        }else if ($paginate == 0){
+          $suppliers = $suppliers
+        ->without('referrences')
+        ->without('supplier_type')->get(['id','name']);
+        }
 
       if(count($suppliers)==true){
         return $this->resultResponse('fetch','Supplier',$suppliers);

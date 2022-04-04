@@ -41,8 +41,8 @@ class TransactionPostRequest extends FormRequest
             , "document.id" => 'required'
             , "document.name" => 'required'
             , "document.payment_type" => 'required'
-            , "document.no" => 'required|unique:transactions,document_no'
-            , "document.date" => 'required'
+            , "document.no" => 'required_if:id,1,4,2|unique:transactions,document_no'
+            , "document.date" => 'required_if:id,1,4,2'
             , "document.amount" => 'required|numeric'
             , "document.remarks" => 'required'
             , "document.company.id" => 'required'
@@ -57,6 +57,8 @@ class TransactionPostRequest extends FormRequest
             , "po_group.*.no" => 'required|numeric'
             , "po_group.*.amount" => 'required|numeric'
             , "po_group.*.rr_no" => 'required'
+            , "from" => 'required_if:id,7'
+            , "to" => 'required_if:id,7'
 
             // // SELECTED CATEGORY (CONDITIONAL)
             // , "category_id" => 'nullable'

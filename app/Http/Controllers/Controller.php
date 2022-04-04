@@ -84,7 +84,7 @@ class Controller extends BaseController
           $i++;
       }
       return $temp_array;
-  }
+    }
 
     public function validateHeader($template,$keys,$headers){
       if(count(array_diff($template,$keys))){
@@ -295,7 +295,6 @@ class Controller extends BaseController
     
      return $errorMessages;
     }
-
     
     public function convertToFloat($amount){
       return floatval(str_replace(',', '',$amount));
@@ -328,6 +327,10 @@ class Controller extends BaseController
           return $this->result(200,$modelName." has been restored.",$data);
         break;
         
+        case('no-content'):
+          return $this->result(403,$modelName,[]);
+        break;
+
         case('registered'):
           throw new FistoException($modelName." already registered.", 409, NULL, $data);
         break;
@@ -405,11 +408,12 @@ class Controller extends BaseController
       }
     }
 
-    
     public function getDuplicateInputs($object,$param,$dbfield){
     return $duplicatelocationCode = $object->filter(function ($q) use ($dbfield,$param){
         return strtolower((string)$q["$dbfield"]) === strtolower((string)$param);
       });
     }
+
+  
 
 }

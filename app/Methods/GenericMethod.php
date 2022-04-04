@@ -855,7 +855,22 @@ class GenericMethod{
        $validateTransactionCount = $transactions->get();
        
        if(count($validateTransactionCount)>0){
-            return GenericMethod::resultLaravelFormat('po_group_no',["PO ".$validateTransactionCount->pluck('po_no')->implode(', ')." has already been taken."]);
+            return GenericMethod::resultLaravelFormat('po_group.no',["PO ".$validateTransactionCount->pluck('po_no')->implode(', ')." has already been taken."]);
+        }
+    }
+    
+    public static function validatePOFullUpdate($company_id,$po_group,$id){
+        $po_nos = array_column($po_group,'no');
+        
+        $transactions = DB::table('transactions')
+        ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
+        ->where('transactions.company_id',$company_id)
+        ->where('transactions.id','<>',$id)
+        ->whereIn('p_o_batches.po_no',$po_nos);
+       $validateTransactionCount = $transactions->get();
+       
+       if(count($validateTransactionCount)>0){
+            return GenericMethod::resultLaravelFormat('po_group.no',["PO ".$validateTransactionCount->pluck('po_no')->implode(', ')." has already been taken."]);
         }
     }
 
@@ -932,6 +947,10 @@ class GenericMethod{
         // }
 
 
+    }
+
+    public static function validateUtilities(){
+      
     }
   
 }

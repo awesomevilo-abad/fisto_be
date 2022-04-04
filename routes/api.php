@@ -56,19 +56,20 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::post('users/username-validation', [UserController::class, 'username_validation']);
     Route::post('users/id-validation', [UserController::class, 'id_validation']);
     
-    //MASTERLIST GENERIC METHOD
-    Route::get('users/dropdown/{status}', [MasterlistController::class, 'newUserDropdown']);
-    Route::get('documents/dropdown/{status}', [MasterlistController::class, 'documentsDropdown']);
-    Route::get('suppliers/dropdown/{status}', [MasterlistController::class, 'suppliersDropdown']);
-    Route::get('account-number/dropdown/{status}', [MasterlistController::class, 'accountNumberDropdown']);
-    Route::get('credit-card/dropdown/{status}', [MasterlistController::class, 'creditCardDropdown']);
-    Route::get('banks/dropdown/{status}', [MasterlistController::class, 'banksDropdown']);
-    Route::get('masterlist/getDocumentCategoryByUser',[MasterlistController::class,'getUserDocumentCategory']);
-    Route::post('masterlist/restore',[MasterlistController::class,'restore']);
-    Route::post('masterlist/category-document',[MasterlistController::class,'categoryPerDocument']);
-    Route::resource('masterlist', MasterlistController::class);
-    
     Route::group(['prefix' => 'admin', 'middleware' => ['auth'=>'is_admin']], function(){
+
+        Route::group(['prefix'=>'dropdown'],function(){
+            //MASTERLIST GENERIC METHOD
+            Route::get('document',[MasterlistController::class,'documentDropdown']);
+            Route::get('category',[MasterlistController::class,'categoryDropdown']);
+            Route::get('supplier-reference',[MasterlistController::class,'supplierRefDropdown']);
+            Route::get('location-category-supplier',[MasterlistController::class,'loccatsupDropdown']);
+            Route::get('location-category',[MasterlistController::class,'loccatDropdown']);
+            Route::get('account-title',[MasterlistController::class,'accountTitleDropdown']);
+            Route::get('company',[MasterlistController::class,'companyDropdown']);
+            Route::get('associate',[MasterlistController::class,'associateDropdown']);
+        });
+
          // CATEGORY
         Route::get('categories/', [CategoryController::class, 'index']);
         Route::patch('categories/{id}', [CategoryController::class, 'change_status']);
@@ -149,16 +150,6 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::patch('users/reset/{id}', [UserController::class, 'reset']);
         Route::resource('users', UserController::class);
         
-        //MASTERLIST GENERIC METHOD
-        Route::get('dropdown/document',[MasterlistController::class,'documentDropdown']);
-        Route::get('dropdown/category',[MasterlistController::class,'categoryDropdown']);
-        Route::get('dropdown/supplier-reference',[MasterlistController::class,'supplierRefDropdown']);
-        Route::get('dropdown/location-category-supplier',[MasterlistController::class,'loccatsupDropdown']);
-        Route::get('dropdown/location-category',[MasterlistController::class,'loccatDropdown']);
-        Route::get('dropdown/account-title',[MasterlistController::class,'accountTitleDropdown']);
-        Route::get('dropdown/company',[MasterlistController::class,'companyDropdown']);
-        Route::get('dropdown/associate',[MasterlistController::class,'associateDropdown']);
-        Route::get('dropdown/charging',[MasterlistController::class,'chargingDropdown']);
 
         // COMPANY
         Route::get('companies/', [CompanyController::class, 'index']);
@@ -177,6 +168,11 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::patch('locations/{id}', [LocationController::class, 'change_status']);
         Route::resource('locations', LocationController::class);
          
+    });
+
+    Route::group(['prefix'=>'dropdown'],function(){
+        Route::get('supplier/', [SupplierController::class, 'index']);
+        Route::get('current-user/',[MasterlistController::class,'currentUser']);
     });
 
 
