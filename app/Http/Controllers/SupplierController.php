@@ -127,8 +127,8 @@ class SupplierController extends Controller
     $supplier_type_list_no_trash = SupplierType::get();
     $referrence_list_no_trash = Referrence::get();
     
-    $headers = 'Supplier Code, Supplier Name, Terms, Supplier Type, Referrences';
-    $template = ["code","name","terms","supplier_type","referrences"];
+    $headers = 'Supplier Code, Supplier Name, Terms, Supplier Type, Referrences, Status';
+    $template = ["code","name","terms","supplier_type","referrences", "status"];
     $keys = array_keys(current($data));
     $this->validateHeader($template,$keys,$headers);
 
@@ -256,16 +256,25 @@ class SupplierController extends Controller
       }
       $inputted_fields = collect($inputted_fields);
       $chunks = $inputted_fields->chunk(1000);
+      $count_upload = count($inputted_fields);
 
+      $active =  $inputted_fields->filter(function ($q){
+        return $q['deleted_at']==NULL;
+      })->count();
+
+      $inactive =  $inputted_fields->filter(function ($q){
+        return $q['deleted_at']!=NULL;
+      })->count();
+      
       foreach ($chunks as $specific_chunk)
       {
         $new_supplier = DB::table('suppliers')->insert($specific_chunk->toArray());
         foreach($specific_chunk->toArray() as $chunk){
-          $supplier= Supplier::where('code',$chunk)->first();
+          $supplier= Supplier::withTrashed()->where('code',$chunk)->first();
           $supplier->referrences()->attach($references_ids);
         }
       }
-      return $this->resultResponse('import','Supplier',$new_supplier);
+      return $this->resultResponse('import','Supplier',$count_upload,$active,$inactive);
     }
     else
       return $this->resultResponse('import-error','Supplier',$errorBag);

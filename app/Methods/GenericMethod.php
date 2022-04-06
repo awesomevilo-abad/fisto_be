@@ -904,42 +904,118 @@ class GenericMethod{
     public static function insertTransaction($transaction_id,$po_total_amount=0,
     $request_id,$date_requested,$fields){
         
-        $new_transaction = Transaction::create([
-            'transaction_id' => $transaction_id
-            , "users_id" => $fields['requestor']['id']
-            , "id_prefix" => $fields['requestor']['id_prefix']
-            , "id_no" => $fields['requestor']['id_no']
-            , "first_name" => $fields['requestor']['first_name']
-            , "middle_name" => $fields['requestor']['middle_name']
-            , "last_name" => $fields['requestor']['last_name']
-            , "suffix" => $fields['requestor']['suffix']
-            , "department_details" => $fields['requestor']['department']
+        if($fields['document']['id'] == 7){
+            $new_transaction = Transaction::create([
+                'transaction_id' => $transaction_id
+                , "users_id" => $fields['requestor']['id']
+                , "id_prefix" => $fields['requestor']['id_prefix']
+                , "id_no" => $fields['requestor']['id_no']
+                , "first_name" => $fields['requestor']['first_name']
+                , "middle_name" => $fields['requestor']['middle_name']
+                , "last_name" => $fields['requestor']['last_name']
+                , "suffix" => $fields['requestor']['suffix']
+                , "department_details" => $fields['requestor']['department']
+    
+                , "document_id" => $fields['document']['id']
+                , "company_id" => $fields['document']['company']['id']
+                , "company" => $fields['document']['company']['name']
+                , "department_id" => $fields['document']['department']['id']
+                , "department" => $fields['document']['department']['name']
+                , "location_id" => $fields['document']['location']['id']
+                , "location" => $fields['document']['location']['name']
+                , "supplier_id" => $fields['document']['supplier']['id']
+                , "supplier" => $fields['document']['supplier']['name']
+                , "payment_type" => $fields['document']['payment_type']
+                , "document_amount" => $fields['document']['amount']
+                , "remarks" => $fields['document']['remarks']
+                , "document_type" => $fields['document']['name']
+    
+                ,"utilities_from" => $fields['document']['from']
+                , "utilities_to" => $fields['document']['to']
+                , "utilities_account_no" => $fields['document']['account_no']
+                , "utilities_consumption" => $fields['document']['consumption']
+                , "utilities_receipt_no" => $fields['document']['receipt_no']
+                , "utilities_category" => $fields['document']['utility_category']['name']
 
-            , "document_id" => $fields['document']['id']
-            , "company_id" => $fields['document']['company']['id']
-            , "company" => $fields['document']['company']['name']
-            , "department_id" => $fields['document']['department']['id']
-            , "department" => $fields['document']['department']['name']
-            , "location_id" => $fields['document']['location']['id']
-            , "location" => $fields['document']['location']['name']
-            , "supplier_id" => $fields['document']['supplier']['id']
-            , "supplier" => $fields['document']['supplier']['name']
-            , "payment_type" => $fields['document']['payment_type']
-            , "document_no" => $fields['document']['no']
-            , "document_date" => $fields['document']['date']
-            , "document_amount" => $fields['document']['amount']
-            , "remarks" => $fields['document']['remarks']
-            , "document_type" => $fields['document']['name']
+                , "po_total_amount" => $po_total_amount
+    
+                , "request_id" => $request_id
+                , "tagging_tag_id" => 0
+                , "date_requested" => $date_requested
+                , "status" => "Pending"
+            ]);
+        }else if($fields['document']['id'] == 9){
+            $new_transaction = Transaction::create([
+                'transaction_id' => $transaction_id
+                , "users_id" => $fields['requestor']['id']
+                , "id_prefix" => $fields['requestor']['id_prefix']
+                , "id_no" => $fields['requestor']['id_no']
+                , "first_name" => $fields['requestor']['first_name']
+                , "middle_name" => $fields['requestor']['middle_name']
+                , "last_name" => $fields['requestor']['last_name']
+                , "suffix" => $fields['requestor']['suffix']
+                , "department_details" => $fields['requestor']['department']
+    
+                , "document_id" => $fields['document']['id']
+                , "company_id" => $fields['document']['company']['id']
+                , "company" => $fields['document']['company']['name']
+                , "department_id" => $fields['document']['department']['id']
+                , "department" => $fields['document']['department']['name']
+                , "location_id" => $fields['document']['location']['id']
+                , "location" => $fields['document']['location']['name']
+                , "supplier_id" => $fields['document']['supplier']['id']
+                , "supplier" => $fields['document']['supplier']['name']
+                , "payment_type" => $fields['document']['payment_type']
+                , "document_date" => $fields['document']['date']
+                , "document_amount" => $fields['document']['amount']
+                , "remarks" => $fields['document']['remarks']
+                , "document_type" => $fields['document']['name']
+    
+                , "pcf_name" => $fields['document']['pcf_batch']['name']
+                , "pcf_date" => $fields['document']['pcf_batch']['date']
+                , "pcf_letter" => $fields['document']['pcf_batch']['letter']
+                , "request_id" => $request_id
+                , "tagging_tag_id" => 0
+                , "date_requested" => $date_requested
+                , "status" => "Pending"
+            ]);
+        }else{
 
-            , "po_total_amount" => $po_total_amount
-
-            , "request_id" => $request_id
-            , "tagging_tag_id" => 0
-            , "date_requested" => $date_requested
-            , "status" => "Pending"
-
-       
-        ]);
+            $new_transaction = Transaction::create([
+                'transaction_id' => $transaction_id
+                , "users_id" => $fields['requestor']['id']
+                , "id_prefix" => $fields['requestor']['id_prefix']
+                , "id_no" => $fields['requestor']['id_no']
+                , "first_name" => $fields['requestor']['first_name']
+                , "middle_name" => $fields['requestor']['middle_name']
+                , "last_name" => $fields['requestor']['last_name']
+                , "suffix" => $fields['requestor']['suffix']
+                , "department_details" => $fields['requestor']['department']
+    
+                , "document_id" => $fields['document']['id']
+                , "company_id" => $fields['document']['company']['id']
+                , "company" => $fields['document']['company']['name']
+                , "department_id" => $fields['document']['department']['id']
+                , "department" => $fields['document']['department']['name']
+                , "location_id" => $fields['document']['location']['id']
+                , "location" => $fields['document']['location']['name']
+                , "supplier_id" => $fields['document']['supplier']['id']
+                , "supplier" => $fields['document']['supplier']['name']
+                , "payment_type" => $fields['document']['payment_type']
+                , "document_no" => $fields['document']['no']
+                , "document_date" => $fields['document']['date']
+                , "document_amount" => $fields['document']['amount']
+                , "remarks" => $fields['document']['remarks']
+                , "document_type" => $fields['document']['name']
+    
+                , "po_total_amount" => $po_total_amount
+    
+                , "request_id" => $request_id
+                , "tagging_tag_id" => 0
+                , "date_requested" => $date_requested
+                , "status" => "Pending"
+            ]);
+        }
 
         return $new_transaction;
         // if($new_transaction->count()>1){
@@ -949,8 +1025,28 @@ class GenericMethod{
 
     }
 
-    public static function validateUtilities(){
-      
+    public static function validateTransactionByDateRange($from,$to,$company_id,$department_id,$location_id,$category){
+        
+        $transactions = DB::table('transactions')
+        ->where(function ($query) use($from,$to){
+            $query->where(function ($query1) use($from){
+                $query1->where('utilities_from','<=',$from)
+                ->where('utilities_to','>=',$from);
+            })
+            ->orWhere(function ($query2) use($to){
+                $query2->where('utilities_from','<=',$to)
+                ->where('utilities_to','>=',$to);
+            });
+        })
+        ->where('company_id',$company_id)
+        ->where('department_id',$department_id)
+        ->where('location_id',$location_id)
+        ->where('utilities_category',$category);
+       $validateTransactionCount = $transactions->get();
+       
+       if(count($validateTransactionCount)>0){
+            return GenericMethod::resultLaravelFormat('document',["Utilities has already been taken."]);
+        }
     }
   
 }

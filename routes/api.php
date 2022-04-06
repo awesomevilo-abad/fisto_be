@@ -173,6 +173,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::group(['prefix'=>'dropdown'],function(){
         Route::get('supplier/', [SupplierController::class, 'index']);
         Route::get('current-user/',[MasterlistController::class,'currentUser']);
+        Route::get('charging/',[MasterlistController::class,'chargingDropdown']);
     });
 
 

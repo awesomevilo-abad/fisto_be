@@ -66,7 +66,16 @@ class TransactionController extends Controller
             break;
 
             case 7: //Utilities
-               return $fields;
+                $duplicateUtilities = GenericMethod::validateTransactionByDateRange($fields['document']['from'],$fields['document']['to'],$fields['document']['company']['id'],$fields['document']['department']['id'],$fields['document']['location']['id'],$fields['document']['utility_category']['name']);
+                if(isset($duplicateUtilities)){
+                    return $this->resultResponse('invalid','',$duplicateUtilities);
+                }
+                
+                $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
+                $request_id,$date_requested,$fields);
+                if(isset($transaction->transaction_id)){
+                   return $this->resultResponse('save','Transaction',[]);
+                }
             break;
         }
 

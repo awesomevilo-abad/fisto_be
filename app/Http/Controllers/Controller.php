@@ -301,6 +301,7 @@ class Controller extends BaseController
     }
 
     public function resultResponse($action,$modelName,$data=[],$active=[],$inactive=[]){
+      $origModelName = $modelName;
       $modelName = ucfirst(strtolower($modelName));
       switch($action){
         case('fetch'):
@@ -359,7 +360,7 @@ class Controller extends BaseController
         break;
         
         case('import-format'):
-          throw new FistoException("Invalid excel template, it should be ".$modelName.".", 406, NULL, []);
+          throw new FistoException("Invalid excel template, it should be ".$origModelName.".", 406, NULL, []);
         break;
         
         case('nothing-has-changed'):

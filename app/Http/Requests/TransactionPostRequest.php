@@ -57,8 +57,15 @@ class TransactionPostRequest extends FormRequest
             , "po_group.*.no" => 'required|numeric'
             , "po_group.*.amount" => 'required|numeric'
             , "po_group.*.rr_no" => 'required'
-            , "from" => 'required_if:id,7'
-            , "to" => 'required_if:id,7'
+            
+            , "document.from" => 'required_if:id,7'
+            , "document.to" => 'required_if:id,7'
+            , "document.account_no" => 'required_if:id,7'
+            , "document.consumption" => 'nullable'
+            , "document.receipt_no" => 'nullable'
+            , "document.to" => 'required_if:id,7'
+            , "document.utility_category.id" => 'required_if:id,7'
+            , "document.utility_category.name" => 'required_if:id,7'
 
             // // SELECTED CATEGORY (CONDITIONAL)
             // , "category_id" => 'nullable'
@@ -154,6 +161,13 @@ class TransactionPostRequest extends FormRequest
             'document.amount' => 'Document amount',
             'document.remarks' => 'Remarks',
             
+             "document.from" => 'From'
+            , "document.to" => 'To'
+            , "document.account_no" => 'Account number'
+            , "document.consumption" => 'Consumption'
+            , "document.receipt_no" => 'Receipt number'
+            , "document.utility_category.id" => 'Utility Category ID'
+            , "document.utility_category.name" => 'Utility Category Name',
             
             'po_group.*.no' => 'PO number',
             'po_group.*.amount' => 'PO amount',
