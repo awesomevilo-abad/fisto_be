@@ -42,6 +42,7 @@ class SupplierController extends Controller
           $suppliers = $suppliers
         ->without('referrences')
         ->without('supplier_type')->get(['id','name']);
+        $suppliers = array("suppliers"=>$suppliers);
         }
 
       if(count($suppliers)==true){
@@ -115,7 +116,6 @@ class SupplierController extends Controller
   {
     $timezone = "Asia/Dhaka";
     date_default_timezone_set($timezone);
-
     $date = date("Y-m-d H:i:s", strtotime('now'));
     $errorBag = [];
     $data = $request->all();
