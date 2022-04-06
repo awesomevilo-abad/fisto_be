@@ -15,6 +15,7 @@ class AddpcfnameToTransactions extends Migration
     {
         Schema::table('transactions', function (Blueprint $table) {
             $table->string('pcf_name')->after('document_amount')->nullable();
+            $table->string('state')->after('status')->nullable();
         });
     }
 

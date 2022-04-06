@@ -111,8 +111,8 @@ class AccountTitleController extends Controller
     $index = 2;
 
     $categories = ['asset','capital','expense','income','payable'];
-    $headers = 'Code, Title, Category';
-    $template = ['code','title','category'];
+    $headers = 'Code, Title, Category, Status';
+    $template = ['code','title','category', 'status'];
     $keys = array_keys(current($data));
     $this->validateHeader($template,$keys,$headers);
 

@@ -15,11 +15,45 @@ use App\Http\Requests\TransactionPostRequest;
 class TransactionController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
-        $transactions = Transaction::select('id','date_requested','transaction_id','document_type','company','supplier','po_total_amount','referrence_total_amount','document_amount','payment_type','status')->latest('updated_at')->get();
-        return $this->resultResponse('fetch','Transaction',$transactions);
+        $status =  isset($request['status']) && $request['status'] ? $request['status'] : "request";
+        $rows =  isset($request['rows']) && $request['rows'] ? (int)$request['rows'] : 10;
+        $search =  $request['search'];
+
+        $transactions = Transaction::select([
+            'id',
+            'date_requested',
+            'transaction_id',
+            'document_type',
+            'company',
+            'supplier',
+            'po_total_amount',
+            'referrence_total_amount',
+            'document_amount',
+            'payment_type',
+            'status'
+        ])
+        ->where('state', $status)
+        ->where(function ($query) use ($search) {
+            $query->where('date_requested', 'like', '%' . $search . '%')
+            ->orWhere('transaction_id', 'like', '%' . $search . '%')
+            ->orWhere('document_amount', 'like', '%' . $search . '%')
+            ->orWhere('document_type', 'like', '%' . $search . '%')
+            ->orWhere('payment_type', 'like', '%' . $search . '%')
+            ->orWhere('company', 'like', '%' . $search . '%')
+            ->orWhere('supplier', 'like', '%' . $search . '%')
+            ->orWhere('po_total_amount', 'like', '%' . $search . '%')
+            ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
+        })
+        ->latest('updated_at')
+        ->paginate($rows);
+
+        if (count($transactions)) return $this->resultResponse('fetch', 'Transaction', $transactions);
+
+        return $this->resultResponse('not-found', 'Transaction', []);
     }
+
 
     public function store(TransactionPostRequest $request)
     {
@@ -67,6 +101,19 @@ class TransactionController extends Controller
 
             case 7: //Utilities
                 $duplicateUtilities = GenericMethod::validateTransactionByDateRange($fields['document']['from'],$fields['document']['to'],$fields['document']['company']['id'],$fields['document']['department']['id'],$fields['document']['location']['id'],$fields['document']['utility_category']['name']);
+                if(isset($duplicateUtilities)){
+                    return $this->resultResponse('invalid','',$duplicateUtilities);
+                }
+                
+                $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
+                $request_id,$date_requested,$fields);
+                if(isset($transaction->transaction_id)){
+                   return $this->resultResponse('save','Transaction',[]);
+                }
+            break;
+
+            case 9: //PCF
+                $duplicateUtilities = GenericMethod::validatePCF($fields['document']['from'],$fields['document']['to'],$fields['document']['company']['id'],$fields['document']['department']['id'],$fields['document']['location']['id'],$fields['document']['utility_category']['name']);
                 if(isset($duplicateUtilities)){
                     return $this->resultResponse('invalid','',$duplicateUtilities);
                 }
