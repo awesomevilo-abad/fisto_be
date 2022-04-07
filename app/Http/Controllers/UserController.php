@@ -43,6 +43,7 @@ class UserController extends Controller
         ->where(function ($query) use ($search) {
             $query->where('id_prefix', 'like', '%' . $search . '%')
             ->orWhere('id_no', 'like', '%' . $search . '%')
+            ->orWhereRaw("concat(first_name, ' ', last_name) like '%" .$search. "%' ")
             ->orWhere('first_name', 'like', '%' . $search . '%')
             ->orWhere('middle_name', 'like', '%' . $search . '%')
             ->orWhere('last_name', 'like', '%' . $search . '%')

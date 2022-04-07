@@ -134,8 +134,8 @@ class BankController extends Controller
     $data_validation_fields = $request->all();
     $index = 2;
 
-    $headers = 'Code, Name, Branch, Account No, Location, Account Title 1, Account Title 2';
-    $template = ['code','name','branch','account_no','location','account_title_1','account_title_2'];
+    $headers = 'Code, Name, Branch, Account No, Location, Account Title 1, Account Title 2, Status';
+    $template = ['code','name','branch','account_no','location','account_title_1','account_title_2','status'];
     $keys = array_keys(current($data));
     $this->validateHeader($template,$keys,$headers);
 
@@ -294,11 +294,21 @@ class BankController extends Controller
       }
       $inputted_fields = collect($inputted_fields);
       $chunks = $inputted_fields->chunk(100);
+      $count_upload = count($inputted_fields);
+
+      $active =  $inputted_fields->filter(function ($q){
+        return $q['deleted_at']==NULL;
+      })->count();
+
+      $inactive =  $inputted_fields->filter(function ($q){
+        return $q['deleted_at']!=NULL;
+      })->count();
+
       foreach($chunks as $chunk)
       {
         Bank::insert($chunk->toArray()) ;
       }
-      return $this->resultResponse('import','Bank',$inputted_fields);
+      return $this->resultResponse('import','Bank',$count_upload,$active,$inactive);
     }
     else
       return $this->resultResponse('import-error','Bank',$errorBag);

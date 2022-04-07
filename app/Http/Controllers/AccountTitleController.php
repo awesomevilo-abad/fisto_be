@@ -247,12 +247,21 @@ class AccountTitleController extends Controller
       }
       $inputted_fields = collect($inputted_fields);
       $chunks = $inputted_fields->chunk(100);
+      $count_upload = count($inputted_fields);
+
+      $active =  $inputted_fields->filter(function ($q){
+        return $q['deleted_at']==NULL;
+      })->count();
+
+      $inactive =  $inputted_fields->filter(function ($q){
+        return $q['deleted_at']!=NULL;
+      })->count();
       foreach($chunks as $chunk)
       {
         AccountTitle::insert($chunk->toArray()) ;
       }
       
-      return $this->resultResponse('import','Account Title',$inputted_fields);
+      return $this->resultResponse('import','Account Title',$count_upload,$active,$inactive);
     }
     else
       return $this->resultResponse('import-error','Account Title',$errorBag);

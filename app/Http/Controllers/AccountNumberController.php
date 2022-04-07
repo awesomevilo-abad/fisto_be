@@ -90,7 +90,7 @@ class AccountNumberController extends Controller
     $timezone = "Asia/Dhaka";
     date_default_timezone_set($timezone);
     $date = date("Y-m-d H:i:s", strtotime('now'));
-    
+
     $data = $request->all();
     $data_validation_fields = $request->all();
     $account_number_masterlist = AccountNumber::withTrashed()->get();
@@ -266,9 +266,7 @@ class AccountNumberController extends Controller
       }
       $inputted_fields = collect($inputted_fields);
       $chunks = $inputted_fields->chunk(100);
-
       $count_upload = count($inputted_fields);
-
       $active =  $inputted_fields->filter(function ($q){
         return $q['deleted_at']==NULL;
       })->count();
