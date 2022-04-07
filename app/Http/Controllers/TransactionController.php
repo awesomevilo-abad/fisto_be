@@ -17,7 +17,7 @@ class TransactionController extends Controller
 
     public function index(Request $request)
     {
-        $status =  isset($request['status']) && $request['status'] ? $request['status'] : "request";
+        $status =  isset($request['state']) && $request['state'] ? $request['state'] : "request";
         $rows =  isset($request['rows']) && $request['rows'] ? (int)$request['rows'] : 10;
         $search =  $request['search'];
 
@@ -61,10 +61,10 @@ class TransactionController extends Controller
         $date_requested = date('Y-m-d H:i:s');
         $transaction_id = GenericMethod::getTransactionID($fields['requestor']['department']);
         $request_id = GenericMethod::getRequestID();
-
+        
         switch($fields['document']['id']){
             case 1: //PAD
-            case 4: //Contractor's Billing
+            case 5: //Contractor's Billing
         
                 if (empty($fields['po_group']) ) 
                 {
@@ -99,7 +99,7 @@ class TransactionController extends Controller
                 }
             break;
 
-            case 7: //Utilities
+            case 6: //Utilities
                 $duplicateUtilities = GenericMethod::validateTransactionByDateRange($fields['document']['from'],$fields['document']['to'],$fields['document']['company']['id'],$fields['document']['department']['id'],$fields['document']['location']['id'],$fields['document']['utility_category']['name']);
                 if(isset($duplicateUtilities)){
                     return $this->resultResponse('invalid','',$duplicateUtilities);
@@ -112,10 +112,34 @@ class TransactionController extends Controller
                 }
             break;
 
-            case 9: //PCF
-                $duplicateUtilities = GenericMethod::validatePCF($fields['document']['from'],$fields['document']['to'],$fields['document']['company']['id'],$fields['document']['department']['id'],$fields['document']['location']['id'],$fields['document']['utility_category']['name']);
-                if(isset($duplicateUtilities)){
-                    return $this->resultResponse('invalid','',$duplicateUtilities);
+            case 8: //PCF
+                
+                $duplicatePCF = GenericMethod::validatePCF($fields['document']['pcf_batch']['date'],$fields['document']['pcf_batch']['letter'],$fields['document']['company']['id'],$fields['document']['supplier']['id']);
+                if(isset($duplicatePCF)){
+                    return $this->resultResponse('invalid','',$duplicatePCF);
+                }
+                
+                $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
+                $request_id,$date_requested,$fields);
+                if(isset($transaction->transaction_id)){
+                   return $this->resultResponse('save','Transaction',[]);
+                }
+            break;
+
+            case 7: //Payroll
+                    $duplicatePayroll = GenericMethod::validatePayroll(
+                    $fields['document']['payroll']['from']
+                    ,$fields['document']['payroll']['to']
+                    ,$fields['document']['company']['id']
+                    ,$fields['document']['location']['id']
+                    ,$fields['document']['supplier']['id']
+                    ,$fields['document']['payroll']['client']
+                    ,$fields['document']['payroll']['type']
+                    ,$fields['document']['payroll']['category']
+            );
+
+                if(isset($duplicatePayroll)){
+                    return $this->resultResponse('invalid','',$duplicatePayroll);
                 }
                 
                 $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
@@ -125,11 +149,11 @@ class TransactionController extends Controller
                 }
             break;
         }
-
         return $this->resultResponse('not-exist','Document number',[]);
     }
     
-    public function update (Request $request, $id){
+    public function update (Request $request, $id)
+    {
         
         $fields=$request->validated();
 
@@ -174,7 +198,8 @@ class TransactionController extends Controller
         return $this->resultResponse('not-exist','Document number',[]);
     }
 
-    public function getPODetails(PODetailsRequest $request){
+    public function getPODetails(PODetailsRequest $request)
+    {
 
         $fields = $request->validated();
         $po_details = DB::table('transactions')
@@ -184,8 +209,13 @@ class TransactionController extends Controller
         ->get(['po_no','po_amount','balance_document_po_amount as po_balance']);
         
         if(count($po_details)>0){
-            if($fields['payment_type']=="FULL"){
+            if(strtoupper($fields['payment_type'])=="FULL"){
                 $errorMessage = GenericMethod::resultLaravelFormat('po_group.no',["PO number already exist."]);
+                return $this->resultResponse('invalid','',$errorMessage);   
+            }
+
+            if(($po_details->first()->po_balance <= 0) || ($po_details->first()->po_balance == null) ){
+                $errorMessage = GenericMethod::resultLaravelFormat('po_group',["No available balance."]);
                 return $this->resultResponse('invalid','',$errorMessage);   
             }
             return $this->resultResponse('fetch','PO number',$po_details->first());   

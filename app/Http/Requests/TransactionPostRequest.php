@@ -41,10 +41,10 @@ class TransactionPostRequest extends FormRequest
             , "document.id" => 'required'
             , "document.name" => 'required'
             , "document.payment_type" => 'required'
-            , "document.no" => 'required_if:id,1,4,2|unique:transactions,document_no'
-            , "document.date" => 'required_if:id,1,4,2'
+            , "document.no" => 'required_if:document.id,1,5,2|unique:transactions,document_no'
+            , "document.date" => 'required_if:document.id,1,5,2'
             , "document.amount" => 'required|numeric'
-            , "document.remarks" => 'required'
+            , "document.remarks" => 'nullable'
             , "document.company.id" => 'required'
             , "document.company.name" => 'required'
             , "document.department.id" => 'required'
@@ -58,15 +58,24 @@ class TransactionPostRequest extends FormRequest
             , "po_group.*.amount" => 'required|numeric'
             , "po_group.*.rr_no" => 'required'
             
-            , "document.from" => 'required_if:id,7'
-            , "document.to" => 'required_if:id,7'
-            , "document.account_no" => 'required_if:id,7'
+            , "document.from" => 'required_if:document.id,6'
+            , "document.to" => 'required_if:document.id,6'
+            , "document.account_no" => 'required_if:document.id,6'
             , "document.consumption" => 'nullable'
             , "document.receipt_no" => 'nullable'
-            , "document.to" => 'required_if:id,7'
-            , "document.utility_category.id" => 'required_if:id,7'
-            , "document.utility_category.name" => 'required_if:id,7'
+            , "document.to" => 'required_if:document.id,6'
+            , "document.utility_category.id" => 'required_if:document.id,6'
+            , "document.utility_category.name" => 'required_if:document.id,6'
 
+            , "document.pcf_batch.name" => 'required_if:document.id,8'
+            , "document.pcf_batch.letter" => 'required_if:document.id,8'
+            , "document.pcf_batch.date" => 'required_if:document.id,8'
+
+            , "document.payroll.from" => 'required_if:document.id,7'
+            , "document.payroll.to" => 'required_if:document.id,7'
+            , "document.payroll.client" => 'required_if:document.id,7'
+            , "document.payroll.type" => 'required_if:document.id,7'
+            , "document.payroll.category" => 'required_if:document.id,7'
             // // SELECTED CATEGORY (CONDITIONAL)
             // , "category_id" => 'nullable'
             // , "category" => 'nullable'
@@ -167,17 +176,28 @@ class TransactionPostRequest extends FormRequest
             , "document.consumption" => 'Consumption'
             , "document.receipt_no" => 'Receipt number'
             , "document.utility_category.id" => 'Utility Category ID'
-            , "document.utility_category.name" => 'Utility Category Name',
+            , "document.utility_category.name" => 'Utility Category Name'
             
-            'po_group.*.no' => 'PO number',
-            'po_group.*.amount' => 'PO amount',
-            'po_group.*.rr_no' => 'RR number'
+            , "document.pcf_batch.letter" => 'PCF batch letter'
+            , "document.pcf_batch.date" => 'PCF batch date'
+            , "document.pcf_batch.name" => 'PCF batch name'
+            
+            , "document.payroll.from" => 'Payroll from'
+            , "document.payroll.to" => 'Payroll to'
+            , "document.payroll.client" => 'Payroll client'
+            , "document.payroll.type" => 'Payroll type'
+            , "document.payroll.category" => 'Payroll category'
+            
+            ,'po_group.*.no' => 'PO number'
+            ,'po_group.*.amount' => 'PO amount'
+            ,'po_group.*.rr_no' => 'RR number'
         ];
     }
     
     public function messages(){
         return [
             'required' => ':attribute is required.',
+            'required_if' => ':attribute is required.',
             'numeric' => ':attribute must be in number format.',
             'min' => ':attribute amount may not be greater than :min.',
             'max' => ':attribute amount may not be greater than :max.'

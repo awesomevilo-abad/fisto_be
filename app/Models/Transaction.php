@@ -44,6 +44,7 @@ class Transaction extends Model
         , 'remarks'
         , 'payment_type'
         , 'status'
+        , 'state'
         , 'reason_id'
         , 'reason'
         , 'document_no'
@@ -75,6 +76,11 @@ class Transaction extends Model
         ,"payroll_from"
         ,"payroll_to"
 
+    ];
+
+    protected $attributes = [
+        "status"=>"Pending",
+        "state"=>"request"
     ];
 
     protected $casts = [
