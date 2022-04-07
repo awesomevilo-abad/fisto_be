@@ -190,7 +190,7 @@ class TransactionController extends Controller
             }
             return $this->resultResponse('fetch','PO number',$po_details->first());   
         }
-        $this->resultResponse('no-content','',[]);  
+        return $this->resultResponse('success-no-content','',[]);  
     }
 
     public function validateDocumentNo(Request $request)
@@ -199,5 +199,6 @@ class TransactionController extends Controller
             $errorMessage = GenericMethod::resultLaravelFormat('document.no',["Document number already exist."]);
             return $this->resultResponse('invalid','',$errorMessage);   
         }   
+        return $this->resultResponse('success-no-content','',[]); 
     }
 }

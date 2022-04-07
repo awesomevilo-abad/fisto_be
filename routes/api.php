@@ -180,8 +180,8 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     // TRANSACTION
     Route::resource('transactions/', TransactionController::class);
     Route::get('transactions/status_group/',[TransactionController::class,'status_group']);
-    Route::get('transactions/get_po_details',[TransactionController::class,'getPODetails']);
-    Route::post('transactions/validate_document_no',[TransactionController::class,'validateDocumentNo']);
+    Route::post('transactions/validate-po-no',[TransactionController::class,'getPODetails']);
+    Route::post('transactions/validate-document-no',[TransactionController::class,'validateDocumentNo']);
     // TRANSACTION FLOW
     Route::get('transactions/flow/',[TransactionFlowController::class,'pullRequest']);
     Route::get('transactions/flow/{id}',[TransactionFlowController::class,'pullSingleRequest']);
