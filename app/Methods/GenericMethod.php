@@ -12,6 +12,7 @@ use Illuminate\Pagination\Paginator;
 
 use App\Models\User;
 use App\Models\POBatch;
+use App\Models\ReferrenceBatch;
 use App\Models\Transaction;
 use App\Models\PayrollClient;
 
@@ -137,6 +138,40 @@ class GenericMethod{
                     , "tagging_tag_id" => 0
                     , "date_requested" => $date_requested
                 ]);
+            }else if($fields['document']['id'] == 4){
+                
+                $new_transaction = Transaction::create([
+                    'transaction_id' => $transaction_id
+                    , "users_id" => $fields['requestor']['id']
+                    , "id_prefix" => $fields['requestor']['id_prefix']
+                    , "id_no" => $fields['requestor']['id_no']
+                    , "first_name" => $fields['requestor']['first_name']
+                    , "middle_name" => $fields['requestor']['middle_name']
+                    , "last_name" => $fields['requestor']['last_name']
+                    , "suffix" => $fields['requestor']['suffix']
+                    , "department_details" => $fields['requestor']['department']
+        
+                    , "document_id" => $fields['document']['id']
+                    , "company_id" => $fields['document']['company']['id']
+                    , "company" => $fields['document']['company']['name']
+                    , "department_id" => $fields['document']['department']['id']
+                    , "department" => $fields['document']['department']['name']
+                    , "location_id" => $fields['document']['location']['id']
+                    , "location" => $fields['document']['location']['name']
+                    , "supplier_id" => $fields['document']['supplier']['id']
+                    , "supplier" => $fields['document']['supplier']['name']
+                    , "payment_type" => $fields['document']['payment_type']
+                    , "document_date" => $fields['document']['date']
+                    , "remarks" => $fields['document']['remarks']
+                    , "document_type" => $fields['document']['name']
+        
+                    , "po_total_amount" => $po_total_amount    
+
+                    , "request_id" => $request_id
+                    , "tagging_tag_id" => 0
+                    , "date_requested" => $date_requested
+                    , "status" => "Pending"
+                ]);
             }else{
                 $new_transaction = Transaction::create([
                     'transaction_id' => $transaction_id
@@ -193,6 +228,17 @@ class GenericMethod{
                     'po_amount' => $po_amount
                 ]);
             }
+        }
+
+        public static function insertRef($request_id,$reference)
+        {
+                $insert_reference_batch = ReferrenceBatch::create([
+                    'request_id' => $request_id,
+                    'referrence_type' => $reference['type'],
+                    'referrence_no' => $reference['no'],
+                    'referrence_amount' => $reference['amount']
+                ]);
+
         }
 
         public static function paginateme($items, $perPage, $page = null, $options = [])
@@ -818,6 +864,17 @@ class GenericMethod{
             $duplicate_clients = GenericMethod::addAnd($duplicate_client);
             if(!empty($duplicate_client)){
                 return GenericMethod::resultLaravelFormat('document',["Payroll client (".$duplicate_clients.") has already been taken."]);
+            }
+        }
+
+        public static function validateReceiptFull($fields){
+            $transaction =  Transaction::leftJoin('referrence_batches','transactions.request_id','=','referrence_batches.request_id')
+            ->where('transactions.company_id',$fields['document']['company']['id'])
+            ->where('referrence_batches.referrence_no',$fields['reference']['no']);
+            $validateTransactionCount = $transaction->get();
+
+            if(count($validateTransactionCount)>0){
+                return GenericMethod::resultLaravelFormat('reference.no',["Reference number already exist."]);
             }
         }
         

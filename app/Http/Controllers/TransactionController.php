@@ -100,7 +100,15 @@ class TransactionController extends Controller
             break;
 
             case 6: //Utilities
-                $duplicateUtilities = GenericMethod::validateTransactionByDateRange($fields['document']['from'],$fields['document']['to'],$fields['document']['company']['id'],$fields['document']['department']['id'],$fields['document']['location']['id'],$fields['document']['utility_category']['name']);
+                $duplicateUtilities = GenericMethod::validateTransactionByDateRange(
+                    $fields['document']['from']
+                    ,$fields['document']['to']
+                    ,$fields['document']['company']['id']
+                    ,$fields['document']['department']['id']
+                    ,$fields['document']['location']['id']
+                    ,$fields['document']['utility_category']['name']
+                );
+                
                 if(isset($duplicateUtilities)){
                     return $this->resultResponse('invalid','',$duplicateUtilities);
                 }
@@ -113,8 +121,12 @@ class TransactionController extends Controller
             break;
 
             case 8: //PCF
-                
-                $duplicatePCF = GenericMethod::validatePCF($fields['document']['pcf_batch']['date'],$fields['document']['pcf_batch']['letter'],$fields['document']['company']['id'],$fields['document']['supplier']['id']);
+                $duplicatePCF = GenericMethod::validatePCF(
+                    $fields['document']['pcf_batch']['date']
+                    ,$fields['document']['pcf_batch']['letter']
+                    ,$fields['document']['company']['id']
+                    ,$fields['document']['supplier']['id']
+                );
                 if(isset($duplicatePCF)){
                     return $this->resultResponse('invalid','',$duplicatePCF);
                 }
@@ -127,7 +139,7 @@ class TransactionController extends Controller
             break;
 
             case 7: //Payroll
-                    $duplicatePayroll = GenericMethod::validatePayroll(
+                $duplicatePayroll = GenericMethod::validatePayroll(
                     $fields['document']['payroll']['from']
                     ,$fields['document']['payroll']['to']
                     ,$fields['document']['company']['id']
@@ -136,7 +148,7 @@ class TransactionController extends Controller
                     ,$fields['document']['payroll']['client']
                     ,$fields['document']['payroll']['type']
                     ,$fields['document']['payroll']['category']
-            );
+                );
 
                 if(isset($duplicatePayroll)){
                     return $this->resultResponse('invalid','',$duplicatePayroll);
@@ -148,7 +160,45 @@ class TransactionController extends Controller
                    return $this->resultResponse('save','Transaction',[]);
                 }
             break;
+
+            case 4: //Receipt
+                $isFull = strtoupper($fields['document']['payment_type']) === 'FULL';
+
+                if($isFull){
+                    if (empty($fields['po_group']) ) 
+                    {
+                        $errorMessage = GenericMethod::resultLaravelFormat('po_group',["PO group required"]);
+                        return $this->resultResponse('invalid','',$errorMessage);
+                    }
+
+                    $duplicateRef = GenericMethod::validateReceiptFull($fields);
+                    if(isset($duplicateRef)){
+                        return $this->resultResponse('invalid','',$duplicateRef);   
+                    }
+                    
+                    $duplicatePO = GenericMethod::validatePOFull($fields['document']['company']['id'],$fields['po_group']);
+                    if(isset($duplicatePO)){
+                        return $this->resultResponse('invalid','',$duplicatePO);
+                    }
+                   
+                    $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
+                    if ($fields['reference']['amount'] != $po_total_amount){
+                       $errorMessage = GenericMethod::resultLaravelFormat('reference.amount',["Reference amount (".$fields['reference']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
+                       return $this->resultResponse('invalid','',$errorMessage);
+                    }
+    
+                    GenericMethod::insertPO($request_id,$fields['po_group']);
+                    GenericMethod::insertRef($request_id,$fields['reference']);
+                    $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
+                    $request_id,$date_requested,$fields);
+                    if(isset($transaction->transaction_id)){
+                       return $this->resultResponse('save','Transaction',[]);
+                    }
+                }
+
+            break;
         }
+
         return $this->resultResponse('not-exist','Document number',[]);
     }
     
@@ -230,5 +280,23 @@ class TransactionController extends Controller
             return $this->resultResponse('invalid','',$errorMessage);   
         }   
         return $this->resultResponse('success-no-content','',[]); 
+    }
+
+    public function validateReferenceNo(Request $request)
+    {
+        Transaction::leftJoin('referrence_batches','transactions.request_id','=','referrence_batches.request_id')
+        ->where('transactions.company_id',$request['company_id'])
+        ->where('referrence_batches.referrence_no',$request['reference_no'])
+        ->get();
+
+       if(Transaction::leftJoin('referrence_batches','transactions.request_id','=','referrence_batches.request_id')
+            ->where('transactions.company_id',$request['company_id'])
+            ->where('referrence_batches.referrence_no',$request['reference_no'])
+            ->first()){
+                $errorMessage = GenericMethod::resultLaravelFormat('reference.no',["Reference number already exist."]);
+                return $this->resultResponse('invalid','',$errorMessage);  
+            }
+            return $this->resultResponse('success-no-content','',[]); 
+ 
     }
 }

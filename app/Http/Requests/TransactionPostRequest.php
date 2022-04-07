@@ -43,7 +43,7 @@ class TransactionPostRequest extends FormRequest
             , "document.payment_type" => 'required'
             , "document.no" => 'required_if:document.id,1,5,2|unique:transactions,document_no'
             , "document.date" => 'required_if:document.id,1,5,2'
-            , "document.amount" => 'required|numeric'
+            , "document.amount" => 'required_if:document.id,1,5,2,6,8,7|numeric'
             , "document.remarks" => 'nullable'
             , "document.company.id" => 'required'
             , "document.company.name" => 'required'
@@ -76,6 +76,11 @@ class TransactionPostRequest extends FormRequest
             , "document.payroll.client" => 'required_if:document.id,7'
             , "document.payroll.type" => 'required_if:document.id,7'
             , "document.payroll.category" => 'required_if:document.id,7'
+            
+            , "reference.id" => 'required_if:document.id,4'
+            , "reference.type" => 'required_if:document.id,4'
+            , "reference.no" => 'required_if:document.id,4'
+            , "reference.amount" => 'required_if:document.id,4'
             // // SELECTED CATEGORY (CONDITIONAL)
             // , "category_id" => 'nullable'
             // , "category" => 'nullable'
@@ -187,6 +192,11 @@ class TransactionPostRequest extends FormRequest
             , "document.payroll.client" => 'Payroll client'
             , "document.payroll.type" => 'Payroll type'
             , "document.payroll.category" => 'Payroll category'
+
+            , "reference.id" => 'Reference id'
+            , "reference.type" => 'Reference type'
+            , "reference.no" => 'Reference number'
+            , "reference.amount" => 'Reference amount'
             
             ,'po_group.*.no' => 'PO number'
             ,'po_group.*.amount' => 'PO amount'

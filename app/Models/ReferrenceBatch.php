@@ -14,7 +14,7 @@ class ReferrenceBatch extends Model
         'referrence_no',
         'referrence_amount',
         'referrence_qty',
-        'tag_id',
+        'request_id',
 
     ];
 }
