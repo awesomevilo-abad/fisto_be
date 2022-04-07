@@ -375,6 +375,10 @@ class Controller extends BaseController
           return $this->result(200,"Password has been changed.",$data);
         break;
 
+        case('success-no-content'):
+          return $this->result(204,"Success.",[]);
+        break;
+
         case('password-incorrect'):
           throw new FistoException("The password you entered is incorrect.", 409, NULL, $data);
         break;
