@@ -122,7 +122,8 @@ class TransactionController extends Controller
 
             case 8: //PCF
                 $duplicatePCF = GenericMethod::validatePCF(
-                    $fields['document']['pcf_batch']['date']
+                    $fields['document']['pcf_batch']['name']
+                    ,$fields['document']['pcf_batch']['date']
                     ,$fields['document']['pcf_batch']['letter']
                     ,$fields['document']['company']['id']
                     ,$fields['document']['supplier']['id']

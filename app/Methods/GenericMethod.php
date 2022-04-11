@@ -878,9 +878,10 @@ class GenericMethod{
             }
         }
         
-        public static function validatePCF($pcf_date,$pcf_letter,$company_id,$supplier_id){
+        public static function validatePCF($pcf_name,$pcf_date,$pcf_letter,$company_id,$supplier_id){
             
             $transactions = DB::table('transactions')
+                ->where('pcf_name',$pcf_name)
                 ->where('pcf_date',$pcf_date)
                 ->where('pcf_letter',$pcf_letter)
                 ->where('company_id',$company_id)
