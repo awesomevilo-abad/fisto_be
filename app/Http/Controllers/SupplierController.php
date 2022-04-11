@@ -236,6 +236,7 @@ class SupplierController extends Controller
       }
     }
     $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
+
     if (empty($errorBag)) {
       foreach ($data as $supplier) {
           $status_date = (strtolower($supplier['status'])=="active"?NULL:$date);
@@ -250,10 +251,13 @@ class SupplierController extends Controller
           'deleted_at' => $status_date,
         ];
 
-        $inputted_fields[] = $fields;
         $references = explode(",", $supplier['referrences']);
         $references_ids = Referrence::whereIn('type', $references)->pluck('id');
+        $fields['references_ids']= $references_ids;
+        $inputted_fields[] = $fields;
       }
+
+
       $inputted_fields = collect($inputted_fields);
       $chunks = $inputted_fields->chunk(1000);
       $count_upload = count($inputted_fields);
@@ -268,10 +272,23 @@ class SupplierController extends Controller
       
       foreach ($chunks as $specific_chunk)
       {
-        $new_supplier = DB::table('suppliers')->insert($specific_chunk->toArray());
+        $specific_chunk_to_insert = [];
+        foreach($specific_chunk as $key=>$chunk){
+          
+          $specific_chunk_to_insert[$key]['code'] = $chunk['code'];
+          $specific_chunk_to_insert[$key]['name'] = $chunk['name'];
+          $specific_chunk_to_insert[$key]['terms'] = $chunk['terms'];
+          $specific_chunk_to_insert[$key]['supplier_type_id'] = $chunk['supplier_type_id'];
+          $specific_chunk_to_insert[$key]['created_at'] = $chunk['created_at'];
+          $specific_chunk_to_insert[$key]['updated_at'] = $chunk['updated_at'];
+          $specific_chunk_to_insert[$key]['deleted_at'] = $chunk['deleted_at'];
+        }
+
+        $new_supplier = DB::table('suppliers')->insert($specific_chunk_to_insert);
         foreach($specific_chunk->toArray() as $chunk){
+       
           $supplier= Supplier::withTrashed()->where('code',$chunk)->first();
-          $supplier->referrences()->attach($references_ids);
+          $supplier->referrences()->attach($chunk['references_ids']);
         }
       }
       return $this->resultResponse('import','Supplier',$count_upload,$active,$inactive);
