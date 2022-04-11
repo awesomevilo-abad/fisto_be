@@ -49,6 +49,7 @@ class Transaction extends Model
         , 'reason'
         , 'document_no'
         , 'document_amount'
+        , 'pcf_name'
         , 'pcf_date'
         , 'pcf_letter'
         , 'utilities_from'
