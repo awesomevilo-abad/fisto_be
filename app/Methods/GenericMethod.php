@@ -887,7 +887,16 @@ class GenericMethod{
                 ->get();
 
             if(count($transactions)>0){
-                return GenericMethod::resultLaravelFormat('document.pcf_batch.letter',["PCF letter has already been taken."]);
+                return GenericMethod::resultLaravelFormat(
+                    [
+                        'document.pcf_batch.letter',
+                        'document.pcf_batch.date',
+                    ],
+                    [
+                        ["PCF letter has already been taken."],
+                        ["PCF date has already been taken."]
+                    ]
+                );
             }
         }
 
@@ -1209,7 +1218,24 @@ class GenericMethod{
         }
 
         public static function resultLaravelFormat($column,$message){
-            return collect(["$column"=>$message]);
+
+            if(gettype($column) == "string"){
+                return collect(["$column"=>$message]);
+            }
+
+            $result = collect();
+            $column_count = count($column);
+            $message_count = count($message);
+
+
+            if($column_count === $message_count){
+                foreach ($column as $key => $value) {
+                    $result->put("$column[$key]", $message[$key]);
+                }
+                
+            }
+
+            return $result;
         }
 
     ##########################################################################################################
