@@ -884,6 +884,8 @@ class GenericMethod{
                 ->where('pcf_name',$pcf_name)
                 ->where('pcf_date',$pcf_date)
                 ->where('pcf_letter',$pcf_letter)
+                ->where('company_id',$company_id)
+                ->where('supplier_id',$supplier_id)
                 ->get();
 
             if(count($transactions)>0){
