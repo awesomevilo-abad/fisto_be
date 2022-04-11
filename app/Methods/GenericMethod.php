@@ -901,8 +901,10 @@ class GenericMethod{
             ->whereIn('po_no',$po_nos);
             $validateTransactionCount = $transactions->get();
             
+            $duplicate_po_nos = GenericMethod::addAnd($validateTransactionCount->pluck('po_no')->toArray());
+
             if(count($validateTransactionCount)>0){
-                return GenericMethod::resultLaravelFormat('po_group.no',["PO ".$validateTransactionCount->pluck('po_no')->implode(', ')." has already been taken."]);
+                return GenericMethod::resultLaravelFormat('po_group.no',["PO ".$duplicate_po_nos." has already been taken."]);
             }
         }
         

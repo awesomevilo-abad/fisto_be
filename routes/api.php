@@ -176,13 +176,13 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::get('charging/',[MasterlistController::class,'chargingDropdown']);
     });
 
-
     // TRANSACTION
     Route::resource('transactions/', TransactionController::class);
     Route::get('transactions/status_group/',[TransactionController::class,'status_group']);
     Route::post('transactions/validate-po-no',[TransactionController::class,'getPODetails']);
     Route::post('transactions/validate-document-no',[TransactionController::class,'validateDocumentNo']);
     Route::post('transactions/validate-reference-no',[TransactionController::class,'validateReferenceNo']);
+    Route::post('transactions/validate-pcf-name/',[TransactionController::class,'validatePCFName']);
     // TRANSACTION FLOW
     Route::get('transactions/flow/',[TransactionFlowController::class,'pullRequest']);
     Route::get('transactions/flow/{id}',[TransactionFlowController::class,'pullSingleRequest']);

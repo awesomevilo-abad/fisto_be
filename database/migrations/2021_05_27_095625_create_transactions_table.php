@@ -47,6 +47,8 @@ class CreateTransactionsTable extends Migration
             $table->string('reason')->nullable();
             $table->string('document_no')->nullable();
             $table->float('document_amount')->nullable();
+            $table->string('pcf_name')->nullable();
+            $table->string('pcf_branch')->nullable();
             $table->string('pcf_date')->nullable();
             $table->string('pcf_letter')->nullable();
             $table->string('utilities_from')->nullable();
@@ -59,9 +61,11 @@ class CreateTransactionsTable extends Migration
             
             $table->bigInteger('tagging_tag_id')->nullable();
             $table->string('utilities_category')->nullable();
+            $table->bigInteger('utilities_account_no_id')->nullable();
             $table->string('utilities_account_no')->nullable();
             $table->float('utilities_consumption')->nullable();
-            $table->string('utilities_uom')->nullable();
+            $table->bigInteger('utilities_location_id')->nullable();
+            $table->string('utilities_location')->nullable();
             $table->string('utilities_receipt_no')->nullable();
             $table->json('payroll_client')->nullable();
             $table->string('payroll_category')->nullable();

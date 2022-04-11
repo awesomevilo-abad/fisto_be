@@ -299,4 +299,15 @@ class TransactionController extends Controller
             return $this->resultResponse('success-no-content','',[]); 
  
     }
+
+    
+    public function validatePCFName(Request $request)
+    {
+
+       if (Transaction::where('pcf_name',$request['pcf_name'])->first()){
+            $errorMessage = GenericMethod::resultLaravelFormat('pcf_batch.name',["PCF name already exist."]);
+            return $this->resultResponse('invalid','',$errorMessage);   
+        }   
+        return $this->resultResponse('success-no-content','',[]); 
+    }
 }
