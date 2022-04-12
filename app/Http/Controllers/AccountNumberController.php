@@ -53,9 +53,9 @@ class AccountNumberController extends Controller
       ->paginate($rows);
     }else if ($paginate == 0){
       $account_number = $account_number
-      ->get(['id','location_id','category_id','account_no']);
+      ->get(['id','location_id','category_id','account_no as no']);
       if(count($account_number)==true){
-          $account_number = array("account_number"=>$account_number);;
+          $account_number = array("account_numbers"=>$account_number);;
       }
     }
     
