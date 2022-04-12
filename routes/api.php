@@ -56,6 +56,17 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::post('users/username-validation', [UserController::class, 'username_validation']);
     Route::post('users/id-validation', [UserController::class, 'id_validation']);
     
+    Route::group(['prefix'=>'dropdown'],function(){
+        Route::get('suppliers/', [SupplierController::class, 'index']);
+
+        Route::get('payroll-categories/', [PayrollCategoryController::class, 'index']);
+        Route::get('payroll-clients/', [PayrollClientController::class, 'index']);
+        Route::get('utility-categories/', [UtilityCategoryController::class, 'index']);
+        Route::get('utility-locations/', [UtilityLocationController::class, 'index']);
+        Route::get('current-user/',[MasterlistController::class,'currentUser']);
+        Route::get('charging/',[MasterlistController::class,'chargingDropdown']);
+    });
+
     Route::group(['prefix' => 'admin', 'middleware' => ['auth'=>'is_admin']], function(){
 
         Route::group(['prefix'=>'dropdown'],function(){
@@ -170,11 +181,6 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
          
     });
 
-    Route::group(['prefix'=>'dropdown'],function(){
-        Route::get('supplier/', [SupplierController::class, 'index']);
-        Route::get('current-user/',[MasterlistController::class,'currentUser']);
-        Route::get('charging/',[MasterlistController::class,'chargingDropdown']);
-    });
 
     // TRANSACTION
     Route::resource('transactions/', TransactionController::class);

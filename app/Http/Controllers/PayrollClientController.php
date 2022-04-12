@@ -27,11 +27,12 @@ class PayrollClientController extends Controller
       $payroll_client = $payroll_client
       ->paginate($rows);
     }else if ($paginate == 0){
-        $payroll_client = $payroll_client
-        ->get(['id','client as name']);
-        $payroll_client = array("payroll_clients"=>$payroll_client);
+      $payroll_client = $payroll_client
+      ->get(['id','client as name']);
+      if(count($payroll_client)==true){
+          $payroll_client = array("payroll_clients"=>$payroll_client);;
+      }
     }
-
     
     if(count($payroll_client)==true){
       return $this->resultResponse('fetch','Payroll Client',$payroll_client);

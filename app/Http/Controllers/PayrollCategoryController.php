@@ -29,11 +29,12 @@ class PayrollCategoryController extends Controller
       $payroll_category = $payroll_category
       ->paginate($rows);
     }else if ($paginate == 0){
-        $payroll_category = $payroll_category
-        ->get(['id','category as name']);
-        $payroll_category = array("payroll_categories"=>$payroll_category);
+      $payroll_category = $payroll_category
+      ->get(['id','category as name']);
+      if(count($payroll_category)==true){
+          $payroll_category = array("payroll_categories"=>$payroll_category);;
+      }
     }
-
     
     if(count($payroll_category)==true){
       return $this->resultResponse('fetch','Payroll Category',$payroll_category);
