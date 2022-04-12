@@ -882,8 +882,24 @@ class GenericMethod{
             }
             $duplicate_clients = GenericMethod::addAnd($duplicate_client);
             if(!empty($duplicate_client)){
-                return GenericMethod::resultLaravelFormat('document',["Payroll client (".$duplicate_clients.") has already been taken."]);
+                return GenericMethod::resultLaravelFormat(
+                    [
+                        'payroll.type',
+                        'payroll.clients',
+                        'payroll.category',
+                        'from',
+                        'to',
+                    ],
+                    [
+                        ["Payroll type has already been taken."],
+                        ["Payroll client has already been taken."],
+                        ["Payroll category has already been taken."],
+                        ["from has already been taken."],
+                        ["to date has already been taken."]
+                    ]
+                );
             }
+
         }
 
         public static function validateReceiptFull($fields){
