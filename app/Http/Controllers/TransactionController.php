@@ -154,7 +154,7 @@ class TransactionController extends Controller
                 // if(isset($duplicatePayroll)){
                 //     return $this->resultResponse('invalid','',$duplicatePayroll);
                 // }
-               return GenericMethod::insertClient($request_id,$fields['document']['payroll']['clients']);
+                GenericMethod::insertClient($request_id,$fields['document']['payroll']['clients']);
                 $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
                 $request_id,$date_requested,$fields);
                 if(isset($transaction->transaction_id)){

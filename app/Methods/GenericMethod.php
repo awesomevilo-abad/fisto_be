@@ -12,6 +12,7 @@ use Illuminate\Pagination\Paginator;
 
 use App\Models\User;
 use App\Models\POBatch;
+use App\Models\TransactionClient;
 use App\Models\ReferrenceBatch;
 use App\Models\Transaction;
 use App\Models\PayrollClient;
@@ -129,11 +130,12 @@ class GenericMethod{
                     , "remarks" => $fields['document']['remarks']
                     , "document_type" => $fields['document']['name']
         
-                    , "payroll_category" => $fields['document']['payroll']['category']
+                    , "payroll_from" => $fields['document']['from']
+                    , "payroll_to" => $fields['document']['to']
+                    , "payroll_category_id" => $fields['document']['payroll']['category']['id']
+                    , "payroll_category" => $fields['document']['payroll']['category']['name']
                     , "payroll_type" => $fields['document']['payroll']['type']
-                    , "payroll_client" => $fields['document']['payroll']['client']
-                    , "payroll_from" => $fields['document']['payroll']['from']
-                    , "payroll_to" => $fields['document']['payroll']['to']
+                    , "payroll_client" => $fields['document']['payroll']['clients']
                     , "request_id" => $request_id
                     , "tagging_tag_id" => 0
                     , "date_requested" => $date_requested
@@ -222,10 +224,10 @@ class GenericMethod{
             for($i=0;$i<$client_count;$i++){
                 $id = $clients[$i]['id'];
                 $name = $clients[$i]['name'];
-                $insert_po_batch = POBatch::create([
+                $insert_po_batch = TransactionClient::create([
                     'request_id' => $request_id,
-                    'po_no' => $po_no,
-                    'po_amount' => $po_amount
+                    'client_id' => $id,
+                    'client_name' => $name
                 ]);
             }
         }

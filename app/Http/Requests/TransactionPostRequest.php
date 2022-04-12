@@ -76,7 +76,8 @@ class TransactionPostRequest extends FormRequest
             , "document.payroll.clients.*.id" => 'required_if:document.id,7'
             , "document.payroll.clients.*.name" => 'required_if:document.id,7'
             , "document.payroll.type" => 'required_if:document.id,7'
-            , "document.payroll.category" => 'required_if:document.id,7'
+            , "document.payroll.category.id" => 'required_if:document.id,7'
+            , "document.payroll.category.name" => 'required_if:document.id,7'
             
             , "reference.id" => 'required_if:document.id,4'
             , "reference.type" => 'required_if:document.id,4'
@@ -193,7 +194,8 @@ class TransactionPostRequest extends FormRequest
             , 'document.payroll.clients.*.id' => 'Payroll ID'
             , 'document.payroll.clients.*.namr' => 'Payroll name'
             , "document.payroll.type" => 'Payroll type'
-            , "document.payroll.category" => 'Payroll category'
+            , "document.payroll.category.id" => 'Payroll category id'
+            , "document.payroll.category.name" => 'Payroll category'
 
             , "reference.id" => 'Reference id'
             , "reference.type" => 'Reference type'

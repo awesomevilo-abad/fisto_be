@@ -72,6 +72,7 @@ class Transaction extends Model
         ,"utilities_uom"
         ,"utilities_receipt_no"
         ,"payroll_client"
+        ,"payroll_category_id"
         ,"payroll_category"
         ,"payroll_type"
         ,"payroll_from"
