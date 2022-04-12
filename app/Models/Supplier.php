@@ -30,7 +30,7 @@ class Supplier extends Model
       return $date->format('Y-m-d H:i');
   }
 
-  public function referrences()
+  public function references()
   {
     return $this->belongsToMany(Referrence::class, 'supplier_referrences', 'supplier_id', 'referrence_id')->select(['referrences.id','referrences.type']);
   }

@@ -22,7 +22,7 @@ class SupplierController extends Controller
     $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
 
     $suppliers = Supplier::withTrashed()
-      ->with('referrences')
+      ->with('references')
       ->with('supplier_type')
       ->where(function ($query) use ($status) {
         if ($status == true) $query->whereNull('suppliers.deleted_at');
@@ -36,18 +36,22 @@ class SupplierController extends Controller
       ->latest('suppliers.updated_at');
 
       if ($paginate == 1){
-        $suppliers = $suppliers
-        ->paginate($rows);
-        }else if ($paginate == 0){
           $suppliers = $suppliers
-        ->without('referrences')
-        ->without('supplier_type')->get(['id','name']);
-        $suppliers = array("suppliers"=>$suppliers);
-        }
+          ->paginate($rows);
+      }else if ($paginate == 0){
+          $suppliers = $suppliers
+          ->with(['references'=> function($q){
+                $q->select('referrences.id');
+            }])
+          ->without('supplier_type')
+          ->get(['id','name']);
+          $suppliers = array("suppliers"=>$suppliers);
+      }
 
       if(count($suppliers)==true){
-        return $this->resultResponse('fetch','Supplier',$suppliers);
+          return $this->resultResponse('fetch','Supplier',$suppliers);
       }
+      
       return $this->resultResponse('not-found','Supplier',[]);
   }
 
@@ -99,14 +103,14 @@ class SupplierController extends Controller
       if (!empty($supplier_validateDuplicateName))
       return $this->resultResponse('registered','Name',["error_field" => "name"]);
       
-      $is_reference_modified = $this->isTaggedArrayModified($fields['references'],  $supplier->referrences()->get(),'id');
+      $is_reference_modified = $this->isTaggedArrayModified($fields['references'],  $supplier->references()->get(),'id');
       
       $supplier->code = $fields['code'];
       $supplier->name = $fields['name'];
       $supplier->terms = $fields['terms'];
       $supplier->supplier_type_id = $fields['supplier_type_id'];
-      $supplier->referrences()->detach();
-      $supplier->referrences()->attach(array_unique($fields['references']));
+      $supplier->references()->detach();
+      $supplier->references()->attach(array_unique($fields['references']));
       return $this->validateIfNothingChangeThenSave($supplier,'Supplier',$is_reference_modified);
     }
     else
@@ -288,7 +292,7 @@ class SupplierController extends Controller
         foreach($specific_chunk->toArray() as $chunk){
        
           $supplier= Supplier::withTrashed()->where('code',$chunk)->first();
-          $supplier->referrences()->attach($chunk['references_ids']);
+          $supplier->references()->attach($chunk['references_ids']);
         }
       }
       return $this->resultResponse('import','Supplier',$count_upload,$active,$inactive);

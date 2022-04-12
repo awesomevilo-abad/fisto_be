@@ -16,14 +16,23 @@ class UtilityCategoryController extends Controller
       $status =  $request['status'];
       $rows =  (empty($request['rows']))?10:(int)$request['rows'];
       $search =  $request['search'];
+      $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
       
       $utility_categories = UtilityCategory::withTrashed()
       ->where(function ($query) use ($status){
         ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
       })
       ->where('category', 'like', '%'.$search.'%')
-      ->latest('updated_at')
+      ->latest('updated_at');
+      
+    if ($paginate == 1){
+      $utility_categories = $utility_categories
       ->paginate($rows);
+    }else if ($paginate == 0){
+        $utility_categories = $utility_categories
+        ->get(['id','category as name']);
+        $utility_categories = array("utility_categories"=>$utility_categories);
+    }
 
       if(count($utility_categories)==true){
         return $this->resultResponse('fetch','Utility Category',$utility_categories);

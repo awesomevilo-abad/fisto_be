@@ -14,14 +14,24 @@ class PayrollClientController extends Controller
     $status =  $request['status'];
     $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
+    $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
     
     $payroll_client = PayrollClient::withTrashed()
     ->where(function ($query) use ($status){
       return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
     })
     ->where('client', 'like', '%'.$search.'%')
-    ->latest('updated_at')
-    ->paginate($rows);
+    ->latest('updated_at');
+    
+    if ($paginate == 1){
+      $payroll_client = $payroll_client
+      ->paginate($rows);
+    }else if ($paginate == 0){
+        $payroll_client = $payroll_client
+        ->get(['id','client as name']);
+        $payroll_client = array("payroll_clients"=>$payroll_client);
+    }
+
     
     if(count($payroll_client)==true){
       return $this->resultResponse('fetch','Payroll Client',$payroll_client);

@@ -15,14 +15,23 @@ class UtilityLocationController extends Controller
     $status =  $request['status'];
     $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
+    $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
     
     $utility_locations= UtilityLocation::withTrashed()
     ->where(function ($query) use ($status){
       ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
     })
     ->where('location', 'like', '%'.$search.'%')
-    ->latest('updated_at')
-    ->paginate($rows);
+    ->latest('updated_at');
+    
+    if ($paginate == 1){
+      $utility_locations = $utility_locations
+      ->paginate($rows);
+    }else if ($paginate == 0){
+        $utility_locations = $utility_locations
+        ->get(['id','location as name']);
+        $utility_locations = array("utility_locations"=>$utility_locations);
+    }
 
     if(count($utility_locations)==true){
       return $this->resultResponse('fetch','Utility Location',$utility_locations);

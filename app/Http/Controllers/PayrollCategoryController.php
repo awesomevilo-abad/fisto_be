@@ -16,14 +16,24 @@ class PayrollCategoryController extends Controller
     $status =  $request['status'];
     $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
+    $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
     
     $payroll_category = PayrollCategory::withTrashed()
     ->where(function ($query) use ($status){
       return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
     })
     ->where('category', 'like', '%'.$search.'%')
-    ->latest('updated_at')
-    ->paginate($rows);
+    ->latest('updated_at');
+    
+    if ($paginate == 1){
+      $payroll_category = $payroll_category
+      ->paginate($rows);
+    }else if ($paginate == 0){
+        $payroll_category = $payroll_category
+        ->get(['id','category as name']);
+        $payroll_category = array("payroll_categories"=>$payroll_category);
+    }
+
     
     if(count($payroll_category)==true){
       return $this->resultResponse('fetch','Payroll Category',$payroll_category);

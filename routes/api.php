@@ -183,6 +183,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::post('transactions/validate-document-no',[TransactionController::class,'validateDocumentNo']);
     Route::post('transactions/validate-reference-no',[TransactionController::class,'validateReferenceNo']);
     Route::post('transactions/validate-pcf-name/',[TransactionController::class,'validatePCFName']);
+ 
     // TRANSACTION FLOW
     Route::get('transactions/flow/',[TransactionFlowController::class,'pullRequest']);
     Route::get('transactions/flow/{id}',[TransactionFlowController::class,'pullSingleRequest']);
