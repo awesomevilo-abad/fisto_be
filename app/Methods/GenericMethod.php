@@ -856,32 +856,34 @@ class GenericMethod{
             foreach($payroll_client as $specific_client){
                 $client_id = $specific_client['id'];
                 $client_name = $specific_client['name'];
+               $transactions = DB::table('transactions')
+                ->leftJoin('transaction_client','transactions.request_id','=','transaction_client.request_id')
+                ->select('client_name')
+                ->where('company_id',$company_id)
+                ->where('supplier_id',$supplier_id)
+                ->where('payroll_category',"$payroll_category")
+                ->where('payroll_type',$payroll_type)
+                ->where('client_name',$client_name)
+                
+                ->where(function ($query) use($payroll_from,$payroll_to){
+                    $query->where(function ($query2) use($payroll_from,$payroll_to){
+                        $query2->where('payroll_from','>=',$payroll_from)
+                        ->where('payroll_from','<=',$payroll_to);
+                    })->orWhere(function ($query3) use($payroll_from,$payroll_to){
+                        $query3->where('payroll_to','>=',$payroll_from)
+                        ->where('payroll_to','<=',$payroll_to);
+                    });
+                })
+                ->get();
 
-                // $transactions = DB::table('transactions')
-                // ->select('id')
-                // ->where('company_id',$company_id)
-                // ->where('supplier_id',$supplier_id)
-                // ->where('payroll_category',$payroll_category)
-                // ->where('payroll_type',$payroll_type)
-                // ->whereJsonContains('payroll_client',$specific_client)
-                // ->where(function ($query) use($payroll_from,$payroll_to){
-                //     $query->where(function ($query2) use($payroll_from,$payroll_to){
-                //         $query2->where('payroll_from','>=',$payroll_from)
-                //         ->where('payroll_from','<=',$payroll_to);
-                //     })->orWhere(function ($query3) use($payroll_from,$payroll_to){
-                //         $query3->where('payroll_to','>=',$payroll_from)
-                //         ->where('payroll_to','<=',$payroll_to);
-                //     });
-                // })->get();
-
-                // if(count($transactions) > 0){
-                //     array_push($duplicate_client,$client_name);
-                // }
+                if(count($transactions) > 0){
+                    array_push($duplicate_client,$client_name);
+                }
             }
-            // $duplicate_clients = GenericMethod::addAnd($duplicate_client);
-            // if(!empty($duplicate_client)){
-            //     return GenericMethod::resultLaravelFormat('document',["Payroll client (".$duplicate_clients.") has already been taken."]);
-            // }
+            $duplicate_clients = GenericMethod::addAnd($duplicate_client);
+            if(!empty($duplicate_client)){
+                return GenericMethod::resultLaravelFormat('document',["Payroll client (".$duplicate_clients.") has already been taken."]);
+            }
         }
 
         public static function validateReceiptFull($fields){
