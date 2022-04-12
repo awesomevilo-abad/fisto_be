@@ -140,21 +140,21 @@ class TransactionController extends Controller
             break;
 
             case 7: //Payroll
-                $duplicatePayroll = GenericMethod::validatePayroll(
-                    $fields['document']['payroll']['from']
-                    ,$fields['document']['payroll']['to']
-                    ,$fields['document']['company']['id']
-                    ,$fields['document']['location']['id']
-                    ,$fields['document']['supplier']['id']
-                    ,$fields['document']['payroll']['client']
-                    ,$fields['document']['payroll']['type']
-                    ,$fields['document']['payroll']['category']
-                );
+                // $duplicatePayroll = GenericMethod::validatePayroll(
+                //     $fields['document']['from']
+                //     ,$fields['document']['to']
+                //     ,$fields['document']['company']['id']
+                //     ,$fields['document']['location']['id']
+                //     ,$fields['document']['supplier']['id']
+                //     ,$fields['document']['payroll']['clients']
+                //     ,$fields['document']['payroll']['type']
+                //     ,$fields['document']['payroll']['category']
+                // );
 
-                if(isset($duplicatePayroll)){
-                    return $this->resultResponse('invalid','',$duplicatePayroll);
-                }
-                
+                // if(isset($duplicatePayroll)){
+                //     return $this->resultResponse('invalid','',$duplicatePayroll);
+                // }
+               return GenericMethod::insertClient($request_id,$fields['document']['payroll']['clients']);
                 $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
                 $request_id,$date_requested,$fields);
                 if(isset($transaction->transaction_id)){

@@ -69,7 +69,7 @@ class AccountNumberController extends Controller
   {
     $fields = $request->validated();
 
-    $account_number_validateDuplicate = AccountNumber::withTrashed()->firstWhere([['account_no', $fields['account_no']],['category_id', $fields['category_id']]]);
+    $account_number_validateDuplicate = AccountNumber::withTrashed()->firstWhere([['supplier_id', $fields['supplier_id']],['location_id', $fields['location_id']],['account_no', $fields['account_no']],['category_id', $fields['category_id']]]);
     if (empty($account_number_validateDuplicate)) {
       $new_account_numbers = AccountNumber::create($fields);
       return $this->resultResponse('save','Account Number',$new_account_numbers);
@@ -86,9 +86,9 @@ class AccountNumberController extends Controller
 
     if (empty($account_number)) 
       return $this->resultResponse('not-found','Account Number',[]);
-      $is_unique = $this->isUnique($model,'Account number',['account_no','category_id'],[$fields['account_no'],$fields['category_id']],$id);
+      // $is_unique = $this->isUnique($model,'Account number',['account_no','category_id'],[$fields['account_no'],$fields['category_id']],$id);
 
-      $account_number_validateDuplicate = AccountNumber::withTrashed()->firstWhere([['id', '<>', $id],['account_no', $fields['account_no']],['category_id', $fields['category_id']]]);
+      $account_number_validateDuplicate = AccountNumber::withTrashed()->firstWhere([['id', '<>', $id],['supplier_id', $fields['supplier_id']],['location_id', $fields['location_id']],['account_no', $fields['account_no']],['category_id', $fields['category_id']]]);
       if (!empty($account_number_validateDuplicate)) 
       return $this->resultResponse('registered','Account Number',[]);
       

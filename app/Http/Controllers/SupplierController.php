@@ -78,7 +78,7 @@ class SupplierController extends Controller
       return $this->resultResponse('registered','Name',["error_field" => "name"]);
 
     $new_supplier = Supplier::create($fields);
-    $new_supplier->referrences()
+    $new_supplier->references()
       ->attach($fields['references']);
     return $this->resultResponse('save','Supplier',$new_supplier);
   }

@@ -71,9 +71,10 @@ class TransactionPostRequest extends FormRequest
             , "document.pcf_batch.letter" => 'required_if:document.id,8'
             , "document.pcf_batch.date" => 'required_if:document.id,8'
 
-            , "document.payroll.from" => 'required_if:document.id,7'
-            , "document.payroll.to" => 'required_if:document.id,7'
-            , "document.payroll.client" => 'required_if:document.id,7'
+            , "document.from" => 'required_if:document.id,7'
+            , "document.to" => 'required_if:document.id,7'
+            , "document.payroll.clients.*.id" => 'required_if:document.id,7'
+            , "document.payroll.clients.*.name" => 'required_if:document.id,7'
             , "document.payroll.type" => 'required_if:document.id,7'
             , "document.payroll.category" => 'required_if:document.id,7'
             
@@ -187,9 +188,10 @@ class TransactionPostRequest extends FormRequest
             , "document.pcf_batch.date" => 'PCF batch date'
             , "document.pcf_batch.name" => 'PCF batch name'
             
-            , "document.payroll.from" => 'Payroll from'
-            , "document.payroll.to" => 'Payroll to'
-            , "document.payroll.client" => 'Payroll client'
+            , "document.from" => 'from'
+            , "document.to" => 'to'
+            , 'document.payroll.clients.*.id' => 'Payroll ID'
+            , 'document.payroll.clients.*.namr' => 'Payroll name'
             , "document.payroll.type" => 'Payroll type'
             , "document.payroll.category" => 'Payroll category'
 
