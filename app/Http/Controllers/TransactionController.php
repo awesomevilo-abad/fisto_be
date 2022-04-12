@@ -105,8 +105,8 @@ class TransactionController extends Controller
                     ,$fields['document']['to']
                     ,$fields['document']['company']['id']
                     ,$fields['document']['department']['id']
-                    ,$fields['document']['location']['id']
-                    ,$fields['document']['utility_category']['name']
+                    ,$fields['document']['utility']['location']['id']
+                    ,$fields['document']['utility']['category']['name']
                 );
                 
                 if(isset($duplicateUtilities)){

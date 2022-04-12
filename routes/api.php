@@ -65,6 +65,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::get('account-numbers/', [AccountNumberController::class, 'index']);
         Route::get('current-user/',[MasterlistController::class,'currentUser']);
         Route::get('charging/',[MasterlistController::class,'chargingDropdown']);
+        Route::get('references/', [ReferrenceController::class, 'index']);
     });
 
     Route::group(['prefix' => 'admin', 'middleware' => ['auth'=>'is_admin']], function(){

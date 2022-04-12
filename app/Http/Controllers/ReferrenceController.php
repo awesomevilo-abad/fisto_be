@@ -15,19 +15,34 @@ class ReferrenceController extends Controller
         $status =  $request['status'];
         $rows =  (empty($request['rows']))?10:(int)$request['rows'];
         $search =  $request['search'];
+        $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
 
         $referrences = Referrence::withTrashed()
-        ->select(['id','type','description','updated_at','deleted_at'])
+        ->when($paginate,function($query) use($search){
+            $query->select(['id','type','description','updated_at','deleted_at'])
+            ->where(function ($query) use ($search) {
+                $query->where('type', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%');
+            });
+        },function($query){
+            $query->select(['id','type']);
+        })
         ->where(function ($query) use ($status) {
             if ($status == true) $query->whereNull('deleted_at');
             else  $query->whereNotNull('deleted_at');
         })
-        ->where(function ($query) use ($search) {
-            $query->where('type', 'like', '%' . $search . '%')
-                ->orWhere('description', 'like', '%' . $search . '%');
-        })
-        ->latest('updated_at')
-        ->paginate($rows);
+        ->latest('updated_at');
+        
+        if ($paginate == 1){
+            $referrences = $referrences
+            ->paginate($rows);
+        }else if ($paginate == 0){
+            $referrences = $referrences
+            ->get();
+            if(count($referrences)==true){
+                $referrences = array("referrences"=>$referrences);;
+            }
+        }
 
         if(count($referrences)==true){
             return $this->resultResponse('fetch','Reference',$referrences);

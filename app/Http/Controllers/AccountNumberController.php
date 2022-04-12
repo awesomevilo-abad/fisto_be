@@ -47,7 +47,6 @@ class AccountNumberController extends Controller
     })
     ->latest('updated_at');
 
-    
     if ($paginate == 1){
       $account_number = $account_number
       ->paginate($rows);

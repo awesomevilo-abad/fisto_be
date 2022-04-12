@@ -58,10 +58,15 @@ class GenericMethod{
         
                     ,"utilities_from" => $fields['document']['from']
                     , "utilities_to" => $fields['document']['to']
-                    , "utilities_account_no" => $fields['document']['account_no']
-                    , "utilities_consumption" => $fields['document']['consumption']
-                    , "utilities_receipt_no" => $fields['document']['receipt_no']
-                    , "utilities_category" => $fields['document']['utility_category']['name']
+
+                    , "utilities_receipt_no" => $fields['document']['utility']['receipt_no']
+                    , "utilities_consumption" => $fields['document']['utility']['consumption']
+                    , "utilities_location_id" => $fields['document']['utility']['location']['id']
+                    , "utilities_location" => $fields['document']['utility']['location']['name']
+                    , "utilities_category_id" => $fields['document']['utility']['category']['id']
+                    , "utilities_category" => $fields['document']['utility']['category']['name']
+                    , "utilities_account_no_id" => $fields['document']['utility']['account_no']['id']
+                    , "utilities_account_no" => $fields['document']['utility']['account_no']['no']
 
                     , "po_total_amount" => $po_total_amount
         
@@ -822,7 +827,6 @@ class GenericMethod{
         }
 
         public static function validateTransactionByDateRange($from,$to,$company_id,$department_id,$location_id,$category){
-            
             $transactions = DB::table('transactions')
             ->where(function ($query) use($from,$to){
                 $query->where(function ($query1) use($from){
@@ -835,11 +839,28 @@ class GenericMethod{
                 });
             })
             ->where('company_id',$company_id)
-            ->where('utilities_category',$category);
-            $validateTransactionCount = $transactions->get();
-            
-            if(count($validateTransactionCount)>0){
-                return GenericMethod::resultLaravelFormat('document',["Utilities has already been taken."]);
+            ->where('utilities_location_id',$location_id)
+            ->where('utilities_category',$category)
+            ->get();
+            if(count($transactions)>0){                
+                return GenericMethod::resultLaravelFormat(
+                    [
+                        'document.from',
+                        'document.to',
+                        'document.company.id',
+                        'document.department.id',
+                        'document.utility.location.id',
+                        'document.utility.location.name',
+                    ],
+                    [
+                        ["from has already been taken."],
+                        ["to has already been taken."],
+                        ["Company has already been taken."],
+                        ["Department has already been taken."],
+                        ["Utility Location has already been taken."],
+                        ["Utility Category has already been taken."]
+                    ]
+                );
             }
         }
         

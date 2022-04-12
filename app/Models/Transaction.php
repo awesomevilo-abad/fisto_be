@@ -66,7 +66,11 @@ class Transaction extends Model
         ,"balance_po_ref_qty"
         ,"tagging_tag_id"
 
+        ,"utilities_category_id"
         ,"utilities_category"
+        ,"utilities_location_id"
+        ,"utilities_location"
+        ,"utilities_account_no_id"
         ,"utilities_account_no"
         ,"utilities_consumption"
         ,"utilities_uom"
