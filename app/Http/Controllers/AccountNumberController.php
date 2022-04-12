@@ -20,22 +20,44 @@ class AccountNumberController extends Controller
     $status =  $request['status'];
     $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
+    $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
+    
     
     $account_number = AccountNumber::withTrashed()
-    ->with('location')
-    ->with('category')
-    ->with('supplier')
+    ->when($paginate,function($q) use ($search){
+      $q->with('location')
+      ->with('category')
+      ->with('supplier')
+      ->where(function ($query) use ($search) {
+        $query->where('account_no', 'like', '%'.$search.'%')
+        ->orWhereHas ('location',function($q)use($search){$q->where('location', 'like', '%'.$search.'%');})
+        ->orWhereHas ('category',function($q)use($search){$q->where('category', 'like', '%'.$search.'%');})
+        ->orWhereHas ('supplier',function($q)use($search){$q->where('name', 'like', '%'.$search.'%');});
+      });
+    },function($q){
+      $q->with(['location'=>function($q){
+        $q->select('id');
+      }])
+      ->with(['category'=>function($q){
+        $q->select('id');
+      }]);
+    })
     ->where(function ($query) use ($status){
       return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
     })
-    ->where(function ($query) use ($search) {
-      $query->where('account_no', 'like', '%'.$search.'%')
-      ->orWhereHas ('location',function($q)use($search){$q->where('location', 'like', '%'.$search.'%');})
-      ->orWhereHas ('category',function($q)use($search){$q->where('category', 'like', '%'.$search.'%');})
-      ->orWhereHas ('supplier',function($q)use($search){$q->where('name', 'like', '%'.$search.'%');});
-    })
-    ->latest('updated_at')
-    ->paginate($rows);
+    ->latest('updated_at');
+
+    
+    if ($paginate == 1){
+      $account_number = $account_number
+      ->paginate($rows);
+    }else if ($paginate == 0){
+      $account_number = $account_number
+      ->get(['id','location_id','category_id','account_no']);
+      if(count($account_number)==true){
+          $account_number = array("account_number"=>$account_number);;
+      }
+    }
     
     if(count($account_number)==true){
       return $this->resultResponse('fetch','Account Number',$account_number);

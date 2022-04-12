@@ -28,11 +28,13 @@ class UtilityLocationController extends Controller
       $utility_locations = $utility_locations
       ->paginate($rows);
     }else if ($paginate == 0){
-        $utility_locations = $utility_locations
-        ->get(['id','location as name']);
-        $utility_locations = array("utility_locations"=>$utility_locations);
+      $utility_locations = $utility_locations
+      ->get(['id','location as name']);
+      if(count($utility_locations)==true){
+          $utility_locations = array("utility_locations"=>$utility_locations);;
+      }
     }
-
+    
     if(count($utility_locations)==true){
       return $this->resultResponse('fetch','Utility Location',$utility_locations);
     }

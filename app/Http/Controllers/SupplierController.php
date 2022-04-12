@@ -34,18 +34,20 @@ class SupplierController extends Controller
           ->orWhere('suppliers.terms', 'like', '%'.$search.'%');
       })
       ->latest('suppliers.updated_at');
-
+        
       if ($paginate == 1){
-          $suppliers = $suppliers
-          ->paginate($rows);
+        $suppliers = $suppliers
+        ->paginate($rows);
       }else if ($paginate == 0){
-          $suppliers = $suppliers
-          ->with(['references'=> function($q){
-                $q->select('referrences.id');
-            }])
-          ->without('supplier_type')
-          ->get(['id','name']);
-          $suppliers = array("suppliers"=>$suppliers);
+        $suppliers = $suppliers
+        ->with(['references'=> function($q){
+              $q->select('referrences.id');
+          }])
+        ->without('supplier_type')
+        ->get(['id','name']);
+        if(count($suppliers)==true){
+            $suppliers = array("suppliers"=>$suppliers);;
+        }
       }
 
       if(count($suppliers)==true){

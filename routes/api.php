@@ -57,12 +57,12 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::post('users/id-validation', [UserController::class, 'id_validation']);
     
     Route::group(['prefix'=>'dropdown'],function(){
-        Route::get('suppliers/', [SupplierController::class, 'index']);
-
         Route::get('payroll-categories/', [PayrollCategoryController::class, 'index']);
         Route::get('payroll-clients/', [PayrollClientController::class, 'index']);
         Route::get('utility-categories/', [UtilityCategoryController::class, 'index']);
         Route::get('utility-locations/', [UtilityLocationController::class, 'index']);
+        Route::get('suppliers/', [SupplierController::class, 'index']);
+        Route::get('account-numbers/', [AccountNumberController::class, 'index']);
         Route::get('current-user/',[MasterlistController::class,'currentUser']);
         Route::get('charging/',[MasterlistController::class,'chargingDropdown']);
     });

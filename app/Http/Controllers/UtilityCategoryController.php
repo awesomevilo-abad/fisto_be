@@ -29,9 +29,11 @@ class UtilityCategoryController extends Controller
       $utility_categories = $utility_categories
       ->paginate($rows);
     }else if ($paginate == 0){
-        $utility_categories = $utility_categories
-        ->get(['id','category as name']);
-        $utility_categories = array("utility_categories"=>$utility_categories);
+      $utility_categories = $utility_categories
+      ->get(['id','category as name']);
+      if(count($utility_categories)==true){
+          $utility_categories = array("utility_categories"=>$utility_categories);;
+      }
     }
 
       if(count($utility_categories)==true){
