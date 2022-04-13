@@ -850,7 +850,7 @@ class GenericMethod{
                         'document.company.id',
                         'document.department.id',
                         'document.utility.location.id',
-                        'document.utility.location.name',
+                        'document.utility.category.id',
                     ],
                     [
                         ["from has already been taken."],
@@ -905,11 +905,11 @@ class GenericMethod{
             if(!empty($duplicate_client)){
                 return GenericMethod::resultLaravelFormat(
                     [
-                        'payroll.type',
-                        'payroll.clients',
-                        'payroll.category',
-                        'from',
-                        'to',
+                        'document.payroll.type',
+                        'document.payroll.clients',
+                        'document.payroll.category',
+                        'document.from',
+                        'document.to',
                     ],
                     [
                         ["Payroll type has already been taken."],
