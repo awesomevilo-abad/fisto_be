@@ -254,9 +254,9 @@ class GenericMethod{
         {
                 $insert_reference_batch = ReferrenceBatch::create([
                     'request_id' => $request_id,
-                    'referrence_type' => $reference['type'],
-                    'referrence_no' => $reference['no'],
-                    'referrence_amount' => $reference['amount']
+                    'referrence_type' => $reference['document']['reference']['type'],
+                    'referrence_no' => $reference['document']['no'],
+                    'referrence_amount' => $reference['document']['amount']
                 ]);
 
         }
@@ -926,11 +926,11 @@ class GenericMethod{
         public static function validateReceiptFull($fields){
             $transaction =  Transaction::leftJoin('referrence_batches','transactions.request_id','=','referrence_batches.request_id')
             ->where('transactions.company_id',$fields['document']['company']['id'])
-            ->where('referrence_batches.referrence_no',$fields['reference']['no']);
+            ->where('referrence_batches.referrence_no',$fields['document']['no']);
             $validateTransactionCount = $transaction->get();
 
             if(count($validateTransactionCount)>0){
-                return GenericMethod::resultLaravelFormat('reference.no',["Reference number already exist."]);
+                return GenericMethod::resultLaravelFormat('document.no',["Reference number already exist."]);
             }
         }
         

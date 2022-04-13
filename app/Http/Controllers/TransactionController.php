@@ -183,13 +183,14 @@ class TransactionController extends Controller
                     }
                    
                     $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
-                    if ($fields['reference']['amount'] != $po_total_amount){
-                       $errorMessage = GenericMethod::resultLaravelFormat('reference.amount',["Reference amount (".$fields['reference']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
+                    if ($fields['document']['amount'] != $po_total_amount){
+                       $errorMessage = GenericMethod::resultLaravelFormat('document.amount',["Reference amount (".$fields['document']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
                        return $this->resultResponse('invalid','',$errorMessage);
                     }
     
+                    
                     GenericMethod::insertPO($request_id,$fields['po_group']);
-                    GenericMethod::insertRef($request_id,$fields['reference']);
+                    GenericMethod::insertRef($request_id,$fields);
                     $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                     $request_id,$date_requested,$fields);
                     if(isset($transaction->transaction_id)){
