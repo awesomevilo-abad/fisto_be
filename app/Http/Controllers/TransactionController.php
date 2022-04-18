@@ -8,6 +8,7 @@ use App\Http\Requests\PODetailsRequest;
 use App\Methods\PADValidationMethod;
 use App\Methods\GenericMethod;
 use App\Models\Transaction;
+use Illuminate\Support\Facades\Auth;
 
 
 use App\Http\Requests\TransactionPostRequest;
@@ -17,6 +18,7 @@ class TransactionController extends Controller
 
     public function index(Request $request)
     {
+        $role = Auth::user()->role;
         $status =  isset($request['state']) && $request['state'] ? $request['state'] : "request";
         $rows =  isset($request['rows']) && $request['rows'] ? (int)$request['rows'] : 10;
         $search =  $request['search'];
@@ -34,6 +36,15 @@ class TransactionController extends Controller
             'payment_type',
             'status'
         ])
+        ->when($role === 'Requestor',function($query){
+            $query->where('users_id',Auth::id());
+        })
+        // ->when($role === 'Approver',function($query){
+        //     $query->where('users_id',Auth::id());
+        // })
+        // ->when($role === 'Requestor',function($query){
+        //     $query->where('users_id',Auth::id());
+        // })
         ->where('state', $status)
         ->where(function ($query) use ($search) {
             $query->where('date_requested', 'like', '%' . $search . '%')
@@ -164,38 +175,66 @@ class TransactionController extends Controller
 
             case 4: //Receipt
                 $isFull = strtoupper($fields['document']['payment_type']) === 'FULL';
+                $isQty = $fields['document']['reference']['type'] === 'DR Qty';
 
-                if($isFull){
-                    if (empty($fields['po_group']) ) 
-                    {
-                        $errorMessage = GenericMethod::resultLaravelFormat('po_group',["PO group required"]);
-                        return $this->resultResponse('invalid','',$errorMessage);
-                    }
+                if (empty($fields['po_group']) ) 
+                {
+                    $errorMessage = GenericMethod::resultLaravelFormat('po_group',["PO group required"]);
+                    return $this->resultResponse('invalid','',$errorMessage);
+                }
+
+                $duplicatePO = GenericMethod::validatePOFull($fields['document']['company']['id'],$fields['po_group']);
+                if(isset($duplicatePO)){
+                    return $this->resultResponse('invalid','',$duplicatePO);
+                }
+                
+                if(!$isQty && $isFull){
 
                     $duplicateRef = GenericMethod::validateReceiptFull($fields);
                     if(isset($duplicateRef)){
                         return $this->resultResponse('invalid','',$duplicateRef);   
                     }
                     
-                    $duplicatePO = GenericMethod::validatePOFull($fields['document']['company']['id'],$fields['po_group']);
-                    if(isset($duplicatePO)){
-                        return $this->resultResponse('invalid','',$duplicatePO);
-                    }
-                   
                     $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
-                    if ($fields['document']['amount'] != $po_total_amount){
-                       $errorMessage = GenericMethod::resultLaravelFormat('document.amount',["Reference amount (".$fields['document']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
+                    if ($fields['document']['reference']['amount'] != $po_total_amount){
+                       $errorMessage = GenericMethod::resultLaravelFormat('document.amount',["Reference amount (".$fields['document']['reference']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
                        return $this->resultResponse('invalid','',$errorMessage);
                     }
-    
                     
                     GenericMethod::insertPO($request_id,$fields['po_group']);
-                    GenericMethod::insertRef($request_id,$fields);
                     $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                     $request_id,$date_requested,$fields);
                     if(isset($transaction->transaction_id)){
                        return $this->resultResponse('save','Transaction',[]);
                     }
+                }
+
+                
+                if(!$isQty && !$isFull){
+                    return "Amount based and Partial payment";
+
+                    return $duplicateRef = GenericMethod::validateReceiptPartial($fields);
+                    if(isset($duplicateRef)){
+                        return $this->resultResponse('invalid','',$duplicateRef);   
+                    }
+                    
+                    // $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
+                    // GenericMethod::insertPO($request_id,$fields['po_group']);
+                    // GenericMethod::insertRef($request_id,$fields);
+                    // $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
+                    // $request_id,$date_requested,$fields);
+                    // if(isset($transaction->transaction_id)){
+                    //    return $this->resultResponse('save','Transaction',[]);
+                    // }
+
+                }
+
+                if($isQty && $isFull){
+                    return "Qty based and Full payment";
+                }
+
+                if($isQty && !$isFull){
+                    return "Payment Type does not exist in DR Qty";
                 }
 
             break;
@@ -286,22 +325,15 @@ class TransactionController extends Controller
 
     public function validateReferenceNo(Request $request)
     {
-        Transaction::leftJoin('referrence_batches','transactions.request_id','=','referrence_batches.request_id')
-        ->where('transactions.company_id',$request['company_id'])
-        ->where('referrence_batches.referrence_no',$request['reference_no'])
-        ->get();
-
-       if(Transaction::leftJoin('referrence_batches','transactions.request_id','=','referrence_batches.request_id')
-            ->where('transactions.company_id',$request['company_id'])
-            ->where('referrence_batches.referrence_no',$request['reference_no'])
+       if(Transaction::where('company_id',$request['company_id'])
+            ->where('referrence_no',$request['reference_no'])
             ->first()){
-                $errorMessage = GenericMethod::resultLaravelFormat('reference.no',["Reference number already exist."]);
+                $errorMessage = GenericMethod::resultLaravelFormat('document.reference.no',["Reference number already exist."]);
                 return $this->resultResponse('invalid','',$errorMessage);  
             }
             return $this->resultResponse('success-no-content','',[]); 
  
     }
-
     
     public function validatePCFName(Request $request)
     {

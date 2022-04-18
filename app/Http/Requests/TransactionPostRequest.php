@@ -41,9 +41,9 @@ class TransactionPostRequest extends FormRequest
             , "document.id" => 'required'
             , "document.name" => 'required'
             , "document.payment_type" => 'required'
-            , "document.no" => 'required_if:document.id,1,5,2,4|unique:transactions,document_no'
+            , "document.no" => 'required_if:document.id,1,5,2|unique:transactions,document_no'
             , "document.date" => 'required_if:document.id,1,5,2'
-            , "document.amount" => 'required_if:document.id,1,5,2,6,8,7,4|numeric'
+            , "document.amount" => 'required_if:document.id,1,5,2,6,8,7|numeric'
             , "document.remarks" => 'nullable'
             , "document.company.id" => 'required'
             , "document.company.name" => 'required'
@@ -81,6 +81,9 @@ class TransactionPostRequest extends FormRequest
             , "document.payroll.category.name" => 'required_if:document.id,7'
             
             , "document.reference.id" => 'required_if:document.id,4'
+            , "document.reference.no" => 'required_if:document.id,4'
+            , "document.reference.amount" => 'nullable'
+            , "document.reference.qty" => 'nullable'
             , "document.reference.type" => 'required_if:document.id,4'
             // // SELECTED CATEGORY (CONDITIONAL)
             // , "category_id" => 'nullable'

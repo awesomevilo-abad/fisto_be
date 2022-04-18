@@ -82,6 +82,12 @@ class Transaction extends Model
         ,"payroll_from"
         ,"payroll_to"
 
+        ,"referrence_type"
+        ,"referrence_no"
+        ,"referrence_amount"
+        ,"referrence_qty"
+        ,"referrence_id"
+
     ];
 
     protected $attributes = [

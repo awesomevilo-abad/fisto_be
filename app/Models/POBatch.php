@@ -17,7 +17,12 @@ class POBatch extends Model
         'po_amount',
         'po_qty',
         'rr_code',
-        'po_group_no'
+        'po_group_no',
+        'rr_group'
+    ];
+
+    protected $casts = [
+        'rr_group' => 'array'
     ];
 
 }

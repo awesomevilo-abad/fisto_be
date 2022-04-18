@@ -147,6 +147,8 @@ class GenericMethod{
                 ]);
             }else if($fields['document']['id'] == 4){
                 
+                $balance_po_ref_amount = $po_total_amount - $fields['document']['reference']['amount'];
+
                 $new_transaction = Transaction::create([
                     'transaction_id' => $transaction_id
                     , "users_id" => $fields['requestor']['id']
@@ -173,11 +175,19 @@ class GenericMethod{
                     , "document_type" => $fields['document']['name']
         
                     , "po_total_amount" => $po_total_amount    
+                    , "balance_po_ref_amount" => $balance_po_ref_amount   
+                    
+                    , "referrence_type" => $fields['document']['reference']['type']
+                    , "referrence_no" => $fields['document']['reference']['no']
+                    , "referrence_amount" => $fields['document']['reference']['amount']
+                    , "referrence_id" => $fields['document']['reference']['id'] 
 
                     , "request_id" => $request_id
                     , "tagging_tag_id" => 0
                     , "date_requested" => $date_requested
                     , "status" => "Pending"
+
+                    
                 ]);
             }else{
                 $new_transaction = Transaction::create([
@@ -240,12 +250,15 @@ class GenericMethod{
         public static function insertPO($request_id,$po_group){
             $po_count = count($po_group);
             for($i=0;$i<$po_count;$i++){
+                
                 $po_no = $po_group[$i]['no'];
                 $po_amount = $po_group[$i]['amount'];
+                $rr_group = $po_group[$i]['rr_no'];
                 $insert_po_batch = POBatch::create([
                     'request_id' => $request_id,
                     'po_no' => $po_no,
-                    'po_amount' => $po_amount
+                    'po_amount' => $po_amount,
+                    'rr_group' => $rr_group
                 ]);
             }
         }
@@ -829,13 +842,21 @@ class GenericMethod{
         public static function validateTransactionByDateRange($from,$to,$company_id,$department_id,$location_id,$category){
             $transactions = DB::table('transactions')
             ->where(function ($query) use($from,$to){
-                $query->where(function ($query1) use($from){
-                    $query1->where('utilities_from','<=',$from)
-                    ->where('utilities_to','>=',$from);
+                $query->where(function ($query) use($from,$to){
+                    $query->where(function ($query1) use($from){
+                        $query1->where('utilities_from','<=',$from)
+                        ->where('utilities_to','>=',$from);
+                    })
+                    ->orWhere(function ($query2) use($to){
+                        $query2->where('utilities_from','<=',$to)
+                        ->where('utilities_to','>=',$to);
+                    });
                 })
-                ->orWhere(function ($query2) use($to){
-                    $query2->where('utilities_from','<=',$to)
-                    ->where('utilities_to','>=',$to);
+                ->orWhere(function ($query) use($from,$to){
+                    $query->where(function ($query1) use($from,$to){
+                        $query1->where('utilities_from','>=',$from)
+                        ->where('utilities_to','<=',$to);
+                    });
                 });
             })
             ->where('company_id',$company_id)
@@ -885,14 +906,22 @@ class GenericMethod{
                 ->where('payroll_category',"$payroll_category")
                 ->where('payroll_type',$payroll_type)
                 ->where('client_name',$client_name)
-                
                 ->where(function ($query) use($payroll_from,$payroll_to){
-                    $query->where(function ($query2) use($payroll_from,$payroll_to){
-                        $query2->where('payroll_from','>=',$payroll_from)
-                        ->where('payroll_from','<=',$payroll_to);
-                    })->orWhere(function ($query3) use($payroll_from,$payroll_to){
-                        $query3->where('payroll_to','>=',$payroll_from)
-                        ->where('payroll_to','<=',$payroll_to);
+                    $query->where(function ($query) use($payroll_from,$payroll_to){
+                        $query->where(function ($query1) use($payroll_from){
+                            $query1->where('payroll_from','<=',$payroll_from)
+                            ->where('payroll_to','>=',$payroll_from);
+                        })
+                        ->orWhere(function ($query2) use($payroll_to){
+                            $query2->where('payroll_from','<=',$payroll_to)
+                            ->where('payroll_to','>=',$payroll_to);
+                        });
+                    })
+                    ->orWhere(function ($query) use($payroll_from,$payroll_to){
+                        $query->where(function ($query1) use($payroll_from,$payroll_to){
+                            $query1->where('payroll_from','>=',$payroll_from)
+                            ->where('payroll_to','<=',$payroll_to);
+                        });
                     });
                 })
                 ->get();
@@ -924,9 +953,24 @@ class GenericMethod{
         }
 
         public static function validateReceiptFull($fields){
-            $transaction =  Transaction::leftJoin('referrence_batches','transactions.request_id','=','referrence_batches.request_id')
-            ->where('transactions.company_id',$fields['document']['company']['id'])
-            ->where('referrence_batches.referrence_no',$fields['document']['no']);
+            $transaction =  Transaction::where('company_id',$fields['document']['company']['id'])
+            ->where('referrence_no',$fields['document']['reference']['no']);
+            $validateTransactionCount = $transaction->get();
+
+            if(count($validateTransactionCount)>0){
+                return GenericMethod::resultLaravelFormat('document.reference.no',["Reference number already exist."]);
+            }
+        }
+
+        public static function validateReceiptPartial($fields){
+
+           return $transaction = DB::table('transactions')
+            ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
+            ->where('transactions.company_id',$company_id)
+            ->where('transactions.supplier_id',$supplier_id)
+            ->where('transactions.balance_po_ref_amount','>',0)
+            ->where('p_o_batches.po_no',$po_no)
+            ->orderBy('p_o_batches.id','desc');
             $validateTransactionCount = $transaction->get();
 
             if(count($validateTransactionCount)>0){

@@ -73,6 +73,12 @@ class CreateTransactionsTable extends Migration
             $table->string('payroll_type')->nullable();
             $table->string('payroll_from')->nullable();
             $table->string('payroll_to')->nullable();
+            
+            $table->string('referrence_type')->nullable();
+            $table->string('referrence_no')->nullable();
+            $table->float('referrence_amount')->nullable();
+            $table->float('referrence_qty')->nullable();
+            $table->bigInteger('referrence_id')->nullable();
 
             $table->timestamps();
 

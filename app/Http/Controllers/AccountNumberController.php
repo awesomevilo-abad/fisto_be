@@ -22,7 +22,6 @@ class AccountNumberController extends Controller
     $search =  $request['search'];
     $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
     
-    
     $account_number = AccountNumber::withTrashed()
     ->when($paginate,function($q) use ($search){
       $q->with('location')
@@ -40,6 +39,9 @@ class AccountNumberController extends Controller
       }])
       ->with(['category'=>function($q){
         $q->select('id');
+      }])
+      ->with(['supplier'=>function($q){
+        $q->select('id');
       }]);
     })
     ->where(function ($query) use ($status){
@@ -52,7 +54,7 @@ class AccountNumberController extends Controller
       ->paginate($rows);
     }else if ($paginate == 0){
       $account_number = $account_number
-      ->get(['id','location_id','category_id','account_no as no']);
+      ->get(['id','location_id','category_id','supplier_id','account_no as no']);
       if(count($account_number)==true){
           $account_number = array("account_numbers"=>$account_number);;
       }
