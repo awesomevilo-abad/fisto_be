@@ -8,6 +8,7 @@ use App\Http\Requests\PODetailsRequest;
 use App\Methods\PADValidationMethod;
 use App\Methods\GenericMethod;
 use App\Models\Transaction;
+use App\Models\POBatch;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -218,7 +219,6 @@ class TransactionController extends Controller
                         return $this->resultResponse('invalid','',$duplicateRef);   
                     }
 
-
                     $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],current($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
                  
                     if(gettype($getAndValidatePOBalance) == 'object'){
@@ -319,14 +319,13 @@ class TransactionController extends Controller
 
     public function getPODetails(PODetailsRequest $request)
     {
-
         $fields = $request->validated();
         $po_details = DB::table('transactions')
         ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         ->where('transactions.company_id',$fields['company_id'])
         ->where('p_o_batches.po_no',$fields['po_no'])
-        ->get(['po_no','po_amount','balance_document_po_amount as po_balance']);
-        
+        ->get(['balance_po_ref_amount as po_balance','transactions.request_id']);
+
         if(count($po_details)>0){
             if(strtoupper($fields['payment_type'])=="FULL"){
                 $errorMessage = GenericMethod::resultLaravelFormat('po_group.no',["PO number already exist."]);
@@ -334,10 +333,22 @@ class TransactionController extends Controller
             }
 
             if(($po_details->first()->po_balance <= 0) || ($po_details->first()->po_balance == null) ){
+                
                 $errorMessage = GenericMethod::resultLaravelFormat('po_group',["No available balance."]);
                 return $this->resultResponse('invalid','',$errorMessage);   
             }
-            return $this->resultResponse('fetch','PO number',$po_details->first());   
+            $balance =  $po_details->first()->po_balance;
+            $po_details = POBatch::where('request_id',$po_details->first()->request_id)->get(['po_no as no','po_amount as amount','rr_group as rr_no']);
+
+            $po_details->mapToGroups(function ($item,$v) use ($balance){
+                return [
+                    $item['balance']=$balance,
+                    $item['rr_no']=json_decode($item['rr_no'], true)
+                    ];
+            });
+
+            // return gettype($po_details);
+            return $this->resultResponse('fetch','PO number',$po_details);   
         }
         return $this->resultResponse('success-no-content','',[]);  
     }

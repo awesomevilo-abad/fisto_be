@@ -146,7 +146,6 @@ class GenericMethod{
                     , "date_requested" => $date_requested
                 ]);
             }else if($fields['document']['id'] == 4){
-                
                 $new_transaction = Transaction::create([
                     'transaction_id' => $transaction_id
                     , "users_id" => $fields['requestor']['id']
@@ -159,6 +158,8 @@ class GenericMethod{
                     , "department_details" => $fields['requestor']['department']
         
                     , "document_id" => $fields['document']['id']
+                    , "category_id" => $fields['document']['category']['id']
+                    , "category" => $fields['document']['category']['name']
                     , "company_id" => $fields['document']['company']['id']
                     , "company" => $fields['document']['company']['name']
                     , "department_id" => $fields['document']['department']['id']
@@ -200,6 +201,8 @@ class GenericMethod{
                     , "department_details" => $fields['requestor']['department']
         
                     , "document_id" => $fields['document']['id']
+                    , "category_id" => $fields['document']['category']['id']
+                    , "category" => $fields['document']['category']['name']
                     , "company_id" => $fields['document']['company']['id']
                     , "company" => $fields['document']['company']['name']
                     , "department_id" => $fields['document']['department']['id']
