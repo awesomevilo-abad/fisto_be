@@ -94,7 +94,7 @@ class TransactionController extends Controller
                    return $this->resultResponse('invalid','',$errorMessage);
                 }
 
-                GenericMethod::insertPO($request_id,$fields['po_group']);
+                GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
                 $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                 $request_id,$date_requested,$fields);
                 if(isset($transaction->transaction_id)){
@@ -176,23 +176,25 @@ class TransactionController extends Controller
             case 4: //Receipt
                 $isFull = strtoupper($fields['document']['payment_type']) === 'FULL';
                 $isQty = $fields['document']['reference']['type'] === 'DR Qty';
-
+                
                 if (empty($fields['po_group']) ) 
                 {
                     $errorMessage = GenericMethod::resultLaravelFormat('po_group',["PO group required"]);
                     return $this->resultResponse('invalid','',$errorMessage);
                 }
-
-                $duplicatePO = GenericMethod::validatePOFull($fields['document']['company']['id'],$fields['po_group']);
-                if(isset($duplicatePO)){
-                    return $this->resultResponse('invalid','',$duplicatePO);
-                }
                 
+                
+
                 if(!$isQty && $isFull){
 
-                    $duplicateRef = GenericMethod::validateReceiptFull($fields);
+                    $duplicateRef = GenericMethod::validateReferenceNo($fields);
                     if(isset($duplicateRef)){
                         return $this->resultResponse('invalid','',$duplicateRef);   
+                    }
+                    
+                    $duplicatePO = GenericMethod::validatePOFull($fields['document']['company']['id'],$fields['po_group']);
+                    if(isset($duplicatePO)){
+                        return $this->resultResponse('invalid','',$duplicatePO);
                     }
                     
                     $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
@@ -201,7 +203,7 @@ class TransactionController extends Controller
                        return $this->resultResponse('invalid','',$errorMessage);
                     }
                     
-                    GenericMethod::insertPO($request_id,$fields['po_group']);
+                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
                     $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                     $request_id,$date_requested,$fields);
                     if(isset($transaction->transaction_id)){
@@ -211,21 +213,47 @@ class TransactionController extends Controller
 
                 
                 if(!$isQty && !$isFull){
-                    return "Amount based and Partial payment";
-
-                    return $duplicateRef = GenericMethod::validateReceiptPartial($fields);
+                    $duplicateRef = GenericMethod::validateReferenceNo($fields);
                     if(isset($duplicateRef)){
                         return $this->resultResponse('invalid','',$duplicateRef);   
                     }
+
+
+                    $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],current($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
+                 
+                    if(gettype($getAndValidatePOBalance) == 'object'){
+                        return $this->resultResponse('invalid','',$getAndValidatePOBalance);  
+                    }
+                    if(gettype($getAndValidatePOBalance) == 'array'){ //Additional PO Validation
+                        $new_po= $getAndValidatePOBalance['new_po_group'];
+                        $po_total_amount= $getAndValidatePOBalance['po_total_amount'];
+                        $balance_with_additional_total_po_amount= $getAndValidatePOBalance['balance'];
+                       GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
+                       $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
+                       $request_id,$date_requested,$fields,$balance_with_additional_total_po_amount);
+                       if(isset($transaction->transaction_id)){
+                          return $this->resultResponse('save','Transaction',[]);
+                       }
+                    }
                     
-                    // $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
-                    // GenericMethod::insertPO($request_id,$fields['po_group']);
-                    // GenericMethod::insertRef($request_id,$fields);
-                    // $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
-                    // $request_id,$date_requested,$fields);
-                    // if(isset($transaction->transaction_id)){
-                    //    return $this->resultResponse('save','Transaction',[]);
-                    // }
+                    $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
+                    $balance_po_ref_amount = $po_total_amount - $fields['document']['reference']['amount'];
+                    
+                    if($po_total_amount < $fields['document']['reference']['amount']){
+                        $amountValdiation =  GenericMethod::resultLaravelFormat('document.reference.no',["Insufficient PO balance."]);
+                        return $this->resultResponse('invalid','',$amountValdiation);  
+                    }
+                    
+                    if(isset($getAndValidatePOBalance)){
+                        $balance_po_ref_amount = $getAndValidatePOBalance;
+                    }
+                        
+                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
+                    $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
+                    $request_id,$date_requested,$fields,$balance_po_ref_amount);
+                    if(isset($transaction->transaction_id)){
+                       return $this->resultResponse('save','Transaction',[]);
+                    }
 
                 }
 

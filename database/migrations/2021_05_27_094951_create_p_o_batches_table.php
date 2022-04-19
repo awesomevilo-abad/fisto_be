@@ -18,7 +18,7 @@ class CreatePOBatchesTable extends Migration
             $table->string('po_no')->nullable();
             $table->float('po_amount')->nullable();
             $table->float('po_qty')->nullable();
-            $table->bigInteger('tag_id')->nullable();
+            $table->bigInteger('request_id')->nullable();
             $table->float('po_total_amount')->nullable();
             $table->timestamps();
 

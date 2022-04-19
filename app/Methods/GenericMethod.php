@@ -28,7 +28,7 @@ class GenericMethod{
     ##########################################################################################################
 
         public static function insertTransaction($transaction_id,$po_total_amount=0,
-        $request_id,$date_requested,$fields){
+        $request_id,$date_requested,$fields,$balance_po_ref_amount=0){
             
             if($fields['document']['id'] == 6){
                 $new_transaction = Transaction::create([
@@ -147,8 +147,6 @@ class GenericMethod{
                 ]);
             }else if($fields['document']['id'] == 4){
                 
-                $balance_po_ref_amount = $po_total_amount - $fields['document']['reference']['amount'];
-
                 $new_transaction = Transaction::create([
                     'transaction_id' => $transaction_id
                     , "users_id" => $fields['requestor']['id']
@@ -247,7 +245,7 @@ class GenericMethod{
             }
         }
 
-        public static function insertPO($request_id,$po_group){
+        public static function insertPO($request_id,$po_group,$po_total_amount){
             $po_count = count($po_group);
             for($i=0;$i<$po_count;$i++){
                 
@@ -258,7 +256,8 @@ class GenericMethod{
                     'request_id' => $request_id,
                     'po_no' => $po_no,
                     'po_amount' => $po_amount,
-                    'rr_group' => $rr_group
+                    'rr_group' => $rr_group,
+                    'po_total_amount' => $po_total_amount
                 ]);
             }
         }
@@ -743,6 +742,11 @@ class GenericMethod{
             }
             return $po_total_amount;
         }
+
+        public static function getBalance($po_total_amount,$balance,$reference_amount){
+            $balance = ($po_total_amount+$balance)-$reference_amount;
+            return $balance;
+        }
         
         public static function getRequestID(){
             $transactions = DB::table('transactions')->select('request_id')->orderBy('id', 'desc')->first();
@@ -952,7 +956,7 @@ class GenericMethod{
 
         }
 
-        public static function validateReceiptFull($fields){
+        public static function validateReferenceNo($fields){
             $transaction =  Transaction::where('company_id',$fields['document']['company']['id'])
             ->where('referrence_no',$fields['document']['reference']['no']);
             $validateTransactionCount = $transaction->get();
@@ -962,21 +966,78 @@ class GenericMethod{
             }
         }
 
-        public static function validateReceiptPartial($fields){
-
-           return $transaction = DB::table('transactions')
-            ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
+        
+        public static function getAndValidatePOBalance($company_id,$po_no,float $reference_amount,$po_group){
+             $balance_po_ref_amount = Transaction::leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
             ->where('transactions.company_id',$company_id)
-            ->where('transactions.supplier_id',$supplier_id)
-            ->where('transactions.balance_po_ref_amount','>',0)
             ->where('p_o_batches.po_no',$po_no)
-            ->orderBy('p_o_batches.id','desc');
-            $validateTransactionCount = $transaction->get();
+            ->orderBy('transactions.id', 'desc')
+            ->get('balance_po_ref_amount')
+            ->first();
 
-            if(count($validateTransactionCount)>0){
-                return GenericMethod::resultLaravelFormat('document.no',["Reference number already exist."]);
+            if(empty($balance_po_ref_amount)){
+                return;
             }
+            $balance_po_ref_amount = $balance_po_ref_amount->balance_po_ref_amount;
+            if($balance_po_ref_amount == 0){
+                return GenericMethod::resultLaravelFormat('po_group.no',["PO already exist."]);
+            }
+
+            if($balance_po_ref_amount < $reference_amount ){
+
+                // Additional PO
+                $new_po_group = [];
+                $po_total_amount = 0;
+                foreach($po_group as $k=>$v){
+                    if(!POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')
+                    ->where('p_o_batches.po_no','=',$po_group[$k]['no'])->exists()){
+                        $new_po_group[$k]['no'] = $po_group[$k]['no'] ;
+                        $new_po_group[$k]['amount'] = $po_group[$k]['amount'] ;
+                        $new_po_group[$k]['rr_no'] = $po_group[$k]['rr_no'] ;
+                    }
+                    $po_total_amount = $po_total_amount+ $po_group[$k]['amount'];
+                }
+                $new_po_group = array_values($new_po_group);
+                $new_po_total_amount = GenericMethod::getPOTotalAmount($request_id=0,$new_po_group);
+                $balance = GenericMethod::getBalance($new_po_total_amount,$balance_po_ref_amount,$reference_amount);
+                
+                if($balance < $reference_amount){
+                    return GenericMethod::resultLaravelFormat('document.reference.no',["Insufficient PO balance."]);
+                }
+                
+                return array(
+                    "po_total_amount" => $po_total_amount
+                    ,"new_po_total_amount" => $new_po_total_amount
+                    ,"balance" => $balance
+                    ,"new_po_group" => $new_po_group);
+
+            }
+
+            $balance = ($balance_po_ref_amount-$reference_amount);
+            return $balance;
         }
+        
+        public static function getBalancePORefAmount($company_id,$reference_no){
+            return Transaction::where('company_id',$company_id)
+            ->where('referrence_no',$reference_no)
+            ->get('balance_po_ref_amount')->first()->balance_po_ref_amount;
+        }
+
+        // public static function validateReceiptPartial($fields){
+
+        //    return $transaction = DB::table('transactions')
+        //     ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
+        //     ->where('transactions.company_id',$fields['document']['company']['id'])
+        //     ->where('transactions.supplier_id',$fields['document']['supplier']['id'])
+        //     ->where('transactions.balance_po_ref_amount','>',0)
+        //     ->where('p_o_batches.po_no',$fields['po_group']['no'])
+        //     ->orderBy('p_o_batches.id','desc');
+        //     $validateTransactionCount = $transaction->get();
+
+        //     if(count($validateTransactionCount)>0){
+        //         return GenericMethod::resultLaravelFormat('document.no',["Reference number already exist."]);
+        //     }
+        // }
         
         public static function validatePCF($pcf_name,$pcf_date,$pcf_letter,$company_id,$supplier_id){
             
