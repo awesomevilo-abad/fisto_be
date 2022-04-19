@@ -326,19 +326,20 @@ class TransactionController extends Controller
         ->where('p_o_batches.po_no',$fields['po_no'])
         ->get(['balance_po_ref_amount as po_balance','transactions.request_id']);
 
+
         if(count($po_details)>0){
             if(strtoupper($fields['payment_type'])=="FULL"){
                 $errorMessage = GenericMethod::resultLaravelFormat('po_group.no',["PO number already exist."]);
                 return $this->resultResponse('invalid','',$errorMessage);   
             }
 
-            if(($po_details->first()->po_balance <= 0) || ($po_details->first()->po_balance == null) ){
+            if(($po_details->last()->po_balance <= 0) || ($po_details->last()->po_balance == null) ){
                 
                 $errorMessage = GenericMethod::resultLaravelFormat('po_group',["No available balance."]);
                 return $this->resultResponse('invalid','',$errorMessage);   
             }
-            $balance =  $po_details->first()->po_balance;
-            $po_details = POBatch::where('request_id',$po_details->first()->request_id)->get(['po_no as no','po_amount as amount','rr_group as rr_no']);
+            $balance =  $po_details->last()->po_balance;
+            $po_details = POBatch::where('request_id',$po_details->last()->request_id)->get(['po_no as no','po_amount as amount','rr_group as rr_no']);
 
             $po_details->mapToGroups(function ($item,$v) use ($balance){
                 return [
