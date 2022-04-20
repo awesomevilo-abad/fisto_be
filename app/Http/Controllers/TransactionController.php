@@ -225,6 +225,7 @@ class TransactionController extends Controller
                     }
 
                     $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],current($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
+                    
                  
                     if(gettype($getAndValidatePOBalance) == 'object'){
                         return $this->resultResponse('invalid','',$getAndValidatePOBalance);  
@@ -252,7 +253,6 @@ class TransactionController extends Controller
                     if(isset($getAndValidatePOBalance)){
                         $balance_po_ref_amount = $getAndValidatePOBalance;
                     }
-                        
                     GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
                     $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                     $request_id,$date_requested,$fields,$balance_po_ref_amount);
@@ -345,14 +345,14 @@ class TransactionController extends Controller
             }
             $po_group = collect();
             $balance =  $po_details->last()->po_balance;
-            $po_details = POBatch::where('request_id',$po_details->last()->request_id)->get(['po_no as no','po_amount as amount','rr_group as rr_no']);
+            $po_details = POBatch::where('request_id',$po_details->last()->request_id)->orderByDesc('id')->get(['request_id as batch','po_no as no','po_amount as amount','rr_group as rr_no']);
             $po_details->mapToGroups(function ($item,$v) use ($balance){
                 return [
                     $item['balance']=0,
                     $item['rr_no']=json_decode($item['rr_no'], true)
                 ];
             });
-             $po_details[count($po_details)-1]['balance'] = $balance;
+             $po_details[0]['balance'] = $balance;
              $po_object =  (object) array("po_group"=>$po_details);
             return $this->resultResponse('fetch','PO number',$po_object);   
         }

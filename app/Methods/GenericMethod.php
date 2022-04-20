@@ -982,40 +982,46 @@ class GenericMethod{
                 return;
             }
             $balance_po_ref_amount = $balance_po_ref_amount->balance_po_ref_amount;
+            
             if($balance_po_ref_amount == 0){
                 return GenericMethod::resultLaravelFormat('po_group.no',["PO already exist."]);
             }
-
-            if($balance_po_ref_amount < $reference_amount ){
-
-                // Additional PO
-                $new_po_group = [];
-                $po_total_amount = 0;
-                foreach($po_group as $k=>$v){
-                    if(!POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')
-                    ->where('p_o_batches.po_no','=',$po_group[$k]['no'])->exists()){
-                        $new_po_group[$k]['no'] = $po_group[$k]['no'] ;
-                        $new_po_group[$k]['amount'] = $po_group[$k]['amount'] ;
-                        $new_po_group[$k]['rr_no'] = $po_group[$k]['rr_no'] ;
-                    }
-                    $po_total_amount = $po_total_amount+ $po_group[$k]['amount'];
+            
+            // Additional PO
+            $additional_po_group = []; 
+            $po_total_amount = 0;
+            foreach($po_group as $k=>$v){
+                if(!POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')
+                ->where('p_o_batches.po_no','=',$po_group[$k]['no'])->exists()){
+                    $additional_po_group[$k]['no'] = $po_group[$k]['no'] ;
+                    $additional_po_group[$k]['amount'] = $po_group[$k]['amount'] ;
+                    $additional_po_group[$k]['rr_no'] = $po_group[$k]['rr_no'] ;
                 }
-                $new_po_group = array_values($new_po_group);
-                $new_po_total_amount = GenericMethod::getPOTotalAmount($request_id=0,$new_po_group);
-                $balance = GenericMethod::getBalance($new_po_total_amount,$balance_po_ref_amount,$reference_amount);
+                $po_total_amount = $po_total_amount+ $po_group[$k]['amount'];
+            }
+            $additional_po_group = array_values($additional_po_group);
+         
+            
+            if(count($additional_po_group)>0){
+
+                $new_po_total_amount = GenericMethod::getPOTotalAmount($request_id=0,$additional_po_group);
+                $additional_plust_balance_amount =  $new_po_total_amount+$balance_po_ref_amount;
                 
-                if($balance < $reference_amount){
+                if($additional_plust_balance_amount < $reference_amount ){
                     return GenericMethod::resultLaravelFormat('document.reference.no',["Insufficient PO balance."]);
                 }
+                $balance = GenericMethod::getBalance($new_po_total_amount,$balance_po_ref_amount,$reference_amount);
                 
-                return array(
-                    "po_total_amount" => $po_total_amount
-                    ,"new_po_total_amount" => $new_po_total_amount
-                    ,"balance" => $balance
-                    ,"new_po_group" => $new_po_group);
-
+                 return array(
+                "po_total_amount" => $po_total_amount
+                ,"new_po_total_amount" => $new_po_total_amount
+                ,"balance" => $balance
+                ,"new_po_group" => $additional_po_group);
             }
-
+            
+            if($balance_po_ref_amount < $reference_amount ){
+                return GenericMethod::resultLaravelFormat('document.reference.no',["Insufficient PO balance."]);
+            }
             $balance = ($balance_po_ref_amount-$reference_amount);
             return $balance;
         }
