@@ -66,6 +66,11 @@ class TransactionController extends Controller
         return $this->resultResponse('not-found', 'Transaction', []);
     }
 
+    public function showTransaction($id){
+        // $transaction = DB::table('transactions')->where('id',$id)->first();
+        $transaction = Transaction::where('id',$id)->get();
+        return $transaction;
+    }
 
     public function store(TransactionPostRequest $request)
     {
@@ -340,15 +345,13 @@ class TransactionController extends Controller
             }
             $balance =  $po_details->last()->po_balance;
             $po_details = POBatch::where('request_id',$po_details->last()->request_id)->get(['po_no as no','po_amount as amount','rr_group as rr_no']);
-
             $po_details->mapToGroups(function ($item,$v) use ($balance){
                 return [
-                    $item['balance']=$balance,
+                    $item['balance']=0,
                     $item['rr_no']=json_decode($item['rr_no'], true)
-                    ];
+                ];
             });
-
-            // return gettype($po_details);
+             $po_details[count($po_details)-1]['balance'] = $balance;
             return $this->resultResponse('fetch','PO number',$po_details);   
         }
         return $this->resultResponse('success-no-content','',[]);  

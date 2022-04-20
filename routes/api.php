@@ -185,6 +185,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
 
     // TRANSACTION
     Route::resource('transactions/', TransactionController::class);
+    Route::get('transactions/{id}',[TransactionController::class,'showTransaction']);
     Route::get('transactions/status_group/',[TransactionController::class,'status_group']);
     Route::post('transactions/validate-po-no',[TransactionController::class,'getPODetails']);
     Route::post('transactions/validate-document-no',[TransactionController::class,'validateDocumentNo']);
