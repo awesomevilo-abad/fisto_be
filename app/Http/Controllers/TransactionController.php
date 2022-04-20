@@ -343,6 +343,7 @@ class TransactionController extends Controller
                 $errorMessage = GenericMethod::resultLaravelFormat('po_group',["No available balance."]);
                 return $this->resultResponse('invalid','',$errorMessage);   
             }
+            $po_group = collect();
             $balance =  $po_details->last()->po_balance;
             $po_details = POBatch::where('request_id',$po_details->last()->request_id)->get(['po_no as no','po_amount as amount','rr_group as rr_no']);
             $po_details->mapToGroups(function ($item,$v) use ($balance){
@@ -352,7 +353,8 @@ class TransactionController extends Controller
                 ];
             });
              $po_details[count($po_details)-1]['balance'] = $balance;
-            return $this->resultResponse('fetch','PO number',$po_details);   
+             $po_object =  (object) array("po_group"=>$po_details);
+            return $this->resultResponse('fetch','PO number',$po_object);   
         }
         return $this->resultResponse('success-no-content','',[]);  
     }
