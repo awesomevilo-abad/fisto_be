@@ -33,6 +33,7 @@ class TransactionController extends Controller
             'supplier',
             'po_total_amount',
             'referrence_total_amount',
+            'referrence_amount',
             'document_amount',
             'payment_type',
             'status'
@@ -224,9 +225,7 @@ class TransactionController extends Controller
                         return $this->resultResponse('invalid','',$duplicateRef);   
                     }
 
-                    $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],current($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
-                    
-                 
+                    $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],last($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
                     if(gettype($getAndValidatePOBalance) == 'object'){
                         return $this->resultResponse('invalid','',$getAndValidatePOBalance);  
                     }
@@ -259,7 +258,6 @@ class TransactionController extends Controller
                     if(isset($transaction->transaction_id)){
                        return $this->resultResponse('save','Transaction',[]);
                     }
-
                 }
 
                 if($isQty && $isFull){
@@ -340,7 +338,7 @@ class TransactionController extends Controller
 
             if(($po_details->last()->po_balance <= 0) || ($po_details->last()->po_balance == null) ){
                 
-                $errorMessage = GenericMethod::resultLaravelFormat('po_group',["No available balance."]);
+                $errorMessage = GenericMethod::resultLaravelFormat('po_group.no',["No available balance."]);
                 return $this->resultResponse('invalid','',$errorMessage);   
             }
             $po_group = collect();
