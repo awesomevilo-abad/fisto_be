@@ -11,6 +11,7 @@ use App\Models\Transaction;
 use App\Models\POBatch;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\TransactionResource;
+use App\Exceptions\FistoException;
 
 
 use App\Http\Requests\TransactionPostRequest;
@@ -71,7 +72,13 @@ class TransactionController extends Controller
     public function showTransaction($id){
         // $transaction = DB::table('transactions')->where('id',$id)->first();
         $transaction = Transaction::where('id',$id)->get();
-        return TransactionResource::collection($transaction);
+        $singleTransaction = TransactionResource::collection($transaction);
+        
+        
+        if(count($singleTransaction)!=true){
+            throw new FistoException("No records found.", 404, NULL, []);
+        }
+        return $this->resultResponse('fetch','Transaction details',$singleTransaction->first());
     }
 
     public function store(TransactionPostRequest $request)

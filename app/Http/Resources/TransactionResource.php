@@ -157,8 +157,8 @@ class TransactionResource extends JsonResource
                     ,"name"=>$this->document_type
                     ,"payment_type"=>$this->payment_type
                     ,"amount"=>$this->document_amount
-                    ,"from"=> $this->utilities_from
-                    ,"to"=> $this->utilities_to
+                    ,"from"=> $this->payroll_from
+                    ,"to"=> $this->payroll_to
                     ,"remarks"=>$this->remarks
                     ,"company"=>[
                         "id"=>$this->company_id,
@@ -235,7 +235,7 @@ class TransactionResource extends JsonResource
                 ,"middle_name"=>$this->middle_name
                 ,"last_name"=>$this->last_name
                 ,"suffix"=>$this->suffix      
-                ,"department"=>$this->department
+                ,"department"=>$this->department_details
             ],
             "document"=>$document
             ,"po_group"=>$po
