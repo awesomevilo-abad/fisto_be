@@ -10,6 +10,7 @@ use App\Methods\GenericMethod;
 use App\Models\Transaction;
 use App\Models\POBatch;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\TransactionResource;
 
 
 use App\Http\Requests\TransactionPostRequest;
@@ -70,7 +71,7 @@ class TransactionController extends Controller
     public function showTransaction($id){
         // $transaction = DB::table('transactions')->where('id',$id)->first();
         $transaction = Transaction::where('id',$id)->get();
-        return $transaction;
+        return TransactionResource::collection($transaction);
     }
 
     public function store(TransactionPostRequest $request)
