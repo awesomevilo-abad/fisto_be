@@ -16,41 +16,183 @@ class TransactionResource extends JsonResource
     public function toArray($request)
     {
 
+        $document  = [];
+        $po = [];
+        $reference = [];
+
         $user = User::where('id',$this->users_id)->get()->first();
         $po = POBatch::where('request_id',$this->request_id)->get(['request_id as batch','po_no as no', 'po_amount as amount','rr_group as rr_no']);
-        $balance  = $this->balance_po_ref_amount;
        
+        $balance  = $this->balance_po_ref_amount;
         if(empty($this->balance_po_ref_amount)){
          $balance  = 0;
          }
 
-        $po->mapToGroups(function ($item,$v) use ($balance){
-            return [
-                $item['balance']=0,
-                $item['rr_no']=json_decode($item['rr_no'], true)
-            ];
-        });
-        $po[0]['balance'] = $balance;
+         if(!$po->isEmpty()){
+            $po->mapToGroups(function ($item,$v) use ($balance){
+                return [
+                    $item['balance']=0,
+                    $item['rr_no']=json_decode($item['rr_no'], true)
+                ];
+            });
+            $po[0]['balance'] = $balance;
+         }
+        
+        switch($this->document_id){
+            case 1: //PAD
+            case 5: //Contractor's Billing
+            case 2: //PRM Common
+                $document = [
+                    "id"=>$this->document_id
+                    ,"name"=>$this->document_type
+                    ,"no"=>$this->document_no
+                    ,"date"=>$this->document_date
+                    ,"payment_type"=>$this->payment_type
+                    ,"amount"=>$this->document_amount
+                    ,"remarks"=>$this->remarks
+                    ,"category"=>[
+                        "id"=>$this->category_id,
+                        "name"=>$this->category
+                    ],
+                    "company"=>[
+                        "id"=>$this->company_id,
+                        "name"=>$this->company
+                    ],
+                    "department"=>[
+                        "id"=>$this->department_id,
+                        "name"=>$this->department
+                    ],
+                    "location"=>[
+                        "id"=>$this->location_id,
+                        "name"=>$this->location
+                    ],
+                    "supplier"=>[
+                        "id"=>$this->supplier_id,
+                        "name"=>$this->supplier
+                    ]
+                ];
+            break;
+            
+            case 6: //Utilities
+                $document = [
+                    "id"=>$this->document_id
+                    ,"name"=>$this->document_type
+                    ,"payment_type"=>$this->payment_type
+                    ,"amount"=>$this->document_amount
+                    ,"from"=> $this->utilities_from
+                    ,"to"=> $this->utilities_to
+                    ,"remarks"=>$this->remarks
+                    ,"company"=>[
+                        "id"=>$this->company_id,
+                        "name"=>$this->company
+                    ],
+                    "department"=>[
+                        "id"=>$this->department_id,
+                        "name"=>$this->department
+                    ],
+                    "location"=>[
+                        "id"=>$this->location_id,
+                        "name"=>$this->location
+                    ],
+                    "supplier"=>[
+                        "id"=>$this->supplier_id,
+                        "name"=>$this->supplier
+                    ],
+                    "utilities" => [
+                        "receipt_no"=> $this->utilities_receipt_no
+                        ,"consumption"=> $this->utilities_consumption
+                        ,"location"=> [
+                            "id"=> $this->utilities_location_id,
+                            "name"=> $this->utilities_location
+                        ]
+                        ,"category"=> [
+                            "id"=>  $this->utilities_category_id,
+                            "name"=> $this->utilities_category
+                        ]
+                        ,"account_no"=> [
+                            "id"=>  $this->utilities_account_no_id,
+                            "no"=> $this->utilities_account_no
+                        ]
+                    ]
+                ];
+            break;
+                
+            case 8: //PCF
+                
+                $document = [
+                    "id"=>$this->document_id
+                    ,"name"=>$this->document_type
+                    ,"date"=>$this->document_date
+                    ,"amount"=>$this->document_amount
+                    ,"payment_type"=>$this->payment_type
+                    ,"remarks"=>$this->remarks
+                    ,"company"=>[
+                        "id"=>$this->company_id,
+                        "name"=>$this->company
+                    ],
+                    "department"=>[
+                        "id"=>$this->department_id,
+                        "name"=>$this->department
+                    ],
+                    "location"=>[
+                        "id"=>$this->location_id,
+                        "name"=>$this->location
+                    ],
+                    "supplier"=>[
+                        "id"=>$this->supplier_id,
+                        "name"=>$this->supplier
+                    ],
+                    "pcf_batch" => [
+                        "name"=> $this->pcf_name
+                        ,"letter"=> $this->pcf_letter
+                        ,"date"=>  $this->pcf_date
+                    ]
+                ];
 
-        return [
-            "requestor"=>[
-                "id"=> $this->users_id
-                ,"id_prefix"=>$this->id_prefix
-                ,"id_no"=>$this->id_no
-                ,"role"=>$user->role
-                ,"position"=> $user->position
-                ,"first_name"=>$this->first_name
-                ,"middle_name"=>$this->middle_name
-                ,"last_name"=>$this->last_name
-                ,"suffix"=>$this->suffix      
-                ,"department"=>$this->department
-            ],
-            "document"=>[
+            break;
+            
+            case 7: //Payroll
+                $document = [
+                    "id"=>$this->document_id
+                    ,"name"=>$this->document_type
+                    ,"payment_type"=>$this->payment_type
+                    ,"amount"=>$this->document_amount
+                    ,"from"=> $this->utilities_from
+                    ,"to"=> $this->utilities_to
+                    ,"remarks"=>$this->remarks
+                    ,"company"=>[
+                        "id"=>$this->company_id,
+                        "name"=>$this->company
+                    ],
+                    "department"=>[
+                        "id"=>$this->department_id,
+                        "name"=>$this->department
+                    ],
+                    "location"=>[
+                        "id"=>$this->location_id,
+                        "name"=>$this->location
+                    ],
+                    "supplier"=>[
+                        "id"=>$this->supplier_id,
+                        "name"=>$this->supplier
+                    ],
+                    "payroll" => [
+                        "type"=> $this->payroll_type
+                        ,"clients"=> $this->payroll_client
+                        ,"category"=> [
+                            "id"=>  $this->payroll_category_id,
+                            "name"=> $this->payroll_category
+                        ]
+                    ]
+                ];
+            break;
+                
+            case 4: //Receipt
+            $document = [
                 "id"=>$this->document_id
                 ,"name"=>$this->document_type
-                ,"no"=>$this->document_no
+                ,"date"=>$this->document_date
                 ,"payment_type"=>$this->payment_type
-                ,"amount"=>$this->document_amount
                 ,"remarks"=>$this->remarks
                 ,"category"=>[
                     "id"=>$this->category_id,
@@ -71,8 +213,31 @@ class TransactionResource extends JsonResource
                 "supplier"=>[
                     "id"=>$this->supplier_id,
                     "name"=>$this->supplier
+                ],
+                "reference"=>[
+                    "id"=>$this->referrence_id,
+                    "type"=>$this->referrence_type,
+                    "no"=>$this->referrence_no,
+                    "amount"=> $this->referrence_amount
                 ]
-            ]
+            ];
+            break;
+        }
+
+        return [
+            "requestor"=>[
+                "id"=> $this->users_id
+                ,"id_prefix"=>$this->id_prefix
+                ,"id_no"=>$this->id_no
+                ,"role"=>$user->role
+                ,"position"=> $user->position
+                ,"first_name"=>$this->first_name
+                ,"middle_name"=>$this->middle_name
+                ,"last_name"=>$this->last_name
+                ,"suffix"=>$this->suffix      
+                ,"department"=>$this->department
+            ],
+            "document"=>$document
             ,"po_group"=>$po
             ,"voucher"=>[
                 "ap_associate"=>null
@@ -119,7 +284,7 @@ class TransactionResource extends JsonResource
                 ,"account_title"=>[
                     "total_amount"=>null
                     ,"account_title_details"=>[[
-                        "id"=>1
+                        "id"=>null
                         ,"name"=>null
                         ,"type"=>null
                         ,"amount"=>null
