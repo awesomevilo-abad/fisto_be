@@ -225,6 +225,12 @@ class TransactionResource extends JsonResource
         }
 
         return [
+            "transaction"=>[
+                "id"=>$this->id
+                ,"request_id"=>$this->request_id
+                ,"no"=>$this->transaction_id
+                ,"date_requested"=>$this->date_requested                
+            ],
             "requestor"=>[
                 "id"=> $this->users_id
                 ,"id_prefix"=>$this->id_prefix
