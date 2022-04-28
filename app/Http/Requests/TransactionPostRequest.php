@@ -58,7 +58,7 @@ class TransactionPostRequest extends FormRequest
             , "document.category.id" => 'required_if:document.id,1,2,4,5'
             , "document.category.name" => 'required_if:document.id,1,2,4,5'
 
-            , "po_group.*.no" => 'required|numeric'
+            , "po_group.*.no" => 'required'
             , "po_group.*.amount" => 'required|numeric'
             , "po_group.*.rr_no" => 'required'
 

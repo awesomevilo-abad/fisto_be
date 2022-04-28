@@ -23,6 +23,15 @@ class TransactionResource extends JsonResource
         $user = User::where('id',$this->users_id)->get()->first();
         $po = POBatch::where('request_id',$this->request_id)->get(['request_id as batch','po_no as no', 'po_amount as amount','rr_group as rr_no']);
        
+        $po_transaction = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')->get();
+        $po_no =  $po_transaction->where('request_id',$this->request_id)->first()->po_no;
+        $previous_balance_transaction = $po_transaction->where('po_no',$po_no)->pluck('balance_po_ref_amount');
+        
+        $previous_balance = 0;
+        if(!empty($previous_balance_transaction->first())){
+            $previous_balance =  $previous_balance_transaction[count($previous_balance_transaction)-2];
+        }
+
         $balance  = $this->balance_po_ref_amount;
         if(empty($this->balance_po_ref_amount)){
          $balance  = 0;
@@ -32,10 +41,12 @@ class TransactionResource extends JsonResource
             $po->mapToGroups(function ($item,$v) use ($balance){
                 return [
                     $item['balance']=0,
+                    $item['previous_balance']=0,
                     $item['rr_no']=json_decode($item['rr_no'], true)
                 ];
             });
             $po[0]['balance'] = $balance;
+            $po[0]['previous_balance'] = $previous_balance;
          }
         
         switch($this->document_id){
@@ -98,7 +109,7 @@ class TransactionResource extends JsonResource
                         "id"=>$this->supplier_id,
                         "name"=>$this->supplier
                     ],
-                    "utilities" => [
+                    "utility" => [
                         "receipt_no"=> $this->utilities_receipt_no
                         ,"consumption"=> $this->utilities_consumption
                         ,"location"=> [
@@ -225,6 +236,8 @@ class TransactionResource extends JsonResource
         }
 
         return [
+
+
             "transaction"=>[
                 "id"=>$this->id
                 ,"request_id"=>$this->request_id
