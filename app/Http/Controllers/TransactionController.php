@@ -22,7 +22,6 @@ class TransactionController extends Controller
 
     public function index(Request $request)
     {
-        // Problem Date from time dapat 0:00:00 ang from and 23:59:59 and to
        $dateToday = Carbon::now()->timezone('Asia/Manila')->format('Y-m-d H:i:s');
 
         $role = Auth::user()->role;
@@ -50,12 +49,19 @@ class TransactionController extends Controller
             'status'
         ])
         ->when($filter,function($query) use($document_ids,$suppliers,$search,$transaction_from,$transaction_to) {
-            
+  
             $query->where(function ($query) use ($document_ids,$suppliers,$transaction_from,$transaction_to) {
-                $query->where(function($query)use($document_ids,$suppliers){
+                $query->when(((count($document_ids)==0) || (count($suppliers)==0)),function($query) use ($document_ids,$suppliers){
+                    $query->where(function($query)use($document_ids,$suppliers){
+                        $query->where('document_id',$document_ids)
+                        ->orWhere('supplier_id',$suppliers);
+                    });
+                },function ($query) use($document_ids,$suppliers){
                     $query->where('document_id',$document_ids)
                     ->where('supplier_id',$suppliers);
-                })->where(function ($query) use ($transaction_from,$transaction_to) {
+                })
+
+               ->where(function ($query) use ($transaction_from,$transaction_to) {
                     $query->where('date_requested','>=',$transaction_from) 
                         ->where('date_requested','<=',$transaction_to);
                 });
@@ -85,9 +91,9 @@ class TransactionController extends Controller
                 ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
             });
         })
-        // ->when($role === 'Requestor',function($query){
-        //     $query->where('users_id',Auth::id());
-        // })
+        ->when($role === 'Requestor',function($query){
+            $query->where('department_details',Auth::user()->department);
+        })
         // ->when($role === 'Approver',function($query){
         //     $query->where('users_id',Auth::id());
         // })
