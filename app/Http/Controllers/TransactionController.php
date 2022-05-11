@@ -12,6 +12,7 @@ use App\Models\POBatch;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\TransactionResource;
 use App\Exceptions\FistoException;
+use Carbon\Carbon;
 
 
 use App\Http\Requests\TransactionPostRequest;
@@ -21,9 +22,17 @@ class TransactionController extends Controller
 
     public function index(Request $request)
     {
+        // Problem Date from time dapat 0:00:00 ang from and 23:59:59 and to
+       $dateToday = Carbon::now()->timezone('Asia/Manila')->format('Y-m-d H:i:s');
+
         $role = Auth::user()->role;
         $status =  isset($request['state']) && $request['state'] ? $request['state'] : "request";
         $rows =  isset($request['rows']) && $request['rows'] ? (int)$request['rows'] : 10;
+        $suppliers =  isset($request['suppliers']) && $request['suppliers'] ? array_map('intval', json_decode($request['suppliers'])) : [];
+        $document_ids =  isset($request['document_ids']) && $request['document_ids'] ? array_map('intval', json_decode($request['document_ids'])) : [];
+        $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : $dateToday;
+        $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday;
+        $filter =  isset($request['filter']) && $request['filter'] ? (int)$request['filter'] : 0;
         $search =  $request['search'];
 
         $transactions = Transaction::select([
@@ -40,27 +49,52 @@ class TransactionController extends Controller
             'payment_type',
             'status'
         ])
-        ->when($role === 'Requestor',function($query){
-            $query->where('users_id',Auth::id());
+        ->when($filter,function($query) use($document_ids,$suppliers,$search,$transaction_from,$transaction_to) {
+            
+            $query->where(function ($query) use ($document_ids,$suppliers,$transaction_from,$transaction_to) {
+                $query->where(function($query)use($document_ids,$suppliers){
+                    $query->where('document_id',$document_ids)
+                    ->where('supplier_id',$suppliers);
+                })->where(function ($query) use ($transaction_from,$transaction_to) {
+                    $query->where('date_requested','>=',$transaction_from) 
+                        ->where('date_requested','<=',$transaction_to);
+                });
+            })
+            ->where(function ($query) use ($search) {
+                $query->where('date_requested', 'like', '%' . $search . '%')
+                ->orWhere('transaction_id', 'like', '%' . $search . '%')
+                ->orWhere('document_amount', 'like', '%' . $search . '%')
+                ->orWhere('document_type', 'like', '%' . $search . '%')
+                ->orWhere('payment_type', 'like', '%' . $search . '%')
+                ->orWhere('company', 'like', '%' . $search . '%')
+                ->orWhere('supplier', 'like', '%' . $search . '%')
+                ->orWhere('po_total_amount', 'like', '%' . $search . '%')
+                ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
+            });
+        },function ($query) use($status,$search){
+            $query->where('state', $status)
+            ->where(function ($query) use ($search) {
+                $query->where('date_requested', 'like', '%' . $search . '%')
+                ->orWhere('transaction_id', 'like', '%' . $search . '%')
+                ->orWhere('document_amount', 'like', '%' . $search . '%')
+                ->orWhere('document_type', 'like', '%' . $search . '%')
+                ->orWhere('payment_type', 'like', '%' . $search . '%')
+                ->orWhere('company', 'like', '%' . $search . '%')
+                ->orWhere('supplier', 'like', '%' . $search . '%')
+                ->orWhere('po_total_amount', 'like', '%' . $search . '%')
+                ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
+            });
         })
+        // ->when($role === 'Requestor',function($query){
+        //     $query->where('users_id',Auth::id());
+        // })
         // ->when($role === 'Approver',function($query){
         //     $query->where('users_id',Auth::id());
         // })
         // ->when($role === 'Requestor',function($query){
         //     $query->where('users_id',Auth::id());
         // })
-        ->where('state', $status)
-        ->where(function ($query) use ($search) {
-            $query->where('date_requested', 'like', '%' . $search . '%')
-            ->orWhere('transaction_id', 'like', '%' . $search . '%')
-            ->orWhere('document_amount', 'like', '%' . $search . '%')
-            ->orWhere('document_type', 'like', '%' . $search . '%')
-            ->orWhere('payment_type', 'like', '%' . $search . '%')
-            ->orWhere('company', 'like', '%' . $search . '%')
-            ->orWhere('supplier', 'like', '%' . $search . '%')
-            ->orWhere('po_total_amount', 'like', '%' . $search . '%')
-            ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
-        })
+
         ->latest('updated_at')
         ->paginate($rows);
 

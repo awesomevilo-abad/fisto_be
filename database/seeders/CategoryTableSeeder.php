@@ -16,7 +16,7 @@ class CategoryTableSeeder extends Seeder
      */
     public function run()
     {
-        Category::factory()->times(100)->create();
+        Category::factory()->times(10000)->create();
         // if(DB::table('categories')->count() == 0){
 
         //     DB::table('categories')->insert([

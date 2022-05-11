@@ -7,11 +7,16 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Traits\LogsActivity;
+
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasApiTokens;
     use SoftDeletes;
+    use LogsActivity;
+
+   
     protected $fillable = [
         'id_prefix'
         , 'id_no'
@@ -38,6 +43,12 @@ class User extends Authenticatable
         'document_types' => 'array',
     ];
 
+    protected static $logAttributes = ['id_no', 'role','first_name', 'middle_name','last_name', 'suffix','department', 'position', 'permissions','document_types', 'username','password'];
+  
+    protected static $logName = 'User';
+
+    protected static $logOnlyDirty = true;
+    
     public function setUsernameAttribute($value)
     {
         $this->attributes['username']=strtolower($value);
@@ -52,6 +63,10 @@ class User extends Authenticatable
     public function permissions()
     {
         return $this->belongsToMany(Permission::class,'user_permission','user_id','permission_id');
+    }
+    public function getDescriptionForEvent(string $eventName): string
+    {
+        return "User has been {$eventName}.";
     }
 
 }

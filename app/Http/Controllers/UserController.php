@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\FistoException;
 
+use Spatie\Activitylog\Models\Activity;
+
 use App\Models\User;
 use App\Models\Document;
 use App\Models\Category;
@@ -204,9 +206,9 @@ class UserController extends Controller
     }
 
     public function change_status(Request $request,$id){
-    $status = $request['status'];
-    $model = new User();
-    return $this->change_masterlist_status($status,$model,$id,'User');
+        $status = $request['status'];
+        $model = new User();
+        return $this->change_masterlist_status($status,$model,$id,'User');
   }
     public function change_password(Request $request)
     {
