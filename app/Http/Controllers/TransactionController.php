@@ -55,12 +55,12 @@ class TransactionController extends Controller
             $query->where(function ($query) use ($document_ids,$suppliers,$transaction_from,$transaction_to) {
                 $query->when(((count($document_ids)==0) || (count($suppliers)==0)),function($query) use ($document_ids,$suppliers){
                     $query->where(function($query)use($document_ids,$suppliers){
-                        $query->where('document_id',$document_ids)
-                        ->orWhere('supplier_id',$suppliers);
+                        $query->whereIn('document_id',$document_ids)
+                        ->orWhereIn('supplier_id',$suppliers);
                     });
                 },function ($query) use($document_ids,$suppliers){
-                    $query->where('document_id',$document_ids)
-                    ->where('supplier_id',$suppliers);
+                    $query->whereIn('document_id',$document_ids)
+                    ->whereIn('supplier_id',$suppliers);
                 })
 
                ->where(function ($query) use ($transaction_from,$transaction_to) {
