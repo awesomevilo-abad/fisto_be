@@ -377,7 +377,7 @@ class Controller extends BaseController
         break;
         
         case('nothing-has-changed'):
-          return $this->result(200,"Nothing has changed.",$data);
+          return $this->result(304,"Nothing has changed.",$data);
         break;
 
         case('not-found'):
