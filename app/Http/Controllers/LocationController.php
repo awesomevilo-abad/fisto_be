@@ -24,7 +24,9 @@ class LocationController extends Controller
       ->where(function ($query) use ($status){
         return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
       })->where(function ($query) use ($search) {
-        $query->where('code', 'like', '%' . $search . '%');
+        $query->where('code', 'like', '%' . $search . '%')
+        ->orWhere('location', 'like', '%' . $search . '%')
+        ->orWhereHas ('departments',function($q)use($search){$q->where('department', 'like', '%'.$search.'%');});
      })
       ->latest('updated_at')
       ->paginate($rows);
@@ -101,45 +103,54 @@ class LocationController extends Controller
             return $this->change_masterlist_status($status,$model,$id,'Location');
     }
 
+    public function group_and_merge($raw_location_data){
+      $locations = $raw_location_data->unique('location')->values();
+      $department_list_raw =  $raw_location_data->pluck('department');
+      $department_list = Department::all();
+
+      $this->validateIfObjectsExistByLocation(new Department,$department_list_raw,'Department');
+
+      $department_per_locations =  $raw_location_data
+      ->mapToGroups(function ($item, $key) use($department_list) {
+        $dep = $item['department'];  
+        return [
+              $item['location'] =>$department_list->filter(function ($query) use ($dep){
+                return (strtolower($query["department"]) == strtolower($dep)); 
+              })->values()->first()['id']
+        ];
+      });
+
+      $location_object = collect();
+        foreach($locations as $k=>$v) {
+          $location_code = $locations[$k]['code'];
+          $location_name = $locations[$k]['location'];
+          $departments =  $department_per_locations["$location_name"]->unique()->values();
+          $location_object->push(['code' => $location_code, 'location' => $location_name,'departments'=>$departments,'status'=> $locations[$k]['status']]);
+        }
+        return $location_object;
+    }
+
     public function import(Request $request)
     {
-      $location_ibject = collect();
-      $locations = collect($request)->unique('location')->values();
+
       $timezone = "Asia/Dhaka";
       date_default_timezone_set($timezone);
       $date = date("Y-m-d H:i:s", strtotime('now'));
       $errorBag = [];
-      $data = $request->all();
-      $data_validation_fields = $request->all();
+      $data = $this->group_and_merge(collect($request))->toArray();
       $index = 2;
       $location_list = Location::withTrashed()->get();
       $department_list = Department::all();
       $headers = 'Code, Location, Department, Status';
-      $template = ["code","location","department","status"];
+      $template = ["code","location","departments","status"];
       $keys = array_keys(current($data));
 
-      $department_per_locations =  collect($request)->pluck('department');
-      $departmentExist = $this->validateIfObjectsExistByLocation(new Department,$department_per_locations,'Department');
-
-       $department_per_locations =  collect($request)
-      ->mapToGroups(function ($item, $key) use($department_list) {
-          return [$item['location'] => $department_list->where('department',$item['department'])->values()->first()['id']];
-        });
-
-          $location_object = collect();
-            foreach($locations as $k=>$v) {
-              $location_code = $locations[$k]['code'];
-              $location_name = $locations[$k]['location'];
-              $departments =  $department_per_locations["$location_name"];
-              $location_object->push(['code' => $location_code, 'name' => $location_name,'departments'=>$departments]);
-            }
-            return $location_object;
       $this->validateHeader($template,$keys,$headers);
   
       foreach ($data as $location) {
             $code = $location['code'];
             $location_name= $location['location'];
-            $company = $location['company'];
+            $departments = $location['departments'];
     
             foreach ($location as $key => $value) 
             {
@@ -173,54 +184,7 @@ class LocationController extends Controller
 
             $index++;
       }
-  
-  
-      $original_lines = array_keys($data_validation_fields);
-      $duplicate_code = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'code'))));
-  
-      foreach($duplicate_code as $line){
-        $input_code = $data_validation_fields[$line]['code'];
-        
-        $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_code){
-          return strtolower((string)$query["code"]) === strtolower((string)$input_code);
-        }); 
-        $duplicate_lines =  implode(",",array_map(function($query){
-          return $query+2;
-        },array_keys($duplicate_data)));
-        $firstDuplicateLine =  array_key_first($duplicate_data);
-  
-        if((empty($data_validation_fields[$line]['code']))){
-  
-        }else{
-          $errorBag[] = [
-            "error_type" => "duplicate",
-            "line" => (string) $duplicate_lines,
-            "description" =>  $data_validation_fields[$firstDuplicateLine]['code'].' code has a duplicate in your excel file.'
-          ];
-        }
-      }
-      
-      $duplicate_location = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'location'))));
-      foreach($duplicate_location as $line){
-        $input_name = $data_validation_fields[$line]['location'];
-        $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_name){
-          return ($query['location'] == $input_name);
-        }); 
-        $duplicate_lines =  implode(",",array_map(function($query){
-          return $query+2;
-        },array_keys($duplicate_data)));
-        $firstDuplicateLine =  array_key_first($duplicate_data);
-  
-        if((empty($data_validation_fields[$line]['location']))){
-  
-        }else{
-          $errorBag[] = [
-            "error_type" => "duplicate",
-            "line" => (string) $duplicate_lines,
-            "description" =>  $data_validation_fields[$firstDuplicateLine]['location'].' location has a duplicate in your excel file.'
-          ];
-        }
-      }
+
       $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
       if (empty($errorBag)) {
         foreach ($data as $location) {
@@ -232,9 +196,11 @@ class LocationController extends Controller
             'updated_at' => $date,
             'deleted_at' => $status_date,
           ];
-  
+          
+          $fields['departments']= $location['departments'];
           $inputted_fields[] = $fields;
         }
+
         $count_upload = count($inputted_fields);
         $inputted_fields = collect($inputted_fields);
         $chunks = $inputted_fields->chunk(300);
@@ -247,13 +213,29 @@ class LocationController extends Controller
           return $q['deleted_at']!=NULL;
         })->count();
   
+
         foreach ($chunks as $specific_chunk)
         {
-          $new_location = DB::table('locations')->insert($specific_chunk->toArray());
+          $specific_chunk_to_insert = [];
+          foreach($specific_chunk as $key=>$chunk){
+            
+            $specific_chunk_to_insert[$key]['code'] = $chunk['code'];
+            $specific_chunk_to_insert[$key]['location'] = $chunk['location'];
+            $specific_chunk_to_insert[$key]['created_at'] = $chunk['created_at'];
+            $specific_chunk_to_insert[$key]['updated_at'] = $chunk['updated_at'];
+            $specific_chunk_to_insert[$key]['deleted_at'] = $chunk['deleted_at'];
+          }
+  
+          $new_location = DB::table('locations')->insert($specific_chunk_to_insert);
+          foreach($specific_chunk->toArray() as $chunk){
+            $location= Location::withTrashed()->where('code',$chunk['code'])->first();
+            $location->departments()->attach($chunk['departments']);
+          }
         }
         return $this->resultResponse('import','location',$count_upload,$active,$inactive,);
       }
       else
         return $this->resultResponse('import-error','location',$errorBag);
+
     }
 }
