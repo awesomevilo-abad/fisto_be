@@ -48,14 +48,24 @@ class Controller extends BaseController
     public function validateIfObjectsExistByLocation($model,$arrParam,$modelName){
       
       $unregisteredObjects = [];
+      $errorBag=[];
+      $index = 2;
+
       foreach($arrParam as $param){
         $modelObject = $model::withTrashed()->whereNull('deleted_at')->where('department',$param)->first();
         if(empty($modelObject)){
+
+          $errorBag[] = (object) [
+            "error_type" => "unregistered",
+            "line" => $index,
+            "description" => $param . " is not registered."
+            ];
             $unregisteredObjects[] = $param;
         }
+        $index++;
       }
-      if(!empty($unregisteredObjects)){
-        throw new FistoException($modelName." not registered or inactive.",404,NULL,$modelName." names: ".implode(',',$unregisteredObjects));
+      if(!empty($errorBag)){
+        throw new FistoException("No locations were imported. Kindly check the errors.",409,NULL,$errorBag);
       }
     }
 
