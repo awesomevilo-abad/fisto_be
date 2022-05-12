@@ -16,7 +16,8 @@ class DepartmentController extends Controller
       $status =  $request['status'];
       $rows =  (empty($request['rows']))?10:(int)$request['rows'];
       $search =  $request['search'];
-      
+      $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
+
       $departments = Department::withTrashed()
       ->with('Company')
       ->where(function ($query) use ($status){
@@ -25,8 +26,19 @@ class DepartmentController extends Controller
         $query->where('code', 'like', '%' . $search . '%')
         ->orWhere('department', 'like', '%' . $search . '%');
      })
-      ->latest('updated_at')
-      ->paginate($rows);
+      ->latest('updated_at');
+
+      
+      if ($paginate == 1){
+        $departments = $departments
+        ->paginate($rows);
+      }else if ($paginate == 0){
+        $departments = $departments
+        ->get(['id','department as name']);
+        if(count($departments)==true){
+            $departments = array("departments"=>$departments);;
+        }
+      }
       
       if(count($departments)==true){
         return $this->resultResponse('fetch','Department',$departments);

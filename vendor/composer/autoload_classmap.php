@@ -80,6 +80,7 @@ return array(
     'App\\Models\\Filing' => $baseDir . '/app/Models/Filing.php',
     'App\\Models\\Gas' => $baseDir . '/app/Models/Gas.php',
     'App\\Models\\Location' => $baseDir . '/app/Models/Location.php',
+    'App\\Models\\LocationDepartment' => $baseDir . '/app/Models/LocationDepartment.php',
     'App\\Models\\Masterlist' => $baseDir . '/app/Models/Masterlist.php',
     'App\\Models\\Match' => $baseDir . '/app/Models/Match.php',
     'App\\Models\\POBatch' => $baseDir . '/app/Models/POBatch.php',

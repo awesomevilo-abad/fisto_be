@@ -40,9 +40,7 @@ class SupplierController extends Controller
         ->paginate($rows);
       }else if ($paginate == 0){
         $suppliers = $suppliers
-        ->with(['references'=> function($q){
-              $q->select('referrences.id');
-          }])
+        ->with('references')
         ->without('supplier_type')
         ->get(['id','name']);
         if(count($suppliers)==true){

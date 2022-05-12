@@ -136,4 +136,8 @@ class MasterlistController extends Controller
 
   }
 
+  public function departmentDropdown(){
+    $data =  array("departments"=>Department::whereNull('deleted_at')->get(['id','department as name']));
+    return $this->resultResponse('fetch','Department',$data);
+  }
 }

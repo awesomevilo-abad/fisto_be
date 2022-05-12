@@ -13,7 +13,7 @@ class Department extends Model
     use SoftDeletes;
     protected $table = 'departments';
     protected $fillable = ["code","department","company"];
-    protected $hidden = ['created_at'];
+    protected $hidden = ['created_at','pivot'];
 
     public function Company(){
         return $this->hasOne(Company::class,'id','company')->select('id','company as name');

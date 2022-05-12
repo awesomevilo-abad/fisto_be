@@ -79,6 +79,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
             Route::get('location-category',[MasterlistController::class,'loccatDropdown']);
             Route::get('account-title',[MasterlistController::class,'accountTitleDropdown']);
             Route::get('company',[MasterlistController::class,'companyDropdown']);
+            Route::get('department',[MasterlistController::class,'departmentDropdown']);
             Route::get('associate',[MasterlistController::class,'associateDropdown']);
         });
 

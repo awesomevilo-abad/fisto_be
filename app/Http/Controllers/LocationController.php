@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Location;
 use App\Models\Company;
+use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
 
 class LocationController extends Controller
 {
@@ -18,12 +20,11 @@ class LocationController extends Controller
       $search =  $request['search'];
       
       $locations = Location::withTrashed()
-      ->with('Company')
+      ->with('departments')
       ->where(function ($query) use ($status){
         return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
       })->where(function ($query) use ($search) {
-        $query->where('code', 'like', '%' . $search . '%')
-        ->orWhere('location', 'like', '%' . $search . '%');
+        $query->where('code', 'like', '%' . $search . '%');
      })
       ->latest('updated_at')
       ->paginate($rows);
@@ -39,7 +40,7 @@ class LocationController extends Controller
         $fields = $request->validate([
             'code' => 'required',
             'location' => 'required',
-            'company' => 'required'
+            'departments' => 'required'
         ]);
 
         $location_validateCodeDuplicate = Location::withTrashed()->where('code', $fields['code'])->first();
@@ -50,15 +51,13 @@ class LocationController extends Controller
         if (!empty($location_validateDescriptionDuplicate)) {
           return $this->resultResponse('registered','Location',["error_field" => "location"]);
         }
-        $companyExist = $this->validateIfObjectExist(new Company,$fields['company'],'Company');
-        if(!$companyExist){
-            return $this->resultResponse('not-found','Company',[]);
-        }
+        $departmentExist = $this->validateIfObjectsExist(new Department,$fields['departments'],'Department');
+        
         $new_location = Location::create([
             'code' => $fields['code']
             , 'location' => $fields['location']
-            , 'company' => $fields['company']
         ]);
+        $new_location->departments()->attach($fields['departments']);
         return $this->resultResponse('save','Location',$new_location);
     }
 
@@ -71,7 +70,7 @@ class LocationController extends Controller
         $fields = $request->validate([
             'code' => 'required',
             'location' => 'required',
-            'company' => 'required'
+            'departments' => 'required'
         ]);
 
         $location_validateCodeDuplicate = Location::withTrashed()->where('code', $fields['code'])->where('id','<>',$id)->first();
@@ -83,18 +82,16 @@ class LocationController extends Controller
           return $this->resultResponse('registered','Location',["error_field" => "location"]);
         }
         
-        $companyExist = DB::table('departments')->where('company','=',$fields['company'])->first();
-        if(!$companyExist){
-            return $this->resultResponse('not-registered','Company',[]);
-        }
+        $departmentExist = $this->validateIfObjectsExist(new Department,$fields['departments'],'Department');
 
         if (!$specific_location) {
             return $this->resultResponse('not-found','Location',[]);
         } else {
+            $is_associates_modified = $this->isTaggedArrayModified($fields['departments'],  $specific_location->departments()->get(),'id');
             $specific_location->code = $fields['code'];
             $specific_location->location = $fields['location'];
-            $specific_location->company = $fields['company'];
-            return $this->validateIfNothingChangeThenSave($specific_location,'Location');
+            $specific_location->departments()->sync(array_unique($fields['departments']));
+            return $this->validateIfNothingChangeThenSave($specific_location,'Location',$is_associates_modified);
         }
     }
     
@@ -106,20 +103,37 @@ class LocationController extends Controller
 
     public function import(Request $request)
     {
+      $location_ibject = collect();
+      $locations = collect($request)->unique('location')->values();
       $timezone = "Asia/Dhaka";
       date_default_timezone_set($timezone);
-  
       $date = date("Y-m-d H:i:s", strtotime('now'));
       $errorBag = [];
       $data = $request->all();
       $data_validation_fields = $request->all();
       $index = 2;
       $location_list = Location::withTrashed()->get();
-      $company_list = Company::get();
-
-      $headers = 'Code, Location, Company, Status';
-      $template = ["code","location","company","status"];
+      $department_list = Department::all();
+      $headers = 'Code, Location, Department, Status';
+      $template = ["code","location","department","status"];
       $keys = array_keys(current($data));
+
+      $department_per_locations =  collect($request)->pluck('department');
+      $departmentExist = $this->validateIfObjectsExistByLocation(new Department,$department_per_locations,'Department');
+
+       $department_per_locations =  collect($request)
+      ->mapToGroups(function ($item, $key) use($department_list) {
+          return [$item['location'] => $department_list->where('department',$item['department'])->values()->first()['id']];
+        });
+
+          $location_object = collect();
+            foreach($locations as $k=>$v) {
+              $location_code = $locations[$k]['code'];
+              $location_name = $locations[$k]['location'];
+              $departments =  $department_per_locations["$location_name"];
+              $location_object->push(['code' => $location_code, 'name' => $location_name,'departments'=>$departments]);
+            }
+            return $location_object;
       $this->validateHeader($template,$keys,$headers);
   
       foreach ($data as $location) {
@@ -157,15 +171,6 @@ class LocationController extends Controller
                     ];
             }
 
-            if (!empty($company)) {
-                $unregistercompany = $this->getDuplicateInputs($company_list,$company,'company');
-                if ($unregistercompany->count() == 0)
-                    $errorBag[] = (object) [
-                    "error_type" => "unregistered",
-                    "line" => $index,
-                    "description" => $company . " is not registered."
-                    ];
-            }
             $index++;
       }
   
@@ -223,7 +228,6 @@ class LocationController extends Controller
           $fields = [
             'code' => $location['code'],
             'location' => $location['location'],
-            'company' => Company::where('company',$location['company'])->first()->id,
             'created_at' => $date,
             'updated_at' => $date,
             'deleted_at' => $status_date,

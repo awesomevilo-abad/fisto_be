@@ -18,7 +18,7 @@ class isAdmin
     public function handle(Request $request, Closure $next)
     {
         if(strtoupper(auth()->user()->role) != "ADMINISTRATOR"){
-            throw new FistoException("Unauthorized access.", 401, NULL, []);
+            throw new FistoException("You don't have permission to access this page.", 403, NULL, []);
         }
         return $next($request);
     }

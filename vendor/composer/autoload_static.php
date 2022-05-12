@@ -591,6 +591,7 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'App\\Models\\Filing' => __DIR__ . '/../..' . '/app/Models/Filing.php',
         'App\\Models\\Gas' => __DIR__ . '/../..' . '/app/Models/Gas.php',
         'App\\Models\\Location' => __DIR__ . '/../..' . '/app/Models/Location.php',
+        'App\\Models\\LocationDepartment' => __DIR__ . '/../..' . '/app/Models/LocationDepartment.php',
         'App\\Models\\Masterlist' => __DIR__ . '/../..' . '/app/Models/Masterlist.php',
         'App\\Models\\Match' => __DIR__ . '/../..' . '/app/Models/Match.php',
         'App\\Models\\POBatch' => __DIR__ . '/../..' . '/app/Models/POBatch.php',

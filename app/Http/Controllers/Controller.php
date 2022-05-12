@@ -45,6 +45,19 @@ class Controller extends BaseController
         throw new FistoException($modelName." not registered or inactive.",404,NULL,$modelName." IDs: ".implode(',',$unregisteredObjects));
       }
     }
+    public function validateIfObjectsExistByLocation($model,$arrParam,$modelName){
+      
+      $unregisteredObjects = [];
+      foreach($arrParam as $param){
+        $modelObject = $model::withTrashed()->whereNull('deleted_at')->where('department',$param)->first();
+        if(empty($modelObject)){
+            $unregisteredObjects[] = $param;
+        }
+      }
+      if(!empty($unregisteredObjects)){
+        throw new FistoException($modelName." not registered or inactive.",404,NULL,$modelName." names: ".implode(',',$unregisteredObjects));
+      }
+    }
 
     public function isTaggedArrayModified($inpputedArrayField, $modelObject,$field){
       $previousArray = array_column($modelObject->toArray(),$field);

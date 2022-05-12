@@ -13,15 +13,12 @@ class Location extends Model
     use SoftDeletes;
 
     protected $table = 'locations';
-    protected $fillable = ['code','location','company'];
-    protected $hidden = ['created_at'];
+    protected $fillable = ['code','location','departments'];
+    protected $hidden = ['pivot','created_at'];
     protected $cast = [
-        "ap_id" => 'array',
+        "department" => 'array',
       ];
 
-    public function Company(){
-        return $this->hasOne(Company::class,'id','company')->select('id','company as name');
-    }
     public function getCreatedAtAttribute($value){
         $date = Carbon::parse($value);
         return $date->format('Y-m-d H:i');
@@ -31,4 +28,9 @@ class Location extends Model
         $date = Carbon::parse($value);
         return $date->format('Y-m-d H:i');
     }
+
+    public function departments(){
+        return $this->belongsToMany(Department::class,'location_departments')->select('departments.id','departments.department as name');
+    }
 }
+ 
