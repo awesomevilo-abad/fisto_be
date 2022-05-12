@@ -22,18 +22,20 @@ class TransactionController extends Controller
 
     public function index(Request $request)
     {
-       $dateToday = Carbon::now()->timezone('Asia/Manila')->format('Y-m-d H:i:s');
+       $dateToday = Carbon::now()->timezone('Asia/Manila');
+       
 
         $role = Auth::user()->role;
         $status =  isset($request['state']) && $request['state'] ? $request['state'] : "request";
         $rows =  isset($request['rows']) && $request['rows'] ? (int)$request['rows'] : 10;
         $suppliers =  isset($request['suppliers']) && $request['suppliers'] ? array_map('intval', json_decode($request['suppliers'])) : [];
         $document_ids =  isset($request['document_ids']) && $request['document_ids'] ? array_map('intval', json_decode($request['document_ids'])) : [];
-        $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : $dateToday;
-        $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday;
+        $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : $dateToday->startOfDay()->format('Y-m-d H:i:s');
+        $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday->endOfDay()->format('Y-m-d H:i:s');
         $filter =  isset($request['filter']) && $request['filter'] ? (int)$request['filter'] : 0;
         $search =  $request['search'];
 
+        // return $transaction_to;
         $transactions = Transaction::select([
             'id',
             'date_requested',
