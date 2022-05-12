@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Models\Department;
+use App\Models\Location;
 use Illuminate\Support\Facades\DB;
 
 class ChargingResource extends JsonResource
@@ -17,13 +18,19 @@ class ChargingResource extends JsonResource
     public function toArray($request)
     {
         $departments =  DB::table('departments')->where('company',$this->id)->get(['id','department as name']);
-        $locations =  DB::table('locations')->where('company',$this->id)->get(['id','location as name']);
+        $locations =  DB::table('departments')->get();
+
+        return $departments->mapToGroups(function ($item,$v) use ($locations) {
+            return $item;
+            return [
+                $item->location=Location::withTrashed()->with('departments')->where('departments.department_id',)->get(['id','location as name']),
+            ];
+        });
 
         return [
             "id" => $this->id,
             "name" => $this->company,
             "departments" => $departments,
-            "locations" => $locations
         ];
     }
 }

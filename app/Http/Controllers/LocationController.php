@@ -188,7 +188,10 @@ class LocationController extends Controller
       $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
       if (empty($errorBag)) {
         foreach ($data as $location) {
+          
           $status_date = (strtolower($location['status'])=="active"?NULL:$date);
+          
+          
           $fields = [
             'code' => $location['code'],
             'location' => $location['location'],
@@ -200,7 +203,7 @@ class LocationController extends Controller
           $fields['departments']= $location['departments'];
           $inputted_fields[] = $fields;
         }
-
+        
         $count_upload = count($inputted_fields);
         $inputted_fields = collect($inputted_fields);
         $chunks = $inputted_fields->chunk(300);
@@ -225,7 +228,7 @@ class LocationController extends Controller
             $specific_chunk_to_insert[$key]['updated_at'] = $chunk['updated_at'];
             $specific_chunk_to_insert[$key]['deleted_at'] = $chunk['deleted_at'];
           }
-  
+          
           $new_location = DB::table('locations')->insert($specific_chunk_to_insert);
           foreach($specific_chunk->toArray() as $chunk){
             $location= Location::withTrashed()->where('code',$chunk['code'])->first();

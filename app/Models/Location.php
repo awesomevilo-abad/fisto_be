@@ -13,7 +13,7 @@ class Location extends Model
     use SoftDeletes;
 
     protected $table = 'locations';
-    protected $fillable = ['code','location','departments'];
+    protected $fillable = ['code','location','departments','created_at','updated_at','deleted_at'];
     protected $hidden = ['pivot','created_at'];
     protected $cast = [
         "department" => 'array',
