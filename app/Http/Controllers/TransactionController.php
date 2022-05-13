@@ -35,7 +35,7 @@ class TransactionController extends Controller
         $filter =  isset($request['filter']) && $request['filter'] ? (int)$request['filter'] : 0;
         $search =  $request['search'];
 
-        // return $transaction_to;
+        
         $transactions = Transaction::select([
             'id',
             'date_requested',
@@ -50,7 +50,7 @@ class TransactionController extends Controller
             'payment_type',
             'status'
         ])
-        ->when($filter,function($query) use($document_ids,$suppliers,$search,$transaction_from,$transaction_to) {
+        ->when((!empty($document_ids)) || (!empty($suppliers)),function($query) use($document_ids,$suppliers,$search,$transaction_from,$transaction_to) {
   
             $query->where(function ($query) use ($document_ids,$suppliers,$transaction_from,$transaction_to) {
                 $query->when(((count($document_ids)==0) || (count($suppliers)==0)),function($query) use ($document_ids,$suppliers){
