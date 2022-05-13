@@ -160,6 +160,9 @@ class LocationController extends Controller
       $template = ["code","location","departments","status"];
       $keys = array_keys(current($data));
 
+
+      return $errorBag;
+
       $this->validateHeader($template,$keys,$headers);
   
       foreach ($data as $location) {

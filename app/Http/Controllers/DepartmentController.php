@@ -21,6 +21,7 @@ class DepartmentController extends Controller
       $company_id =  $request['company_id'];
       
       $departments = Department::withTrashed()
+      ->with('Company')
       ->where(function ($query) use ($status){
         return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
       })->where(function ($query) use ($search) {
