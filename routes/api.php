@@ -66,6 +66,11 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::get('current-user/',[MasterlistController::class,'currentUser']);
         Route::get('charging/',[MasterlistController::class,'chargingDropdown']);
         Route::get('references/', [ReferrenceController::class, 'index']);
+
+        // TRANSACTION
+        Route::get('company',[CompanyController::class,'index']);
+        Route::get('department',[DepartmentController::class,'index']);
+        Route::get('location',[LocationController::class,'index']);
     });
 
     Route::group(['prefix' => 'admin', 'middleware' => ['auth'=>'is_admin']], function(){
@@ -180,7 +185,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::post('locations/import',[LocationController::class,'import']);
         Route::patch('locations/{id}', [LocationController::class, 'change_status']);
         Route::resource('locations', LocationController::class);
-         
+        
     });
 
 

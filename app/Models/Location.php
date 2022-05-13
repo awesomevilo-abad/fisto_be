@@ -32,5 +32,8 @@ class Location extends Model
     public function departments(){
         return $this->belongsToMany(Department::class,'location_departments')->select('departments.id','departments.department as name');
     }
+    public function departments2(){
+        return $this->belongsToMany(Department::class,'location_departments');
+    }
 }
  

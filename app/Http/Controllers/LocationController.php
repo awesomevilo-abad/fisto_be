@@ -18,6 +18,8 @@ class LocationController extends Controller
       $status =  $request['status'];
       $rows =  (empty($request['rows']))?10:(int)$request['rows'];
       $search =  $request['search'];
+      $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
+      $department_id =  $request['department_id'];
       
       $locations = Location::withTrashed()
       ->with('departments')
@@ -28,8 +30,21 @@ class LocationController extends Controller
         ->orWhere('location', 'like', '%' . $search . '%')
         ->orWhereHas ('departments',function($q)use($search){$q->where('department', 'like', '%'.$search.'%');});
      })
-      ->latest('updated_at')
-      ->paginate($rows);
+      ->latest('updated_at');    
+      if ($paginate == 1){
+        $locations = $locations
+        ->paginate($rows);
+      }else if ($paginate == 0){
+        $locations = $locations
+        // ->without('departments')
+        ->when($department_id, function($q)use($department_id){
+          $q->whereHas('departments2',function($q)use($department_id){$q->where('departments.id', $department_id);});
+        })
+        ->get(['id','location as name']);
+        if(count($locations)==true){
+            $locations = array("locations"=>$locations);;
+        }
+      }
       
       if(count($locations)==true){
         return $this->resultResponse('fetch','Location',$locations);

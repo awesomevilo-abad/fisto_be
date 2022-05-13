@@ -16,6 +16,7 @@ class CompanyController extends Controller
       $status =  $request['status'];
       $rows =  (empty($request['rows']))?10:(int)$request['rows'];
       $search =  $request['search'];
+      $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
       
       $companies = Company::withTrashed()
       ->with('associates')
@@ -25,8 +26,18 @@ class CompanyController extends Controller
         $query->where('code', 'like', '%' . $search . '%')
         ->orWhere('company', 'like', '%' . $search . '%');
      })
-      ->latest('updated_at')
-      ->paginate($rows);
+     ->latest('updated_at');    
+     if ($paginate == 1){
+       $companies = $companies
+       ->paginate($rows);
+     }else if ($paginate == 0){
+       $companies = $companies
+       ->without('associates')
+       ->get(['id','company as name']);
+       if(count($companies)==true){
+           $companies = array("companies"=>$companies);;
+       }
+     }
       
       if(count($companies)==true){
         return $this->resultResponse('fetch','Company',$companies);

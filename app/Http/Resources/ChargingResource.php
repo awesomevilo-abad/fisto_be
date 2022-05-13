@@ -20,11 +20,18 @@ class ChargingResource extends JsonResource
         $departments =  DB::table('departments')->where('company',$this->id)->get(['id','department as name']);
         $locations =  DB::table('departments')->get();
 
+        return $departments;
         return $departments->mapToGroups(function ($item,$v) use ($locations) {
             return $item;
-            return [
-                $item->location=Location::withTrashed()->with('departments')->where('departments.department_id',)->get(['id','location as name']),
-            ];
+            // return [
+
+
+            //     $item->location=
+            //     Location::withTrashed()
+            //     ->with('departments')
+            //     ->whereHas ('departments',function($q)use($search){$q->where('departments.department_id', $);})
+            //     ->get(['id','location as name']),
+            // ];
         });
 
         return [
