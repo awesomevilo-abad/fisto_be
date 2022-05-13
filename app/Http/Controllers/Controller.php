@@ -64,9 +64,10 @@ class Controller extends BaseController
         }
         $index++;
       }
-      if(!empty($errorBag)){
-        throw new FistoException("No locations were imported. Kindly check the errors.",409,NULL,$errorBag);
-      }
+      return $errorBag;
+      // if(!empty($errorBag)){
+      //   throw new FistoException("No locations were imported. Kindly check the errors.",409,NULL,$errorBag);
+      // }
     }
 
     public function isTaggedArrayModified($inpputedArrayField, $modelObject,$field){

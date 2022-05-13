@@ -123,8 +123,8 @@ class LocationController extends Controller
       $department_list_raw =  $raw_location_data->pluck('department');
       $department_list = Department::all();
 
-      $this->validateIfObjectsExistByLocation(new Department,$department_list_raw,'Department');
-
+     $errorBag =  $this->validateIfObjectsExistByLocation(new Department,$department_list_raw,'Department');
+      
       $department_per_locations =  $raw_location_data
       ->mapToGroups(function ($item, $key) use($department_list) {
         $dep = $item['department'];  
@@ -142,26 +142,27 @@ class LocationController extends Controller
           $departments =  $department_per_locations["$location_name"]->unique()->values();
           $location_object->push(['code' => $location_code, 'location' => $location_name,'departments'=>$departments,'status'=> $locations[$k]['status']]);
         }
-        return $location_object;
+
+        return collect(["errorBag"=>$errorBag,"location"=>$location_object]);
     }
 
     public function import(Request $request)
     {
-
+      $groupAndMergeResult= $this->group_and_merge(collect($request));
       $timezone = "Asia/Dhaka";
       date_default_timezone_set($timezone);
       $date = date("Y-m-d H:i:s", strtotime('now'));
       $errorBag = [];
-      $data = $this->group_and_merge(collect($request))->toArray();
+      $data = $groupAndMergeResult['location'];
       $index = 2;
       $location_list = Location::withTrashed()->get();
       $department_list = Department::all();
       $headers = 'Code, Location, Department, Status';
       $template = ["code","location","departments","status"];
-      $keys = array_keys(current($data));
+      $keys = array_keys(current(current($data)));
 
 
-      return $errorBag;
+      $errorBag = $groupAndMergeResult['errorBag'];
 
       $this->validateHeader($template,$keys,$headers);
   
