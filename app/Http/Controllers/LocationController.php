@@ -162,7 +162,7 @@ class LocationController extends Controller
       $location_list = Location::withTrashed()->get();
       $department_list = Department::all();
       $headers = 'Code, Location, Department, Status';
-      $template = ["code","location","departments","status"];
+      $template = ["code","location","department","status"];
       $keys = array_keys(current(current($data)));
 
 
