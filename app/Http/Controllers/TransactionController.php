@@ -32,7 +32,6 @@ class TransactionController extends Controller
         $document_ids =  isset($request['document_ids']) && $request['document_ids'] ? array_map('intval', json_decode($request['document_ids'])) : [];
         $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : $dateToday->startOfDay()->format('Y-m-d H:i:s');
         $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday->endOfDay()->format('Y-m-d H:i:s');
-        $filter =  isset($request['filter']) && $request['filter'] ? (int)$request['filter'] : 0;
         $search =  $request['search'];
 
         
@@ -50,48 +49,24 @@ class TransactionController extends Controller
             'payment_type',
             'status'
         ])
-        ->when((!empty($document_ids)) || (!empty($suppliers)),function($query) use($document_ids,$suppliers,$search,$transaction_from,$transaction_to) {
-  
-            $query->where(function ($query) use ($document_ids,$suppliers,$transaction_from,$transaction_to) {
-                $query->when(((count($document_ids)==0) || (count($suppliers)==0)),function($query) use ($document_ids,$suppliers){
-                    $query->where(function($query)use($document_ids,$suppliers){
-                        $query->whereIn('document_id',$document_ids)
-                        ->orWhereIn('supplier_id',$suppliers);
-                    });
-                },function ($query) use($document_ids,$suppliers){
-                    $query->whereIn('document_id',$document_ids)
-                    ->whereIn('supplier_id',$suppliers);
-                })
-
-               ->where(function ($query) use ($transaction_from,$transaction_to) {
-                    $query->where('date_requested','>=',$transaction_from) 
-                        ->where('date_requested','<=',$transaction_to);
-                });
-            })
-            ->where(function ($query) use ($search) {
-                $query->where('date_requested', 'like', '%' . $search . '%')
-                ->orWhere('transaction_id', 'like', '%' . $search . '%')
-                ->orWhere('document_amount', 'like', '%' . $search . '%')
-                ->orWhere('document_type', 'like', '%' . $search . '%')
-                ->orWhere('payment_type', 'like', '%' . $search . '%')
-                ->orWhere('company', 'like', '%' . $search . '%')
-                ->orWhere('supplier', 'like', '%' . $search . '%')
-                ->orWhere('po_total_amount', 'like', '%' . $search . '%')
-                ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
-            });
-        },function ($query) use($status,$search){
-            $query->where('state', $status)
-            ->where(function ($query) use ($search) {
-                $query->where('date_requested', 'like', '%' . $search . '%')
-                ->orWhere('transaction_id', 'like', '%' . $search . '%')
-                ->orWhere('document_amount', 'like', '%' . $search . '%')
-                ->orWhere('document_type', 'like', '%' . $search . '%')
-                ->orWhere('payment_type', 'like', '%' . $search . '%')
-                ->orWhere('company', 'like', '%' . $search . '%')
-                ->orWhere('supplier', 'like', '%' . $search . '%')
-                ->orWhere('po_total_amount', 'like', '%' . $search . '%')
-                ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
-            });
+        ->when(!empty($document_ids),function($query) use ($document_ids){
+            $query->whereIn('document_id',$document_ids);
+        })
+        ->when(!empty($suppliers),function($query) use ($suppliers){
+            $query->whereIn('supplier_id',$suppliers);
+        })
+        ->where('date_requested','>=',$transaction_from) 
+        ->where('date_requested','<=',$transaction_to)
+        ->where(function ($query) use ($search) {
+            $query->where('date_requested', 'like', '%' . $search . '%')
+            ->orWhere('transaction_id', 'like', '%' . $search . '%')
+            ->orWhere('document_amount', 'like', '%' . $search . '%')
+            ->orWhere('document_type', 'like', '%' . $search . '%')
+            ->orWhere('payment_type', 'like', '%' . $search . '%')
+            ->orWhere('company', 'like', '%' . $search . '%')
+            ->orWhere('supplier', 'like', '%' . $search . '%')
+            ->orWhere('po_total_amount', 'like', '%' . $search . '%')
+            ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
         })
         ->when($role === 'Requestor',function($query){
             $query->where('department_details',Auth::user()->department);

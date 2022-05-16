@@ -52,7 +52,7 @@ class Controller extends BaseController
       $index = 2;
 
       foreach($arrParam as $param){
-        $modelObject = $model::withTrashed()->whereNull('deleted_at')->where('department',$param)->first();
+        $modelObject = $model::withTrashed()->where('department',$param)->first();
         if(empty($modelObject)){
 
           $errorBag[] = (object) [

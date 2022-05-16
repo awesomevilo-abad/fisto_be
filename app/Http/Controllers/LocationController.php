@@ -124,7 +124,6 @@ class LocationController extends Controller
       $department_list = Department::all();
 
      $errorBag =  $this->validateIfObjectsExistByLocation(new Department,$department_list_raw,'Department');
-      
       $department_per_locations =  $raw_location_data
       ->mapToGroups(function ($item, $key) use($department_list) {
         $dep = $item['department'];  
@@ -163,7 +162,6 @@ class LocationController extends Controller
 
 
       $errorBag = $groupAndMergeResult['errorBag'];
-
       $this->validateHeader($template,$keys,$headers);
   
       foreach ($data as $location) {
