@@ -13,7 +13,6 @@ class DepartmentController extends Controller
 
     public function index(Request $request)
     {
-      
       $status =  $request['status'];
       $rows =  (empty($request['rows']))?10:(int)$request['rows'];
       $search =  $request['search'];
@@ -21,34 +20,34 @@ class DepartmentController extends Controller
       $company_id =  $request['company_id'];
       
       $departments = Department::withTrashed()
-      ->with('Company')
-      ->where(function ($query) use ($status){
-        return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
-      })->where(function ($query) use ($search) {
-        $query->where('code', 'like', '%' . $search . '%')
-        ->orWhere('department', 'like', '%' . $search . '%');
-      })
-      ->latest('updated_at');
-      
-      if ($paginate == 1){
-        $departments = $departments
-        ->paginate($rows);
-      }else if ($paginate == 0){
-        $departments = $departments
-        ->when($company_id, function($q)use($company_id){
-          $q->where('company',$company_id);
+        ->when($paginate === 1, function ($query) {
+          return $query->with('Company');
         })
-        ->get(['id','department as name']);
-        if(count($departments)==true){
-            $departments = array("departments"=>$departments);;
-        }
+        ->where(function ($query) use ($status){
+          if ($status == 1) return $query->whereNull('deleted_at');
+          else return $query->whereNotNull('deleted_at');
+        })
+        ->where(function ($query) use ($search) {
+          return $query->where('code', 'like', '%' . $search . '%')
+            ->orWhere('department', 'like', '%' . $search . '%');
+        })
+        ->latest('updated_at');
+      
+      if ($paginate == 1) {
+        $departments = $departments->paginate($rows);
+      }
+      else {
+        $departments = $departments->when(!empty($company_id), function($query) use ($company_id) {
+          return $query->where('company',$company_id);
+        })
+        ->get(['id', 'department as name']);
+
+        if(count($departments)) $departments = array('departments' => $departments);
       }
       
-      if(count($departments)==true){
-        return $this->resultResponse('fetch','Department',$departments);
-      }
-      return $this->resultResponse('not-found','Department',[]);
-      
+      if(count($departments)) return $this->resultResponse('fetch', 'Department', $departments);
+
+      return $this->resultResponse('not-found', 'Department', []);
     }
 
     public function store(Request $request)

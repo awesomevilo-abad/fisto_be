@@ -22,34 +22,39 @@ class LocationController extends Controller
       $department_id =  $request['department_id'];
       
       $locations = Location::withTrashed()
-      ->with('departments')
-      ->where(function ($query) use ($status){
-        return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
-      })->where(function ($query) use ($search) {
-        $query->where('code', 'like', '%' . $search . '%')
-        ->orWhere('location', 'like', '%' . $search . '%')
-        ->orWhereHas ('departments',function($q)use($search){$q->where('department', 'like', '%'.$search.'%');});
-     })
-      ->latest('updated_at');    
-      if ($paginate == 1){
-        $locations = $locations
-        ->paginate($rows);
-      }else if ($paginate == 0){
-        $locations = $locations
-        // ->without('departments')
-        ->when($department_id, function($q)use($department_id){
-          $q->whereHas('departments2',function($q)use($department_id){$q->where('departments.id', $department_id);});
+        ->when($paginate === 1, function ($query) {
+          return $query->with('departments');
         })
-        ->get(['id','location as name']);
-        if(count($locations)==true){
-            $locations = array("locations"=>$locations);;
-        }
+        ->where(function ($query) use ($status){
+          if ($status == 1) return $query->whereNull('deleted_at');
+          else return $query->whereNotNull('deleted_at');
+        })
+        ->where(function ($query) use ($search) {
+          $query->where('code', 'like', '%' . $search . '%')
+            ->orWhere('location', 'like', '%' . $search . '%')
+            ->orWhereHas('departments', function($query) use ($search) {
+              return $query->where('department', 'like', '%'.$search.'%');
+            });
+        })
+        ->latest('updated_at');  
+
+      if ($paginate == 1) {
+        $locations = $locations->paginate($rows);
+      }
+      else {
+        $locations = $locations->when(!empty($department_id), function($query) use ($department_id) {
+          return $query->whereHas('departments', function($query) use ($department_id) {
+            return $query->where('departments.id', $department_id);
+          });
+        })
+        ->get(['id', 'location as name']);
+
+        if(count($locations)) $locations = array('locations' => $locations);
       }
       
-      if(count($locations)==true){
-        return $this->resultResponse('fetch','Location',$locations);
-      }
-      return $this->resultResponse('not-found','Location',[]);
+      if(count($locations)) return $this->resultResponse('fetch', 'Location', $locations);
+
+      return $this->resultResponse('not-found', 'Location', []);
     }
 
     public function store(Request $request)
