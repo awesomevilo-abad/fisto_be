@@ -29,14 +29,13 @@ class TransactionResource extends JsonResource
         }
 
         $condition =  ($this->state=='void')? '=': '!=';
-        // return $po_transaction->where('po_no',$po_no)->where('state',$condition,'void');
         
         $last_po =  $po_transaction->where('request_id',$this->request_id)->pluck('po_no');
         $last_po_array = $last_po->toArray();
         $last_po = next($last_po_array);
 
-        return $last_po;
-        
+        $previous_po_balance = $po_transaction->where('po_no',$last_po)->where('request_id','<',$this->request_id)->where('state',$condition,'void')->pluck('balance_po_ref_amount')->last();
+
         $first_transaction_id = $po_transaction->where('po_no',$po_no)->where('state',$condition,'void')->pluck('id')->first();
         $last_transaction_id = $po_transaction->where('po_no',$po_no)->where('state',$condition,'void')->pluck('id')->last();
         $previous_balance = 0;
@@ -47,24 +46,27 @@ class TransactionResource extends JsonResource
         }
        
         if($first_transaction_id == $this->id){
-            return "First transaction";
-            $previous_balance = $po_transaction->where('request_id',$this->request_id)->first()->po_total_amount;
+            if(isset($previous_po_balance)){
+                $previous_balance = $previous_po_balance;
+            }else{
+                $previous_balance = $po_transaction->where('request_id',$this->request_id)->first()->po_total_amount;
+            }
         }else{
-            return "not first transaction";
             $previous_balance_transaction = $po_transaction->where('po_no',$po_no)->where('state','!=','void')->pluck('balance_po_ref_amount');
             if(!empty($previous_balance_transaction->first())){
                 $previous_balance =  $previous_balance_transaction[count($previous_balance_transaction)-2];
             }
         }
-       
 
+        
+        
 
         $balance  = $this->balance_po_ref_amount;
         if(empty($this->balance_po_ref_amount)){
-         $balance  = 0;
-         }
-
-         if(!$po->isEmpty()){
+            $balance  = 0;
+        }
+        
+        if(!$po->isEmpty()){
             $po->mapToGroups(function ($item,$v) use ($balance){
                 return [
                     $item['balance']=0,
@@ -74,7 +76,7 @@ class TransactionResource extends JsonResource
             });
             $po[0]['balance'] = $balance;
             $po[0]['previous_balance'] = $previous_balance;
-         }
+        }
         
         switch($this->document_id){
             case 1: //PAD
