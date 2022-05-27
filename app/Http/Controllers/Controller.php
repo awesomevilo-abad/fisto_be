@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Illuminate\Routing\Controller as BaseController;
 use App\Exceptions\FistoException;
 use App\Exceptions\FistoLaravelException;
+use App\Methods\GenericMethod;
 
 class Controller extends BaseController
 {
@@ -45,6 +46,22 @@ class Controller extends BaseController
         throw new FistoException($modelName." not registered or inactive.",404,NULL,$modelName." IDs: ".implode(',',$unregisteredObjects));
       }
     }
+    
+    public function validateIfObjectsExistByLocationStore($model,$arrParam,$modelName){
+      
+      $unregisteredObjects = [];
+      foreach($arrParam as $param){
+        $department_name= $model::withTrashed()->firstWhere('id',$param)->department;
+        $modelObject = $model::withTrashed()->whereNull('deleted_at')->where('id',$param)->first();
+        if(empty($modelObject)){
+            $unregisteredObjects[] = $department_name;
+        }
+      }
+      if(!empty($unregisteredObjects)){
+        throw new FistoException(GenericMethod::addAND($unregisteredObjects)." is not registered.",404,NULL,collect(["error_field"=>"departments"]));
+      }
+    }
+
     public function validateIfObjectsExistByLocation($model,$arrParam,$modelName){
       
       $unregisteredObjects = [];
@@ -261,6 +278,27 @@ class Controller extends BaseController
           return $this->resultResponse('not-found',$modelName,[]);
      }
     }
+
+    public function change_masterlist_status_user($transaction_exist,$status,$model,$id,$modelName){
+      if($status == 1){
+
+        if($transaction_exist){
+          throw new FistoException("Cannot archive user with pending or hold transactions.", 409, NULL, []);
+         }
+         
+        $softDelete = $model::where('id',$id)->delete();
+        if($softDelete == 1){
+          return $this->resultResponse('archive',$modelName,[]);
+        }
+        return $this->resultResponse('not-found',$modelName,[]);
+      }else {
+          $restore = $model::onlyTrashed()->where('id',$id)->restore();
+          if($restore == 1){
+              return $this->resultResponse('restore',$modelName,[]);
+          }
+          return $this->resultResponse('not-found',$modelName,[]);
+     }
+    }
     
     public function isUnique($model,$modelName,$params,$fields,$id,$per_field=0)
     {
@@ -334,6 +372,10 @@ class Controller extends BaseController
         
         case('save'):
           return $this->result(201,"New ".strtolower($modelName)." has been saved.",$data);
+        break;
+
+        case('void'):
+          return $this->result(201,strtoupper($modelName)." has been voided.",$data);
         break;
 
         case('import'):

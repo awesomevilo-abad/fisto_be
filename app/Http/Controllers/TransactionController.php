@@ -20,6 +20,18 @@ use App\Http\Requests\TransactionPostRequest;
 class TransactionController extends Controller
 {
 
+    public function showUserDepartment($id){
+        $departments =  Transaction::where('users_id',$id)
+        ->leftJoin('departments','transactions.department_details','=','departments.department')
+        ->select('departments.id as id','department_details as name')
+        ->get()
+        ->unique();
+
+        if (count($departments)) return $this->resultResponse('fetch', 'Departments', $departments);
+
+        return $this->resultResponse('not-found', 'Transaction', []);
+    }
+
     public function index(Request $request)
     {
        $dateToday = Carbon::now()->timezone('Asia/Manila');
@@ -33,7 +45,9 @@ class TransactionController extends Controller
         $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : $dateToday->startOfDay()->format('Y-m-d H:i:s');
         $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday->endOfDay()->format('Y-m-d H:i:s');
         $search =  $request['search'];
-
+        $department = isset($request['department'])? $request['department']: Auth::user()->department;
+        $state = isset($request['state'])? $request['state']: 'request';
+        $department = json_decode($department);
         
         $transactions = Transaction::select([
             'id',
@@ -55,8 +69,10 @@ class TransactionController extends Controller
         ->when(!empty($suppliers),function($query) use ($suppliers){
             $query->whereIn('supplier_id',$suppliers);
         })
-        ->where('date_requested','>=',$transaction_from) 
-        ->where('date_requested','<=',$transaction_to)
+        ->when(!empty($document_ids) || !empty($suppliers),function($query) use ($transaction_from, $transaction_to){
+            $query->where('date_requested','>=',$transaction_from) 
+            ->where('date_requested','<=',$transaction_to);
+        })
         ->where(function ($query) use ($search) {
             $query->where('date_requested', 'like', '%' . $search . '%')
             ->orWhere('transaction_id', 'like', '%' . $search . '%')
@@ -68,9 +84,10 @@ class TransactionController extends Controller
             ->orWhere('po_total_amount', 'like', '%' . $search . '%')
             ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
         })
-        ->when($role === 'Requestor',function($query){
-            $query->where('department_details',Auth::user()->department);
+        ->when($role === 'Requestor',function($query) use($department){
+            $query->whereIn('department_details',$department);
         })
+        ->where('state',$state)
         // ->when($role === 'Approver',function($query){
         //     $query->where('users_id',Auth::id());
         // })
@@ -105,10 +122,12 @@ class TransactionController extends Controller
         $transaction_id = GenericMethod::getTransactionID($fields['requestor']['department']);
         $request_id = GenericMethod::getRequestID();
         
+
         switch($fields['document']['id']){
             case 1: //PAD
             case 5: //Contractor's Billing
-        
+                GenericMethod::documentNoValidation($request['document']['no']);
+
                 if (empty($fields['po_group']) ) 
                 {
                     $errorMessage = GenericMethod::resultLaravelFormat('po_group',["PO group required"]);
@@ -135,6 +154,7 @@ class TransactionController extends Controller
             break;
 
             case 2: //PRM Common
+                GenericMethod::documentNoValidation($request['document']['no']);
                 $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
                 $request_id,$date_requested,$fields);
                 if(isset($transaction->transaction_id)){
@@ -352,6 +372,7 @@ class TransactionController extends Controller
         ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         ->where('transactions.company_id',$fields['company_id'])
         ->where('p_o_batches.po_no',$fields['po_no'])
+        ->where('transactions.state','!=','void')
         ->get(['balance_po_ref_amount as po_balance','transactions.request_id']);
 
 
@@ -384,7 +405,9 @@ class TransactionController extends Controller
 
     public function validateDocumentNo(Request $request)
     {
-       if (Transaction::where('document_no',$request['document_no'])->first()){
+       if (Transaction::where('document_no',$request['document_no'])
+       ->where('state','!=','void')
+       ->first()){
             $errorMessage = GenericMethod::resultLaravelFormat('document.no',["Document number already exist."]);
             return $this->resultResponse('invalid','',$errorMessage);   
         }   
@@ -395,6 +418,7 @@ class TransactionController extends Controller
     {
        if(Transaction::where('company_id',$request['company_id'])
             ->where('referrence_no',$request['reference_no'])
+            ->where('state','!=','void')
             ->first()){
                 $errorMessage = GenericMethod::resultLaravelFormat('document.reference.no',["Reference number already exist."]);
                 return $this->resultResponse('invalid','',$errorMessage);  
@@ -406,10 +430,25 @@ class TransactionController extends Controller
     public function validatePCFName(Request $request)
     {
 
-       if (Transaction::where('pcf_name',$request['pcf_name'])->first()){
+       if (Transaction::where('pcf_name',$request['pcf_name'])
+       ->where('state','!=','void')
+       ->exists()){
             $errorMessage = GenericMethod::resultLaravelFormat('pcf_batch.name',["PCF name already exist."]);
             return $this->resultResponse('invalid','',$errorMessage);   
         }   
         return $this->resultResponse('success-no-content','',[]); 
+    }
+
+    public function voidTransaction($id){
+       $transaction = Transaction::where('id',$id)->where('state','!=','void')->first();
+       if(!isset($transaction)){
+        return $this->resultResponse('not-found', 'Transaction', []);
+       }
+      
+       $transaction->status = 'Requestor - Voided';
+       $transaction->state = 'void';
+       $transaction->save();
+       
+       return $this->resultResponse('void',strtoupper($transaction->transaction_id),[]);
     }
 }

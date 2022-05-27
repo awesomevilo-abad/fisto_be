@@ -53,7 +53,6 @@ class LocationController extends Controller
       }
       
       if(count($locations)) return $this->resultResponse('fetch', 'Location', $locations);
-
       return $this->resultResponse('not-found', 'Location', []);
     }
 
@@ -73,7 +72,7 @@ class LocationController extends Controller
         if (!empty($location_validateDescriptionDuplicate)) {
           return $this->resultResponse('registered','Location',["error_field" => "location"]);
         }
-        $departmentExist = $this->validateIfObjectsExist(new Department,$fields['departments'],'Department');
+        $departmentExist = $this->validateIfObjectsExistByLocationStore(new Department,$fields['departments'],'Department');
         
         $new_location = Location::create([
             'code' => $fields['code']
@@ -89,6 +88,10 @@ class LocationController extends Controller
         $company =new Company();
         $specific_location = Location::find($id);
 
+        if (!$specific_location) {
+          return $this->resultResponse('not-found','Location',[]);
+        }
+        
         $fields = $request->validate([
             'code' => 'required',
             'location' => 'required',
@@ -104,17 +107,13 @@ class LocationController extends Controller
           return $this->resultResponse('registered','Location',["error_field" => "location"]);
         }
         
-        $departmentExist = $this->validateIfObjectsExist(new Department,$fields['departments'],'Department');
+        $departmentExist = $this->validateIfObjectsExistByLocationStore(new Department,$fields['departments'],'Department');
 
-        if (!$specific_location) {
-            return $this->resultResponse('not-found','Location',[]);
-        } else {
-            $is_associates_modified = $this->isTaggedArrayModified($fields['departments'],  $specific_location->departments()->get(),'id');
-            $specific_location->code = $fields['code'];
-            $specific_location->location = $fields['location'];
-            $specific_location->departments()->sync(array_unique($fields['departments']));
-            return $this->validateIfNothingChangeThenSave($specific_location,'Location',$is_associates_modified);
-        }
+        $is_associates_modified = $this->isTaggedArrayModified($fields['departments'],  $specific_location->departments()->get(),'id');
+        $specific_location->code = $fields['code'];
+        $specific_location->location = $fields['location'];
+        $specific_location->departments()->sync(array_unique($fields['departments']));
+        return $this->validateIfNothingChangeThenSave($specific_location,'Location',$is_associates_modified);
     }
     
     public function change_status(Request $request,$id){
@@ -144,7 +143,7 @@ class LocationController extends Controller
           $location_code = $locations[$k]['code'];
           $location_name = $locations[$k]['location'];
           $departments =  $department_per_locations["$location_name"]->unique()->values();
-          $location_object->push(['code' => $location_code, 'location' => $location_name,'departments'=>$departments,'status'=> $locations[$k]['status']]);
+          $location_object->push(['code' => $location_code, 'location' => $location_name,'department'=>$departments,'status'=> $locations[$k]['status']]);
         }
 
         return collect(["errorBag"=>$errorBag,"location"=>$location_object]);
@@ -165,14 +164,13 @@ class LocationController extends Controller
       $template = ["code","location","department","status"];
       $keys = array_keys(current(current($data)));
 
-
       $errorBag = $groupAndMergeResult['errorBag'];
       $this->validateHeader($template,$keys,$headers);
   
       foreach ($data as $location) {
             $code = $location['code'];
             $location_name= $location['location'];
-            $departments = $location['departments'];
+            $departments = $location['department'];
     
             foreach ($location as $key => $value) 
             {
@@ -222,7 +220,7 @@ class LocationController extends Controller
             'deleted_at' => $status_date,
           ];
           
-          $fields['departments']= $location['departments'];
+          $fields['departments']= $location['department'];
           $inputted_fields[] = $fields;
         }
         

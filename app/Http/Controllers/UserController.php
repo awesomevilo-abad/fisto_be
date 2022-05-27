@@ -8,13 +8,16 @@ use Spatie\Activitylog\Models\Activity;
 
 use App\Models\User;
 use App\Models\Document;
+use App\Models\Department;
 use App\Models\Category;
 use App\Models\UserDocument;
 use App\Models\UserDocumentCategory;
 use App\Models\Permission;
+use App\Models\Transaction;
 use App\Http\Requests\UserControllerRequest;
 
 use App\Methods\GenericMethod;
+use App\Methods\UserMethod;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
@@ -28,8 +31,17 @@ use Illuminate\Support\Arr;
 
 class UserController extends Controller
 {
+    public function synchSedarValidation(Request $request){
+        if(!Department::where('department',$request->department)->exists()){
+            return $this->resultResponse('not-exist','Department',collect(['error_field'=>'department']));
+        }
+        
+        return $this->resultResponse('available','Department',[]);
+    }
+
     public function index(Request $request)
     {
+        
         $status =  $request['status'];
         $rows =  (empty($request['rows']))?10:(int)$request['rows'];
         $search =  $request['search'];
@@ -160,23 +172,16 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        
-        $user = User::withTrashed()->find($id);
-
-        if (!$user) {
-            throw new FistoException("No records found.", 404, NULL, []);     
-        }         
         $specific_user = $request;
+        $user = User::withTrashed()->find($id);
+        $new_user = User::withTrashed()->with('documents.document_categories')->where('id',$id)->first();
         $document_types =  $specific_user['document_types'];
         $document_ids = array_column($document_types,'document_id');
-        $new_user = User::withTrashed()
-        ->with('documents.document_categories')
-        ->where('id',$id)
-        ->first();
-      
-        $user->role = $specific_user['role'];
-        $user->permissions = $specific_user['permissions'];
-        $user->document_types = [];
+        
+        UserMethod::validateIfExist($user,$id);
+        UserMethod::synchWithSedarValidation($specific_user,$id);
+        $user =  UserMethod::redefinedUserForSaving($user,$specific_user);
+
         if((!in_array(1,$specific_user['permissions'])) && (!in_array(2,$specific_user['permissions']))  ){
             $user->document_types = [];
             $specific_user['document_types'] = [];
@@ -208,7 +213,8 @@ class UserController extends Controller
     public function change_status(Request $request,$id){
         $status = $request['status'];
         $model = new User();
-        return $this->change_masterlist_status($status,$model,$id,'User');
+        $is_exist = UserMethod::validateIfTransactionExist($id);
+        return $this->change_masterlist_status_user($is_exist,$status,$model,$id,'User');
   }
     public function change_password(Request $request)
     {
@@ -299,9 +305,14 @@ class UserController extends Controller
 
     public function reset($id)
     {
+        
         if( Auth::user()->role == "Administrator")
         {
            $user = User::find($id);
+           if(empty($user)){
+            return $this->resultResponse('not-found','User',[]);
+            }
+
            $user->password =bcrypt(strtolower($user->username));
            $user->save();
             

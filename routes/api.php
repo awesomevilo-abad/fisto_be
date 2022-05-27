@@ -65,7 +65,9 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::get('account-numbers/', [AccountNumberController::class, 'index']);
         Route::get('current-user/',[MasterlistController::class,'currentUser']);
         Route::get('charging/',[MasterlistController::class,'chargingDropdown']);
+        Route::get('departments/{id}',[TransactionController::class,'showUserDepartment']);
         Route::get('references/', [ReferrenceController::class, 'index']);
+        Route::get('reason/', [ReasonController::class, 'index']);
 
         // TRANSACTION
         Route::get('company',[CompanyController::class,'index']);
@@ -164,6 +166,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
       
         // USER
         Route::get('users/',[UserController::class,'index']);
+        Route::post('users/synch-validation/',[UserController::class,'synchSedarValidation']);
         Route::patch('users/{id}', [UserController::class, 'change_status']);
         Route::patch('users/reset/{id}', [UserController::class, 'reset']);
         Route::resource('users', UserController::class);
@@ -188,11 +191,11 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         
     });
 
-
     // TRANSACTION
     Route::resource('transactions/', TransactionController::class);
     Route::get('transactions/{id}',[TransactionController::class,'showTransaction']);
     Route::get('transactions/status_group/',[TransactionController::class,'status_group']);
+    Route::post('transactions/void/{id}',[TransactionController::class,'voidTransaction']);
     Route::post('transactions/validate-po-no',[TransactionController::class,'getPODetails']);
     Route::post('transactions/validate-document-no',[TransactionController::class,'validateDocumentNo']);
     Route::post('transactions/validate-reference-no',[TransactionController::class,'validateReferenceNo']);

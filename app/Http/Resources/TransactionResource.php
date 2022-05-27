@@ -19,18 +19,45 @@ class TransactionResource extends JsonResource
         $document  = [];
         $po = [];
         $reference = [];
+        $po_no = [];
 
         $user = User::where('id',$this->users_id)->get()->first();
         $po = POBatch::where('request_id',$this->request_id)->get(['request_id as batch','po_no as no', 'po_amount as amount','rr_group as rr_no']);
-       
         $po_transaction = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')->get();
-        $po_no =  $po_transaction->where('request_id',$this->request_id)->first()->po_no;
-        $previous_balance_transaction = $po_transaction->where('po_no',$po_no)->pluck('balance_po_ref_amount');
-        
-        $previous_balance = 0;
-        if(!empty($previous_balance_transaction->first())){
-            $previous_balance =  $previous_balance_transaction[count($previous_balance_transaction)-2];
+        if(isset( $po_transaction->where('request_id',$this->request_id)->first()->po_no)){
+            $po_no =  $po_transaction->where('request_id',$this->request_id)->first()->po_no;
         }
+
+        $condition =  ($this->state=='void')? '=': '!=';
+        // return $po_transaction->where('po_no',$po_no)->where('state',$condition,'void');
+        
+        $last_po =  $po_transaction->where('request_id',$this->request_id)->pluck('po_no');
+        $last_po_array = $last_po->toArray();
+        $last_po = next($last_po_array);
+
+        return $last_po;
+        
+        $first_transaction_id = $po_transaction->where('po_no',$po_no)->where('state',$condition,'void')->pluck('id')->first();
+        $last_transaction_id = $po_transaction->where('po_no',$po_no)->where('state',$condition,'void')->pluck('id')->last();
+        $previous_balance = 0;
+        $is_latest_transaction=0;
+
+        if($last_transaction_id == $this->id){
+            $is_latest_transaction=1;
+        }
+       
+        if($first_transaction_id == $this->id){
+            return "First transaction";
+            $previous_balance = $po_transaction->where('request_id',$this->request_id)->first()->po_total_amount;
+        }else{
+            return "not first transaction";
+            $previous_balance_transaction = $po_transaction->where('po_no',$po_no)->where('state','!=','void')->pluck('balance_po_ref_amount');
+            if(!empty($previous_balance_transaction->first())){
+                $previous_balance =  $previous_balance_transaction[count($previous_balance_transaction)-2];
+            }
+        }
+       
+
 
         $balance  = $this->balance_po_ref_amount;
         if(empty($this->balance_po_ref_amount)){
@@ -236,13 +263,18 @@ class TransactionResource extends JsonResource
         }
 
         return [
-
-
             "transaction"=>[
                 "id"=>$this->id
+                ,"is_latest_transaction"=>$is_latest_transaction
                 ,"request_id"=>$this->request_id
                 ,"no"=>$this->transaction_id
                 ,"date_requested"=>$this->date_requested                
+                ,"status"=>$this->status     
+                ,"state"=>$this->state
+            ],
+            "reason"=>[
+                "id"=>$this->reason_id
+                ,"description"=>$this->reason
             ],
             "requestor"=>[
                 "id"=> $this->users_id

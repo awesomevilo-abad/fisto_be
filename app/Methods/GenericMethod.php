@@ -188,7 +188,47 @@ class GenericMethod{
 
                     
                 ]);
-            }else{
+            }else if($fields['document']['id'] == 5){
+                
+                $new_transaction = Transaction::create([
+                    'transaction_id' => $transaction_id
+                    , "users_id" => $fields['requestor']['id']
+                    , "id_prefix" => $fields['requestor']['id_prefix']
+                    , "id_no" => $fields['requestor']['id_no']
+                    , "first_name" => $fields['requestor']['first_name']
+                    , "middle_name" => $fields['requestor']['middle_name']
+                    , "last_name" => $fields['requestor']['last_name']
+                    , "suffix" => $fields['requestor']['suffix']
+                    , "department_details" => $fields['requestor']['department']
+        
+                    , "document_id" => $fields['document']['id']
+                    , "capex_no" => $fields['document']['capex_no']
+                    , "category_id" => $fields['document']['category']['id']
+                    , "category" => $fields['document']['category']['name']
+                    , "company_id" => $fields['document']['company']['id']
+                    , "company" => $fields['document']['company']['name']
+                    , "department_id" => $fields['document']['department']['id']
+                    , "department" => $fields['document']['department']['name']
+                    , "location_id" => $fields['document']['location']['id']
+                    , "location" => $fields['document']['location']['name']
+                    , "supplier_id" => $fields['document']['supplier']['id']
+                    , "supplier" => $fields['document']['supplier']['name']
+                    , "payment_type" => $fields['document']['payment_type']
+                    , "document_no" => $fields['document']['no']
+                    , "document_date" => $fields['document']['date']
+                    , "document_amount" => $fields['document']['amount']
+                    , "remarks" => $fields['document']['remarks']
+                    , "document_type" => $fields['document']['name']
+        
+                    , "po_total_amount" => $po_total_amount
+        
+                    , "request_id" => $request_id
+                    , "tagging_tag_id" => 0
+                    , "date_requested" => $date_requested
+                    , "status" => "Pending"
+                ]);
+            }
+            else{
                 $new_transaction = Transaction::create([
                     'transaction_id' => $transaction_id
                     , "users_id" => $fields['requestor']['id']
@@ -829,7 +869,7 @@ class GenericMethod{
             }
             
             if(TransactionValidationMethod::validateIfDocumentNoExist($doc_no) > 0){
-                throw new FistoException("Document number already exist in other document types", 409, NULL, []);
+                throw new FistoException("The given data was invalid.", 422, NULL, collect(["document.no"=>["The Document number has already been taken."]]));
             }
         }
             
@@ -867,6 +907,7 @@ class GenericMethod{
                 });
             })
             ->where('company_id',$company_id)
+            ->where('state','!=','void')
             ->where('utilities_location_id',$location_id)
             ->where('utilities_category',$category)
             ->get();
@@ -913,6 +954,7 @@ class GenericMethod{
                 ->where('payroll_category',"$payroll_category")
                 ->where('payroll_type',$payroll_type)
                 ->where('client_name',$client_name)
+                ->where('state','!=','void')
                 ->where(function ($query) use($payroll_from,$payroll_to){
                     $query->where(function ($query) use($payroll_from,$payroll_to){
                         $query->where(function ($query1) use($payroll_from){
@@ -960,9 +1002,9 @@ class GenericMethod{
         }
 
         public static function validateReferenceNo($fields){
-            $transaction =  Transaction::where('company_id',$fields['document']['company']['id'])
-            ->where('referrence_no',$fields['document']['reference']['no']);
-            $validateTransactionCount = $transaction->get();
+            $validateTransactionCount =  Transaction::where('company_id',$fields['document']['company']['id'])
+            ->where('referrence_no',$fields['document']['reference']['no'])
+            ->where('state','!=','void')->get();
 
             if(count($validateTransactionCount)>0){
                 return GenericMethod::resultLaravelFormat('document.reference.no',["Reference number already exist."]);
@@ -971,9 +1013,9 @@ class GenericMethod{
 
         
         public static function getAndValidatePOBalance($company_id,$po_no,float $reference_amount,$po_group){
-            // return $company_id;
              $balance_po_ref_amount = Transaction::leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
             ->where('transactions.company_id',$company_id)
+            ->where('transactions.state','!=','void')
             ->where('p_o_batches.po_no',$po_no)
             ->orderBy('transactions.id', 'desc')
             ->get('balance_po_ref_amount')
@@ -987,13 +1029,13 @@ class GenericMethod{
             if($balance_po_ref_amount == 0){
                 return GenericMethod::resultLaravelFormat('po_group.no',["PO already exist."]);
             }
-            
             // Additional PO
             $additional_po_group = []; 
             $po_total_amount = 0;
+
             foreach($po_group as $k=>$v){
                 if(!POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')
-                ->where('p_o_batches.po_no','=',$po_group[$k]['no'])->exists()){
+                ->where('p_o_batches.po_no','=',$po_group[$k]['no'])->where('state','!=','void')->exists()){
                     $additional_po_group[$k]['no'] = $po_group[$k]['no'] ;
                     $additional_po_group[$k]['amount'] = $po_group[$k]['amount'] ;
                     $additional_po_group[$k]['rr_no'] = $po_group[$k]['rr_no'] ;
@@ -1001,8 +1043,8 @@ class GenericMethod{
                 $po_total_amount = $po_total_amount+ $po_group[$k]['amount'];
             }
             $additional_po_group = array_values($additional_po_group);
-         
             
+
             if(count($additional_po_group)>0){
 
                 $new_po_total_amount = GenericMethod::getPOTotalAmount($request_id=0,$additional_po_group);
@@ -1057,6 +1099,7 @@ class GenericMethod{
                 ->where('pcf_letter',$pcf_letter)
                 ->where('company_id',$company_id)
                 ->where('supplier_id',$supplier_id)
+                ->where('state','!=','void')
                 ->get();
 
             if(count($transactions)>0){
@@ -1079,6 +1122,7 @@ class GenericMethod{
             $transactions = DB::table('transactions')
             ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
             ->where('company_id',$company_id)
+            ->where('transactions.state','!=','void')
             ->whereIn('po_no',$po_nos);
             $validateTransactionCount = $transactions->get();
             $unique_po = array_unique($validateTransactionCount->pluck('po_no')->toArray());

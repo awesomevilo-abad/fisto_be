@@ -39,9 +39,10 @@ class TransactionPostRequest extends FormRequest
             , "requestor.department" => 'required'
            
             , "document.id" => 'required'
+            , "document.capex_no" => 'required_if:document.id,5'
             , "document.name" => 'required'
             , "document.payment_type" => 'required'
-            , "document.no" => 'required_if:document.id,1,5,2|unique:transactions,document_no'
+            , "document.no" => 'required_if:document.id,1,5,2'
             , "document.date" => 'required_if:document.id,1,5,2'
             , "document.amount" => 'required_if:document.id,1,5,2,6,8,7|numeric'
             , "document.remarks" => 'nullable'
@@ -166,6 +167,7 @@ class TransactionPostRequest extends FormRequest
             'requestor.department' => 'Department',
             
             'document.id' => 'Document id',
+            'document.capex_no' => 'CAPEX number',
             'document.name' => 'Document name',
             'document.company.id' => 'Company id',
             'document.company.name' => 'Company name',

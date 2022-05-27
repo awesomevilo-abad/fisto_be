@@ -26,6 +26,7 @@ class CreateTransactionsTable extends Migration
             $table->string('transaction_id');
             $table->bigInteger('tag_id')->unique();
             $table->bigInteger('document_id')->nullable();
+            $table->string('capex_no')->nullable();
             $table->string('document_type')->nullable();
             $table->dateTime('document_date')->nullable();
             $table->bigInteger('category_id')->nullable();

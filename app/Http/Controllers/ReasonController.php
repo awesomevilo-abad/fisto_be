@@ -15,6 +15,7 @@ class ReasonController extends Controller
       $status =  $request['status'];
       $rows =  (empty($request['rows']))?10:(int)$request['rows'];
       $search =  $request['search'];
+      $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
       
       $reasons = Reason::withTrashed()
       ->where(function ($query) use ($status){
@@ -24,8 +25,17 @@ class ReasonController extends Controller
         $query->where('reason', 'like', '%'.$search.'%')
           ->orWhere('remarks', 'like', '%'.$search.'%');
       })
-      ->latest('updated_at')
-      ->paginate($rows);
+      ->latest('updated_at');
+      if ($paginate == 1){
+        $reasons = $reasons
+        ->paginate($rows);
+      }else if ($paginate == 0){
+        $reasons = $reasons
+        ->get(['id','reason as description']);
+        if(count($reasons)==true){
+            $reasons = array("reasons"=>$reasons);
+        }
+      }
       
       if(count($reasons)==true){
         return $this->resultResponse('fetch','Reason',$reasons);

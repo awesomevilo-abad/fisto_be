@@ -31,13 +31,11 @@ class TransactionValidationMethod
 
 
     public static function validateIfDocumentNoExist($doc_no){
-        $transactions = DB::table('transactions')
+        return  DB::table('transactions')
         ->where('document_no',$doc_no)
-        ->whereNotNull('document_no')->first();
-        if($transactions){
-            return $transactions->count();
-        }
-        return 0;
+        ->where('transactions.state','!=','void')
+        ->whereNotNull('document_no')->exists();
+   
     }
 
 // CONTINUATION     

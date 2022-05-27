@@ -23,6 +23,7 @@ class Transaction extends Model
         , 'transaction_id'
         , 'request_id'
         , 'document_id'
+        , 'capex_no'
         , 'document_type'
         , 'document_date'
         , 'category_id'
