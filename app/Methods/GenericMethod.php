@@ -16,6 +16,7 @@ use App\Models\TransactionClient;
 use App\Models\ReferrenceBatch;
 use App\Models\Transaction;
 use App\Models\PayrollClient;
+use App\Models\RequestorLogs;
 
 use App\Models\UserDocumentCategory;
 use Illuminate\Routing\Route;
@@ -29,7 +30,8 @@ class GenericMethod{
 
         public static function insertTransaction($transaction_id,$po_total_amount=0,
         $request_id,$date_requested,$fields,$balance_po_ref_amount=0){
-            
+            $status = 'create';
+            // return $date_requested;
             if($fields['document']['id'] == 6){
                 $new_transaction = Transaction::create([
                     'transaction_id' => $transaction_id
@@ -267,6 +269,8 @@ class GenericMethod{
                 ]);
             }
 
+            GenericMethod::insertRequestorLogs($new_transaction->id,$transaction_id,$date_requested,$fields['document']['remarks'],$fields['requestor']['id'],$status,NULL,NULL,NULL);
+
             return $new_transaction;
             // if($new_transaction->count()>1){
             //     return GenericMethod::resultLaravelFormat('po_group.no',"The PO number has already been taken.: ".$validateTransactionCount->pluck('po_no')->implode(','));
@@ -275,6 +279,22 @@ class GenericMethod{
 
         }
         
+
+        public static function insertRequestorLogs($transaction_id,$transaction_no,$date_requested,$remarks,$user_id,$status,$reason_id,$reason_description,$reason_remarks){
+            RequestorLogs::create([
+                "transaction_id"=>$transaction_id
+                ,"transaction_no"=>$transaction_no
+                ,"description"=>$remarks
+                ,"status"=>$status
+                ,"date_status"=>$date_requested
+                ,"user_id"=>$user_id
+                ,"reason_id"=>$reason_id
+                ,"reason_description"=>$reason_description
+                ,"reason_remarks"=>$reason_remarks
+            ]);
+
+        }
+
         public static function insertClient($request_id,$clients){
             $client_count = count($clients);
             for($i=0;$i<$client_count;$i++){

@@ -36,7 +36,7 @@ class TransactionController extends Controller
     {
        $dateToday = Carbon::now()->timezone('Asia/Manila');
        
-
+        $department = [];
         $role = Auth::user()->role;
         $status =  isset($request['state']) && $request['state'] ? $request['state'] : "request";
         $rows =  isset($request['rows']) && $request['rows'] ? (int)$request['rows'] : 10;
@@ -45,10 +45,10 @@ class TransactionController extends Controller
         $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : $dateToday->startOfDay()->format('Y-m-d H:i:s');
         $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday->endOfDay()->format('Y-m-d H:i:s');
         $search =  $request['search'];
-        $department = isset($request['department'])? $request['department']: Auth::user()->department;
         $state = isset($request['state'])? $request['state']: 'request';
-        $department = json_decode($department);
         
+        isset($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department) ;
+
         $transactions = Transaction::select([
             'id',
             'date_requested',
@@ -439,16 +439,26 @@ class TransactionController extends Controller
         return $this->resultResponse('success-no-content','',[]); 
     }
 
-    public function voidTransaction($id){
+    public function voidTransaction(Request $request,$id){
+
        $transaction = Transaction::where('id',$id)->where('state','!=','void')->first();
+       $date_requested = date('Y-m-d H:i:s');
+       $status="void";
+
        if(!isset($transaction)){
         return $this->resultResponse('not-found', 'Transaction', []);
        }
       
        $transaction->status = 'Requestor - Voided';
        $transaction->state = 'void';
+       $transaction->reason_id = $request->id;
+       $transaction->reason = $request->description;
+       $transaction->reason_remarks = $request->remarks;
        $transaction->save();
        
+       GenericMethod::insertRequestorLogs($id,$transaction->transaction_id,$date_requested,$transaction->remarks,$transaction->users_id,$status,$request->id,$request->description,$request->remarks);
+
+
        return $this->resultResponse('void',strtoupper($transaction->transaction_id),[]);
     }
 }

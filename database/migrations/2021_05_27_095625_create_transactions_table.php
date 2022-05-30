@@ -46,6 +46,7 @@ class CreateTransactionsTable extends Migration
             $table->string('status');
             $table->bigInteger('reason_id')->nullable();
             $table->string('reason')->nullable();
+            $table->string('reason_remarks')->nullable();
             $table->string('document_no')->nullable();
             $table->float('document_amount')->nullable();
             $table->string('pcf_name')->nullable();

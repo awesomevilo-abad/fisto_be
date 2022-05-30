@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 class LocationController extends Controller
 {
-    
 
     public function index(Request $request)
     {
