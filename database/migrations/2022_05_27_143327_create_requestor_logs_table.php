@@ -17,7 +17,7 @@ class CreateRequestorLogsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('transaction_id');
             $table->string('transaction_no');
-            $table->string('description');
+            $table->string('description')->nullable();
             $table->string('status');
             $table->dateTime('date_status');
             $table->unsignedBigInteger('user_id');
