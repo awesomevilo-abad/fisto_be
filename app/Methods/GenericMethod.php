@@ -1055,7 +1055,9 @@ class GenericMethod{
 
             foreach($po_group as $k=>$v){
                 if(!POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')
-                ->where('p_o_batches.po_no','=',$po_group[$k]['no'])->where('state','!=','void')->exists()){
+                ->where('company_id','=',$company_id)
+                ->where('p_o_batches.po_no','=',$po_group[$k]['no'])
+                ->where('state','!=','void')->exists()){
                     $additional_po_group[$k]['no'] = $po_group[$k]['no'] ;
                     $additional_po_group[$k]['amount'] = $po_group[$k]['amount'] ;
                     $additional_po_group[$k]['rr_no'] = $po_group[$k]['rr_no'] ;
@@ -1063,7 +1065,6 @@ class GenericMethod{
                 $po_total_amount = $po_total_amount+ $po_group[$k]['amount'];
             }
             $additional_po_group = array_values($additional_po_group);
-            
 
             if(count($additional_po_group)>0){
 

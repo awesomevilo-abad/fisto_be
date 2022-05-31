@@ -22,7 +22,7 @@ class TransactionResource extends JsonResource
         $po_no = [];
 
         $user = User::where('id',$this->users_id)->get()->first();
-        $po = POBatch::where('request_id',$this->request_id)->get(['request_id as batch','po_no as no', 'po_amount as amount','rr_group as rr_no']);
+        $po = POBatch::where('request_id',$this->request_id)->get(['po_no as no', 'po_amount as amount','rr_group as rr_no']);
         $po_transaction = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')->get();
         if(isset( $po_transaction->where('request_id',$this->request_id)->first()->po_no)){
             $po_no =  $po_transaction->where('request_id',$this->request_id)->first()->po_no;
