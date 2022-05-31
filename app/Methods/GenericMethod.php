@@ -1480,6 +1480,10 @@ class GenericMethod{
     #########################################      OTHERS               ######################################
     ##########################################################################################################
 
+        public static function viewRequestLogs(){
+            return RequestLogs::all();
+        }
+
         public static function addToUserDocumentCategory($user_id,$document_id,$category_id)
         {
             $new_user_document_category = UserDocumentCategory::create([
@@ -1491,13 +1495,4 @@ class GenericMethod{
 
         }
     ##########################################################################################################
-
-
-    
-    
-
-
-    
-
-  
-}
+    }

@@ -9,8 +9,10 @@ use App\Methods\PADValidationMethod;
 use App\Methods\GenericMethod;
 use App\Models\Transaction;
 use App\Models\POBatch;
+use App\Models\RequestorLogs;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\TransactionResource;
+use App\Http\Resources\RequestLog;
 use App\Exceptions\FistoException;
 use Carbon\Carbon;
 
@@ -456,9 +458,46 @@ class TransactionController extends Controller
        $transaction->reason_remarks = $request->remarks;
        $transaction->save();
        
-       GenericMethod::insertRequestorLogs($id,$transaction->transaction_id,$date_requested,$transaction->remarks,$transaction->users_id,$status,$request->id,$request->description,$request->remarks);
-
+       GenericMethod::insertRequestorLogs($id,$transaction->transaction_id,$date_requested,$transaction->remarks,
+       $transaction->users_id,$status,$request->id,$request->description,$request->remarks);
 
        return $this->resultResponse('void',strtoupper($transaction->transaction_id),[]);
+    }
+
+    public function viewRequestorLogs(Request $request){
+       $rows =  (empty($request['rows']))?10:(int)$request['rows'];
+       $search =  $request['search'];
+       $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
+       
+       $requestor_logs = RequestorLogs::where(function ($query) use ($search){
+         $query->where('transaction_id', 'like', '%'.$search.'%')
+         ->orWhere('transaction_no', 'like', '%'.$search.'%')
+         ->orWhere('description', 'like', '%'.$search.'%')
+         ->orWhere('status', 'like', '%'.$search.'%')
+         ->orWhere('date_status', 'like', '%'.$search.'%')
+         ->orWhere('user_id', 'like', '%'.$search.'%')
+         ->orWhere('reason_description', 'like', '%'.$search.'%')
+         ->orWhere('reason_remarks', 'like', '%'.$search.'%');
+       })
+       ->latest('updated_at');
+       
+     if ($paginate == 1){
+       $requestor_logs = $requestor_logs
+       ->paginate($rows);
+     }else if ($paginate == 0){
+       $requestor_logs = $requestor_logs
+       ->get(['id','transaction_id','transaction_no','description','status','date_status'
+       ,'user_id','reason_description','reason_remarks','updated_at']);
+       if(count($requestor_logs)==true){
+           $requestor_logs = array("requestor_logs"=>$requestor_logs);;
+       }
+     }
+ 
+       if(count($requestor_logs)==true){
+           
+        $requestor_logs = RequestLog::collection($requestor_logs);
+         return $this->resultResponse('fetch','Requestor Logs',$requestor_logs);
+       }
+       return $this->resultResponse('not-found','Requestor Logs',[]);
     }
 }

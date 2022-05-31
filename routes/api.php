@@ -193,6 +193,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
 
     // TRANSACTION
     Route::resource('transactions/', TransactionController::class);
+    Route::get('transactions/logs/request', [TransactionController::class,'viewRequestorLogs']);
     Route::get('transactions/{id}',[TransactionController::class,'showTransaction']);
     Route::get('transactions/status_group/',[TransactionController::class,'status_group']);
     Route::post('transactions/void/{id}',[TransactionController::class,'voidTransaction']);
