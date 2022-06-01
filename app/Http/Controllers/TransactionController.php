@@ -109,7 +109,7 @@ class TransactionController extends Controller
     {
         // $transaction = DB::table('transactions')->where('id',$id)->first();
         $transaction = Transaction::where('id',$id)->get();
-        return $singleTransaction = TransactionResource::collection($transaction);
+        $singleTransaction = TransactionResource::collection($transaction);
         
         
         if(count($singleTransaction)!=true){
