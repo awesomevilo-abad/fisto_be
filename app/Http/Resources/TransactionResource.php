@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 use App\Models\User;
 use App\Models\POBatch;
-use App\Models\Transaction;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TransactionResource extends JsonResource
@@ -25,10 +24,8 @@ class TransactionResource extends JsonResource
 
         $user = User::where('id',$this->users_id)->get()->first();
         $po = POBatch::where('request_id',$this->request_id)->get(['po_no as no', 'po_amount as amount','rr_group as rr_no']);
-        $po_transaction = Transaction::leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')->get();
-
-        return $po_transaction->where('request_id',$this->request_id);
-
+        $po_transaction = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')->get();
+        
         $balance = $po_transaction->where('request_id',$this->request_id)->first()->balance_po_ref_amount;
         $referrence_amount = $po_transaction->where('request_id',$this->request_id)->first()->referrence_amount;
         $document_amount = $po_transaction->where('request_id',$this->request_id)->first()->document_amount;
