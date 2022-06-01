@@ -370,12 +370,16 @@ class TransactionController extends Controller
 
     public function getPODetails(PODetailsRequest $request)
     {
+        $transaction_id = $request->transaction_id;
         $fields = $request->validated();
         $po_details = DB::table('transactions')
         ->leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
         ->where('transactions.company_id',$fields['company_id'])
         ->where('p_o_batches.po_no',$fields['po_no'])
         ->where('transactions.state','!=','void')
+        ->when(isset($transaction_id),function($query) use($transaction_id){
+          $query->where('transactions.id','<>',$transaction_id);
+        })
         ->get(['balance_po_ref_amount as po_balance','transactions.request_id']);
 
 
@@ -424,9 +428,14 @@ class TransactionController extends Controller
 
     public function validateReferenceNo(Request $request)
     {
+       $transaction_id = $request->transaction_id;
+
        if(Transaction::where('company_id',$request['company_id'])
             ->where('referrence_no',$request['reference_no'])
             ->where('state','!=','void')
+            ->when(isset($transaction_id),function($query) use($transaction_id){
+                $query->where('id','<>',$transaction_id);
+            })
             ->first()){
                 $errorMessage = GenericMethod::resultLaravelFormat('document.reference.no',["Reference number already exist."]);
                 return $this->resultResponse('invalid','',$errorMessage);  
@@ -437,9 +446,13 @@ class TransactionController extends Controller
     
     public function validatePCFName(Request $request)
     {
+        $transaction_id = $request->transaction_id;
 
        if (Transaction::where('pcf_name',$request['pcf_name'])
        ->where('state','!=','void')
+       ->when(isset($transaction_id),function($query) use($transaction_id){
+         $query->where('transactions.id','<>',$transaction_id);
+       })
        ->exists()){
             $errorMessage = GenericMethod::resultLaravelFormat('pcf_batch.name',["PCF name already exist."]);
             return $this->resultResponse('invalid','',$errorMessage);   
