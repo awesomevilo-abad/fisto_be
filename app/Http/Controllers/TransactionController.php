@@ -105,7 +105,8 @@ class TransactionController extends Controller
         return $this->resultResponse('not-found', 'Transaction', []);
     }
 
-    public function showTransaction($id){
+    public function showTransaction($id)
+    {
         // $transaction = DB::table('transactions')->where('id',$id)->first();
         $transaction = Transaction::where('id',$id)->get();
         $singleTransaction = TransactionResource::collection($transaction);
@@ -465,36 +466,8 @@ class TransactionController extends Controller
     }
 
     public function viewRequestorLogs(Request $request){
-       $rows =  (empty($request['rows']))?10:(int)$request['rows'];
-       $search =  $request['search'];
-       $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
-       
-       $requestor_logs = RequestorLogs::where(function ($query) use ($search){
-         $query->where('transaction_id', 'like', '%'.$search.'%')
-         ->orWhere('transaction_no', 'like', '%'.$search.'%')
-         ->orWhere('description', 'like', '%'.$search.'%')
-         ->orWhere('status', 'like', '%'.$search.'%')
-         ->orWhere('date_status', 'like', '%'.$search.'%')
-         ->orWhere('user_id', 'like', '%'.$search.'%')
-         ->orWhere('reason_description', 'like', '%'.$search.'%')
-         ->orWhere('reason_remarks', 'like', '%'.$search.'%');
-       })
-       ->latest('updated_at');
-       
-     if ($paginate == 1){
-       $requestor_logs = $requestor_logs
-       ->paginate($rows);
-     }else if ($paginate == 0){
-       $requestor_logs = $requestor_logs
-       ->get(['id','transaction_id','transaction_no','description','status','date_status'
-       ,'user_id','reason_description','reason_remarks','updated_at']);
+       $requestor_logs = GenericMethod::viewRequestLogs($request);
        if(count($requestor_logs)==true){
-           $requestor_logs = array("requestor_logs"=>$requestor_logs);;
-       }
-     }
- 
-       if(count($requestor_logs)==true){
-           
         $requestor_logs = RequestLog::collection($requestor_logs);
          return $this->resultResponse('fetch','Requestor Logs',$requestor_logs);
        }

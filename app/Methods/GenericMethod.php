@@ -1480,8 +1480,36 @@ class GenericMethod{
     #########################################      OTHERS               ######################################
     ##########################################################################################################
 
-        public static function viewRequestLogs(){
-            return RequestLogs::all();
+        public static function viewRequestLogs($request){
+            $rows =  (empty($request['rows']))?10:(int)$request['rows'];
+            $search =  $request['search'];
+            $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
+            
+            $requestor_logs = RequestorLogs::with('transaction')
+            ->where(function ($query) use ($search){
+              $query->where('transaction_id', 'like', '%'.$search.'%')
+              ->orWhere('transaction_no', 'like', '%'.$search.'%')
+              ->orWhere('description', 'like', '%'.$search.'%')
+              ->orWhere('status', 'like', '%'.$search.'%')
+              ->orWhere('date_status', 'like', '%'.$search.'%')
+              ->orWhere('user_id', 'like', '%'.$search.'%')
+              ->orWhere('reason_description', 'like', '%'.$search.'%')
+              ->orWhere('reason_remarks', 'like', '%'.$search.'%');
+            })
+            ->latest('updated_at');
+            
+          if ($paginate == 1){
+            $requestor_logs = $requestor_logs
+            ->select(['id','status as type','created_at as date','transaction_id'])
+            ->paginate($rows);
+          }else if ($paginate == 0){
+            $requestor_logs = $requestor_logs
+            ->get(['id','status as type','created_at as date','transaction_id']);
+            if(count($requestor_logs)==true){
+                $requestor_logs = array("requestor_logs"=>$requestor_logs);;
+            }
+          }
+          return $requestor_logs;
         }
 
         public static function addToUserDocumentCategory($user_id,$document_id,$category_id)

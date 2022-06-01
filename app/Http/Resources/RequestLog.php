@@ -14,24 +14,25 @@ class RequestLog extends JsonResource
      */
     public function toArray($request)
     {
+        $fullname = $this->transaction->first_name.' '.$this->transaction->middle_name.' '.$this->transaction->last_name;
         return [
-            "log_id"=>$this->id
+            "id"=>$this->id
+            ,"type"=>$this->type
+            ,"date"=>$this->date   
             ,"transaction"=>[
                 "id"=>$this->transaction_id
-                ,"no"=>$this->transaction_no
-                ,"description"=>$this->description
-                ,"status"=>[
-                    "date"=>$this->date_status,
-                    "action"=>$this->status,
-                ],
-                "reason"=>[
-                    "id"=>$this->reason_id,
-                    "description"=>$this->reason_description,
-                    "remarks"=>$this->reason_remarks,
+                ,"no"=>$this->transaction->transaction_no
+                ,"description"=>$this->transaction->description
+                ,"user"=>[
+                    "id"=>$this->transaction->users_id
+                    ,"name"=>$fullname
                 ]
-                ,"created_at"=>$this->created_at                
-                ,"updated_at"=>$this->updated_at     
-            ],
+                ,"reason"=>[
+                    "id"=>$this->transaction->reason_id,
+                    "description"=>$this->transaction->reason,
+                    "remarks"=>$this->transaction->reason_remarks,
+                ], 
+            ]
         ];
     }
 }
