@@ -27,7 +27,9 @@ class TransactionResource extends JsonResource
         $po_transaction = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')->get();
         $balance = $po_transaction->where('request_id',$this->request_id)->first()->balance_po_ref_amount;
         $referrence_amount = $po_transaction->where('request_id',$this->request_id)->first()->referrence_amount;
-        $previous_balance = $balance + $referrence_amount;
+        $document_amount = $po_transaction->where('request_id',$this->request_id)->first()->document_amount;
+        
+        $previous_balance = $balance + (isset($referrence_amount)?$referrence_amount:$document_amount);
         $po_no =  $po_transaction->where('request_id',$this->request_id)->first()->po_no;
         // return $this->request_id;
         // return $po_transaction->where('request_id',$this->request_id)->first();

@@ -109,7 +109,7 @@ class TransactionController extends Controller
     {
         // $transaction = DB::table('transactions')->where('id',$id)->first();
         $transaction = Transaction::where('id',$id)->get();
-        $singleTransaction = TransactionResource::collection($transaction);
+        return $singleTransaction = TransactionResource::collection($transaction);
         
         
         if(count($singleTransaction)!=true){
@@ -408,7 +408,12 @@ class TransactionController extends Controller
 
     public function validateDocumentNo(Request $request)
     {
+       $transaction_id = $request->transaction_id;
+        
        if (Transaction::where('document_no',$request['document_no'])
+       ->when(isset($transaction_id),function($query) use($transaction_id){
+         $query->where('id','<>',$transaction_id);
+       })
        ->where('state','!=','void')
        ->first()){
             $errorMessage = GenericMethod::resultLaravelFormat('document.no',["Document number already exist."]);
