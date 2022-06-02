@@ -65,7 +65,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::get('account-numbers/', [AccountNumberController::class, 'index']);
         Route::get('current-user/',[MasterlistController::class,'currentUser']);
         Route::get('charging/',[MasterlistController::class,'chargingDropdown']);
-        Route::get('departments/{id}',[TransactionController::class,'showUserDepartment']);
+        Route::get('user/departments/',[TransactionController::class,'showUserDepartment']);
         Route::get('references/', [ReferrenceController::class, 'index']);
         Route::get('reason/', [ReasonController::class, 'index']);
 

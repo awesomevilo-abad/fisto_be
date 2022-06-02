@@ -22,14 +22,17 @@ use App\Http\Requests\TransactionPostRequest;
 class TransactionController extends Controller
 {
 
-    public function showUserDepartment($id){
+    public function showUserDepartment(){
+
+        $id= Auth::id();
+
         $departments =  Transaction::where('users_id',$id)
         ->leftJoin('departments','transactions.department_details','=','departments.department')
         ->select('departments.id as id','department_details as name')
         ->get()
         ->unique();
 
-        if (count($departments)) return $this->resultResponse('fetch', 'Departments', $departments);
+        if (count($departments)) return $this->resultResponse('fetch', 'Departments', array("departments"=>$departments));
 
         return $this->resultResponse('not-found', 'Transaction', []);
     }
