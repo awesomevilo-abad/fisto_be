@@ -52,7 +52,7 @@ class TransactionController extends Controller
         $search =  $request['search'];
         $state = isset($request['state'])? $request['state']: 'request';
         
-        empty($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department) ;
+        !empty($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department) ;
 
 
         $transactions = Transaction::select([

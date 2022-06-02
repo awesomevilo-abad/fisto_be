@@ -32,7 +32,12 @@ use Illuminate\Support\Arr;
 class UserController extends Controller
 {
     public function departmentValidation(Request $request){
-        if(!Department::where('department',$request->department)->exists()){
+        $department = Auth::user()->department;
+        if(isset($request->department)){
+            $department = $request->department;
+        }
+
+        if(!Department::where('department',$department)->exists()){
             return $this->resultResponse('not-exist-department','Department',collect(['error_field'=>'department']));
         }
         
