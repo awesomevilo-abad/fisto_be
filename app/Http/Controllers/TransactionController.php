@@ -52,7 +52,8 @@ class TransactionController extends Controller
         $search =  $request['search'];
         $state = isset($request['state'])? $request['state']: 'request';
         
-        isset($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department) ;
+        empty($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department) ;
+
 
         $transactions = Transaction::select([
             'id',
@@ -90,7 +91,7 @@ class TransactionController extends Controller
             ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
         })
         ->when($role === 'Requestor',function($query) use($department){
-            $query->whereIn('department_details',$department);
+            $query->orWhereIn('department_details',$department);
         })
         ->where('state',$state)
         // ->when($role === 'Approver',function($query){
