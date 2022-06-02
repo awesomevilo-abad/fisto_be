@@ -421,6 +421,10 @@ class Controller extends BaseController
           throw new FistoLaravelException($modelName." does not exist.", 404, NULL, $data);
         break;
         
+        case('not-exist-department'):
+          return $this->result(404,$modelName." does not exist.",$data);
+        break;
+        
         case('import-error'):
           throw new FistoException("No ".Str::plural(strtolower($modelName))." were imported. Kindly check the errors.", 409, NULL, $data);
         break;

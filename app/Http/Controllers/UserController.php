@@ -33,7 +33,7 @@ class UserController extends Controller
 {
     public function departmentValidation(Request $request){
         if(!Department::where('department',$request->department)->exists()){
-            return $this->resultResponse('not-exist','Department',collect(['error_field'=>'department']));
+            return $this->resultResponse('not-exist-department','Department',collect(['error_field'=>'department']));
         }
         
         return $this->resultResponse('available','Department',[]);
