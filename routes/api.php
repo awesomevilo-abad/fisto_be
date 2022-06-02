@@ -166,7 +166,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
       
         // USER
         Route::get('users/',[UserController::class,'index']);
-        Route::post('users/synch-validation/',[UserController::class,'synchSedarValidation']);
+        Route::post('users/department-validation/',[UserController::class,'departmentValidation']);
         Route::patch('users/{id}', [UserController::class, 'change_status']);
         Route::patch('users/reset/{id}', [UserController::class, 'reset']);
         Route::resource('users', UserController::class);

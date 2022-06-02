@@ -31,7 +31,7 @@ use Illuminate\Support\Arr;
 
 class UserController extends Controller
 {
-    public function synchSedarValidation(Request $request){
+    public function departmentValidation(Request $request){
         if(!Department::where('department',$request->department)->exists()){
             return $this->resultResponse('not-exist','Department',collect(['error_field'=>'department']));
         }
