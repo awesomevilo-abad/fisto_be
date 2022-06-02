@@ -91,7 +91,7 @@ class TransactionController extends Controller
             ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
         })
         ->when($role === 'Requestor',function($query) use($department){
-            $query->orWhereIn('department_details',$department);
+            $query->whereIn('department_details',$department);
         })
         ->where('state',$state)
         // ->when($role === 'Approver',function($query){
