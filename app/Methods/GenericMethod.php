@@ -28,6 +28,116 @@ class GenericMethod{
     #########################################      REUSABLE FUNCTION    ######################################
     ##########################################################################################################
 
+        public static function getTransactionChanges($request_id,$transaction,$id){
+            $current_transaction = Transaction::with('po_details')->findOrFail($id);
+            $original_transaction = Transaction::with('po_details')->findOrFail($id);
+
+
+            $current_transaction->users_id = $transaction['requestor']['id'];
+            $current_transaction->id_prefix = $transaction['requestor']['id_prefix'];
+            $current_transaction->id_no = $transaction['requestor']['id_no'];
+            $current_transaction->first_name = $transaction['requestor']['first_name'];
+            $current_transaction->middle_name = $transaction['requestor']['middle_name'];
+            $current_transaction->last_name = $transaction['requestor']['last_name'];
+            $current_transaction->suffix = $transaction['requestor']['suffix'];
+            $current_transaction->department_details = $transaction['requestor']['department'];
+            
+            $current_transaction->document_id = $transaction['document']['id'];
+            $current_transaction->document_type = $transaction['document']['name'];
+            $current_transaction->document_no = $transaction['document']['no'];
+            $current_transaction->document_date = $transaction['document']['date'];
+            $current_transaction->payment_type = $transaction['document']['payment_type'];
+            $current_transaction->document_amount = $transaction['document']['amount'];
+            $current_transaction->remarks = $transaction['document']['remarks'];
+            $current_transaction->category_id = $transaction['document']['category']['id'];
+            $current_transaction->category = $transaction['document']['category']['name'];
+            $current_transaction->company_id = $transaction['document']['company']['id'];
+            $current_transaction->company = $transaction['document']['company']['name'];
+            $current_transaction->department_id = $transaction['document']['department']['id'];
+            $current_transaction->department = $transaction['document']['department']['name'];
+            $current_transaction->location_id = $transaction['document']['location']['id'];
+            $current_transaction->location = $transaction['document']['location']['name'];
+            $current_transaction->supplier_id = $transaction['document']['supplier']['id'];
+            $current_transaction->supplier = $transaction['document']['supplier']['name'];
+
+
+            if(isset($transaction['po_group'])){
+                
+            }
+            
+            $po_changes = [];
+            $modifiedPO = [];
+            $newPO = [];
+            foreach($current_transaction->po_details as $k=>$v){
+                 foreach($transaction['po_group'] as $l=>$w){
+                    if($current_transaction->po_details[$k]->request_id == $transaction['po_group'][$l]['request_id']){
+                        if(
+                            ($current_transaction->po_details[$k]->po_no != $transaction['po_group'][$l]['no'])||
+                            ($current_transaction->po_details[$k]->po_amount != $transaction['po_group'][$l]['amount'])||
+                            ($current_transaction->po_details[$k]->rr_group) != ($transaction['po_group'][$l]['rr_no'])
+                        
+                        ){
+                            $modifiedPO[$k] = [
+                                "old"=>[
+                                    "po_no"=>$current_transaction->po_details[$k]->po_no,
+                                    "po_amount"=>$current_transaction->po_details[$k]->po_amount,
+                                    "rr_group"=>$current_transaction->po_details[$k]->rr_group
+                                ]
+                                ,
+                                "new"=>[
+                                    "po_no"=>$transaction['po_group'][$l]['no'],
+                                    "po_amount"=>$transaction['po_group'][$l]['amount'],
+                                    "rr_group"=>($transaction['po_group'][$l]['rr_no'])
+                                ]
+                            ];
+                        }
+
+                    }else{
+                        $newPO[$l] = [
+                            "new"=>[
+                                "po_no"=>$transaction['po_group'][$l]['no'],
+                                "po_amount"=>$transaction['po_group'][$l]['amount'],
+                                "rr_group"=>($transaction['po_group'][$l]['rr_no'])
+                            ]
+                        ];
+                    }
+                    
+                }
+            }
+
+            $newPO = array_values($newPO);
+            $modifiedPO = array_values($modifiedPO);
+            
+            // $newPO = array_unique($newPO, 'new');
+            $po_changes = [
+                "modified"=>$modifiedPO
+                ,"additional"=>$newPO
+                
+            ];
+
+            
+            // $current_po_nos= $current_transaction->po_details->pluck('po_no')->toArray();
+            // $new_po_nos = array_column($transaction['po_group'], 'no');
+            // $additional_po_nos = array_merge(array_diff($current_po_nos,$new_po_nos),array_diff($new_po_nos,$current_po_nos));
+
+
+            $modifiedFields = array_keys($current_transaction->getDirty());
+            $oldTransaction = collect();
+            foreach($modifiedFields as $field){
+                $oldTransaction->PUT("$field",$original_transaction->$field);
+            }
+
+            return $changes = [
+                "old"=>
+                $oldTransaction
+                ,
+                "new"=>
+                    $current_transaction->getDirty()
+                ,    
+                "po_details"=>$po_changes
+            ];
+        }
+
         public static function insertTransaction($transaction_id,$po_total_amount=0,
         $request_id,$date_requested,$fields,$balance_po_ref_amount=0){
             $status = 'create';
@@ -278,9 +388,265 @@ class GenericMethod{
 
 
         }
-        
 
-        public static function insertRequestorLogs($transaction_id,$transaction_no,$date_requested,$remarks,$user_id,$status,$reason_id,$reason_description,$reason_remarks){
+        public static function updateTransaction($transaction_id,$po_total_amount=0,
+        $request_id,$date_requested,$fields,$balance_po_ref_amount=0,$changes){
+
+            $currentTransaction = Transaction::with('po_details')->where('id',$transaction_id)->first();
+            $currentTransaction->isClean();
+            $status = 'update';
+            if($fields['document']['id'] == 6){
+                $new_transaction = Transaction::create([
+                    'transaction_id' => $request['transaction']['no']
+                    , "users_id" => $fields['requestor']['id']
+                    , "id_prefix" => $fields['requestor']['id_prefix']
+                    , "id_no" => $fields['requestor']['id_no']
+                    , "first_name" => $fields['requestor']['first_name']
+                    , "middle_name" => $fields['requestor']['middle_name']
+                    , "last_name" => $fields['requestor']['last_name']
+                    , "suffix" => $fields['requestor']['suffix']
+                    , "department_details" => $fields['requestor']['department']
+        
+                    , "document_id" => $fields['document']['id']
+                    , "company_id" => $fields['document']['company']['id']
+                    , "company" => $fields['document']['company']['name']
+                    , "department_id" => $fields['document']['department']['id']
+                    , "department" => $fields['document']['department']['name']
+                    , "location_id" => $fields['document']['location']['id']
+                    , "location" => $fields['document']['location']['name']
+                    , "supplier_id" => $fields['document']['supplier']['id']
+                    , "supplier" => $fields['document']['supplier']['name']
+                    , "payment_type" => $fields['document']['payment_type']
+                    , "document_amount" => $fields['document']['amount']
+                    , "remarks" => $fields['document']['remarks']
+                    , "document_type" => $fields['document']['name']
+        
+                    ,"utilities_from" => $fields['document']['from']
+                    , "utilities_to" => $fields['document']['to']
+
+                    , "utilities_receipt_no" => $fields['document']['utility']['receipt_no']
+                    , "utilities_consumption" => $fields['document']['utility']['consumption']
+                    , "utilities_location_id" => $fields['document']['utility']['location']['id']
+                    , "utilities_location" => $fields['document']['utility']['location']['name']
+                    , "utilities_category_id" => $fields['document']['utility']['category']['id']
+                    , "utilities_category" => $fields['document']['utility']['category']['name']
+                    , "utilities_account_no_id" => $fields['document']['utility']['account_no']['id']
+                    , "utilities_account_no" => $fields['document']['utility']['account_no']['no']
+
+                    , "po_total_amount" => $po_total_amount
+        
+                    , "request_id" => $request_id
+                    , "tagging_tag_id" => 0
+                    , "date_requested" => $date_requested
+                    , "status" => "Pending"
+                ]);
+            }else if($fields['document']['id'] == 8){
+                $new_transaction = Transaction::create([
+                    'transaction_id' => $transaction_id
+                    , "users_id" => $fields['requestor']['id']
+                    , "id_prefix" => $fields['requestor']['id_prefix']
+                    , "id_no" => $fields['requestor']['id_no']
+                    , "first_name" => $fields['requestor']['first_name']
+                    , "middle_name" => $fields['requestor']['middle_name']
+                    , "last_name" => $fields['requestor']['last_name']
+                    , "suffix" => $fields['requestor']['suffix']
+                    , "department_details" => $fields['requestor']['department']
+        
+                    , "document_id" => $fields['document']['id']
+                    , "company_id" => $fields['document']['company']['id']
+                    , "company" => $fields['document']['company']['name']
+                    , "department_id" => $fields['document']['department']['id']
+                    , "department" => $fields['document']['department']['name']
+                    , "location_id" => $fields['document']['location']['id']
+                    , "location" => $fields['document']['location']['name']
+                    , "supplier_id" => $fields['document']['supplier']['id']
+                    , "supplier" => $fields['document']['supplier']['name']
+                    , "payment_type" => $fields['document']['payment_type']
+                    , "document_date" => $fields['document']['date']
+                    , "document_amount" => $fields['document']['amount']
+                    , "remarks" => $fields['document']['remarks']
+                    , "document_type" => $fields['document']['name']
+        
+                    , "pcf_name" => $fields['document']['pcf_batch']['name']
+                    , "pcf_date" => $fields['document']['pcf_batch']['date']
+                    , "pcf_letter" => $fields['document']['pcf_batch']['letter']
+                    , "request_id" => $request_id
+                    , "tagging_tag_id" => 0
+                    , "date_requested" => $date_requested
+                ]);
+            }else if($fields['document']['id'] == 7){
+                $new_transaction = Transaction::create([
+                    'transaction_id' => $transaction_id
+                    , "users_id" => $fields['requestor']['id']
+                    , "id_prefix" => $fields['requestor']['id_prefix']
+                    , "id_no" => $fields['requestor']['id_no']
+                    , "first_name" => $fields['requestor']['first_name']
+                    , "middle_name" => $fields['requestor']['middle_name']
+                    , "last_name" => $fields['requestor']['last_name']
+                    , "suffix" => $fields['requestor']['suffix']
+                    , "department_details" => $fields['requestor']['department']
+        
+                    , "document_id" => $fields['document']['id']
+                    , "company_id" => $fields['document']['company']['id']
+                    , "company" => $fields['document']['company']['name']
+                    , "department_id" => $fields['document']['department']['id']
+                    , "department" => $fields['document']['department']['name']
+                    , "location_id" => $fields['document']['location']['id']
+                    , "location" => $fields['document']['location']['name']
+                    , "supplier_id" => $fields['document']['supplier']['id']
+                    , "supplier" => $fields['document']['supplier']['name']
+                    , "payment_type" => $fields['document']['payment_type']
+                    , "document_amount" => $fields['document']['amount']
+                    , "remarks" => $fields['document']['remarks']
+                    , "document_type" => $fields['document']['name']
+        
+                    , "payroll_from" => $fields['document']['from']
+                    , "payroll_to" => $fields['document']['to']
+                    , "payroll_category_id" => $fields['document']['payroll']['category']['id']
+                    , "payroll_category" => $fields['document']['payroll']['category']['name']
+                    , "payroll_type" => $fields['document']['payroll']['type']
+                    , "payroll_client" => $fields['document']['payroll']['clients']
+                    , "request_id" => $request_id
+                    , "tagging_tag_id" => 0
+                    , "date_requested" => $date_requested
+                ]);
+            }else if($fields['document']['id'] == 4){
+                $new_transaction = Transaction::create([
+                    'transaction_id' => $transaction_id
+                    , "users_id" => $fields['requestor']['id']
+                    , "id_prefix" => $fields['requestor']['id_prefix']
+                    , "id_no" => $fields['requestor']['id_no']
+                    , "first_name" => $fields['requestor']['first_name']
+                    , "middle_name" => $fields['requestor']['middle_name']
+                    , "last_name" => $fields['requestor']['last_name']
+                    , "suffix" => $fields['requestor']['suffix']
+                    , "department_details" => $fields['requestor']['department']
+        
+                    , "document_id" => $fields['document']['id']
+                    , "category_id" => $fields['document']['category']['id']
+                    , "category" => $fields['document']['category']['name']
+                    , "company_id" => $fields['document']['company']['id']
+                    , "company" => $fields['document']['company']['name']
+                    , "department_id" => $fields['document']['department']['id']
+                    , "department" => $fields['document']['department']['name']
+                    , "location_id" => $fields['document']['location']['id']
+                    , "location" => $fields['document']['location']['name']
+                    , "supplier_id" => $fields['document']['supplier']['id']
+                    , "supplier" => $fields['document']['supplier']['name']
+                    , "payment_type" => $fields['document']['payment_type']
+                    , "document_date" => $fields['document']['date']
+                    , "remarks" => $fields['document']['remarks']
+                    , "document_type" => $fields['document']['name']
+        
+                    , "po_total_amount" => $po_total_amount    
+                    , "balance_po_ref_amount" => $balance_po_ref_amount   
+                    
+                    , "referrence_type" => $fields['document']['reference']['type']
+                    , "referrence_no" => $fields['document']['reference']['no']
+                    , "referrence_amount" => $fields['document']['reference']['amount']
+                    , "referrence_id" => $fields['document']['reference']['id'] 
+
+                    , "request_id" => $request_id
+                    , "tagging_tag_id" => 0
+                    , "date_requested" => $date_requested
+                    , "status" => "Pending"
+
+                    
+                ]);
+            }else if($fields['document']['id'] == 5){
+                
+                $new_transaction = Transaction::create([
+                    'transaction_id' => $transaction_id
+                    , "users_id" => $fields['requestor']['id']
+                    , "id_prefix" => $fields['requestor']['id_prefix']
+                    , "id_no" => $fields['requestor']['id_no']
+                    , "first_name" => $fields['requestor']['first_name']
+                    , "middle_name" => $fields['requestor']['middle_name']
+                    , "last_name" => $fields['requestor']['last_name']
+                    , "suffix" => $fields['requestor']['suffix']
+                    , "department_details" => $fields['requestor']['department']
+        
+                    , "document_id" => $fields['document']['id']
+                    , "capex_no" => $fields['document']['capex_no']
+                    , "category_id" => $fields['document']['category']['id']
+                    , "category" => $fields['document']['category']['name']
+                    , "company_id" => $fields['document']['company']['id']
+                    , "company" => $fields['document']['company']['name']
+                    , "department_id" => $fields['document']['department']['id']
+                    , "department" => $fields['document']['department']['name']
+                    , "location_id" => $fields['document']['location']['id']
+                    , "location" => $fields['document']['location']['name']
+                    , "supplier_id" => $fields['document']['supplier']['id']
+                    , "supplier" => $fields['document']['supplier']['name']
+                    , "payment_type" => $fields['document']['payment_type']
+                    , "document_no" => $fields['document']['no']
+                    , "document_date" => $fields['document']['date']
+                    , "document_amount" => $fields['document']['amount']
+                    , "remarks" => $fields['document']['remarks']
+                    , "document_type" => $fields['document']['name']
+        
+                    , "po_total_amount" => $po_total_amount
+        
+                    , "request_id" => $request_id
+                    , "tagging_tag_id" => 0
+                    , "date_requested" => $date_requested
+                    , "status" => "Pending"
+                ]);
+            }
+            else{
+                $currentTransaction->transaction_id = $fields['transaction']['no'];
+                $currentTransaction->users_id= $fields['requestor']['id'];
+                $currentTransaction->id_prefix= $fields['requestor']['id_prefix'];
+                $currentTransaction->id_no= $fields['requestor']['id_no'];
+                $currentTransaction->first_name= $fields['requestor']['first_name'];
+                $currentTransaction->middle_name= $fields['requestor']['middle_name'];
+                $currentTransaction->last_name= $fields['requestor']['last_name'];
+                $currentTransaction->suffix= $fields['requestor']['suffix'];
+                $currentTransaction->department_details= $fields['requestor']['department'];
+                $currentTransaction->document_id= $fields['document']['id'];
+                $currentTransaction->category_id= $fields['document']['category']['id'];
+                $currentTransaction->category= $fields['document']['category']['name'];
+                $currentTransaction->company_id= $fields['document']['company']['id'];
+                $currentTransaction->company= $fields['document']['company']['name'];
+                $currentTransaction->department_id= $fields['document']['department']['id'];
+                $currentTransaction->department= $fields['document']['department']['name'];
+                $currentTransaction->location_id= $fields['document']['location']['id'];
+                $currentTransaction->location= $fields['document']['location']['name'];
+                $currentTransaction->supplier_id= $fields['document']['supplier']['id'];
+                $currentTransaction->supplier= $fields['document']['supplier']['name'];
+                $currentTransaction->payment_type= $fields['document']['payment_type'];
+                $currentTransaction->document_no= $fields['document']['no'];
+                $currentTransaction->document_date= $fields['document']['date'];
+                $currentTransaction->document_amount= $fields['document']['amount'];
+                $currentTransaction->remarks= $fields['document']['remarks'];
+                $currentTransaction->document_type= $fields['document']['name'];
+                $currentTransaction->po_total_amount= $po_total_amount;
+                $currentTransaction->request_id= $request_id;
+                $currentTransaction->status= "Pending";
+
+            }
+
+            
+        // if(count($currentTransaction->getDirty()) == 0){
+        //     return "Nothing Has Changed";
+        //   }else{
+                $currentTransaction->save();
+                GenericMethod::insertRequestorLogs($transaction_id,$fields['transaction']['no'],$date_requested,$fields['document']['remarks'],$fields['requestor']['id'],$status,NULL,NULL,NULL,$changes);
+                return $currentTransaction;
+        //   }
+        }
+        
+        public function validateIfNothingChangeThenSave($model,$modelName,$is_tagged_array_modified=0){
+            // return $model->isClean().'&&'.$is_tagged_array_modified;
+            if($model->isClean() && $is_tagged_array_modified == 0){
+              return GenericMethod::resultResponse('nothing-has-changed',$modelName,[]);
+            }else{
+                $model->save();
+                return GenericMethod::resultResponse('update',$modelName,[]);
+            }
+          }
+
+        public static function insertRequestorLogs($transaction_id,$transaction_no,$date_requested,$remarks,$user_id,$status,$reason_id,$reason_description,$reason_remarks,$changes=[]){
             RequestorLogs::create([
                 "transaction_id"=>$transaction_id
                 ,"transaction_no"=>$transaction_no
@@ -291,6 +657,7 @@ class GenericMethod{
                 ,"reason_id"=>$reason_id
                 ,"reason_description"=>$reason_description
                 ,"reason_remarks"=>$reason_remarks
+                ,"changes"=>$changes
             ]);
 
         }
@@ -308,15 +675,60 @@ class GenericMethod{
             }
         }
 
-        public static function insertPO($request_id,$po_group,$po_total_amount){
+        
+        public static function insertPO($request_id,$po_group,$po_total_amount,$payment_type){
             $po_count = count($po_group);
             for($i=0;$i<$po_count;$i++){
                 
+                $is_add= NULL;
+                $is_editable= 1;
+                $previous_balance= $po_group[$i]['amount'];
+                if($payment_type === 'PARTIAL'){
+                    $is_add = $po_group[$i]['is_add'];
+                    $is_editable = $po_group[$i]['is_editable'];
+                    $previous_balance = $po_group[$i]['previous_balance'];
+                }
+
                 $po_no = $po_group[$i]['no'];
                 $po_amount = $po_group[$i]['amount'];
                 $rr_group = $po_group[$i]['rr_no'];
+               
                 $insert_po_batch = POBatch::create([
                     'request_id' => $request_id,
+                    'is_add' => $is_add,
+                    'is_editable' => $is_editable,
+                    'previous_balance' => $previous_balance,
+                    'po_no' => $po_no,
+                    'po_amount' => $po_amount,
+                    'rr_group' => $rr_group,
+                    'po_total_amount' => $po_total_amount
+                ]);
+            }
+        }
+
+        public static function updatePO($request_id,$po_group,$po_total_amount,$payment_type,$id){
+            $po_count = count($po_group);
+            
+            POBatch::where('request_id',$request_id)->delete();
+            for($i=0;$i<$po_count;$i++){
+                $is_add= NULL;
+                $is_editable= 1;
+                $previous_balance= $po_group[$i]['amount'];
+                if($payment_type === 'PARTIAL'){
+                    $is_add = $po_group[$i]['is_add'];
+                    $is_editable = $po_group[$i]['is_editable'];
+                    $previous_balance = $po_group[$i]['previous_balance'];
+                }
+
+                $po_no = $po_group[$i]['no'];
+                $po_amount = $po_group[$i]['amount'];
+                $rr_group = $po_group[$i]['rr_no'];
+               
+                $insert_po_batch = POBatch::create([
+                    'request_id' => $request_id,
+                    'is_add' => $is_add,
+                    'is_editable' => $is_editable,
+                    'previous_balance' => $previous_balance,
                     'po_no' => $po_no,
                     'po_amount' => $po_amount,
                     'rr_group' => $rr_group,
@@ -892,6 +1304,17 @@ class GenericMethod{
                 throw new FistoException("The given data was invalid.", 422, NULL, collect(["document.no"=>["The Document number has already been taken."]]));
             }
         }
+        
+        public static function documentNoValidationUpdate($doc_no,$id){
+            if(!isset($doc_no)){
+                
+                throw new FistoException("Document number is empty.", 404, NULL, []);
+            }
+            
+            if(TransactionValidationMethod::validateIfDocumentNoExistUpdate($doc_no,$id) > 0){
+                throw new FistoException("The given data was invalid.", 422, NULL, collect(["document.no"=>["The Document number has already been taken."]]));
+            }
+        }
             
         public function getEmptyErrorBag($tableName,$index,$errorBag) {
             foreach($tableName as $key=>$value){
@@ -1354,35 +1777,88 @@ class GenericMethod{
 
         }
 
+        public static function validateIfPOExists($po_group,$company_id){
+
+            $po_total_amount = 0;
+
+            $existingTransaction = [];
+            // return validateIfFirstTransaction = 
+            foreach($po_group as $k=>$v){
+                $po_no = $po_group[$k]['no'];
+
+                $existingTransaction = Transaction::with('po_details')->where('company_id',$company_id)
+                ->whereHas('po_details',function($q) use($po_no){$q->where('po_no',$po_no);})
+                ->exists();
+            }
+
+            foreach($po_group as $k=>$v){
+               $po_no = $po_group[$k]['no'];
+
+               $transaction = Transaction::with('po_details')->where('company_id',$company_id)
+                ->whereHas('po_details',function($q) use($po_no){$q->where('po_no',$po_no);})
+                ->get();
+                if($transaction->count() > 0){
+                    $po_group[$k]['is_add'] = 0;
+                    $po_group[$k]['is_editable'] = 0;
+                    $po_group[$k]['previous_balance'] = Transaction::with('po_details')
+                        ->where('company_id',$company_id)
+                        ->without('po_details')
+                        ->whereHas('po_details',function($q) use($po_no){$q->where('po_no',$po_no);})
+                        ->whereHas('po_details',function($q) {$q->where('is_add',0);})
+                        ->get('balance_po_ref_amount')->last()->balance_po_ref_amount;
+               }else{
+                   
+                   $po_group[$k]['is_editable'] = 1;  
+                   $po_group[$k]['is_add'] = 1;  
+                    if(!$existingTransaction){
+                        $po_group[$k]['is_add'] = 0;  
+                       
+                    }
+
+                    $po_group[$k]['previous_balance'] =  $v['amount'];  
+                }
+            }
+            return $po_group;
+            
+        }
+
     ##########################################################################################################
     #########################################      RESPONSE             ######################################
     ##########################################################################################################
+        public static function result($code,$message,$data){
+            $arrayResponse = [
+                "code" => $code,
+                "message" =>$message,
+                "result" => $data,
+            ];
+            return response($arrayResponse,$code);
+        }
 
-        public function resultResponse($action,$modelName,$data=[]){
+        public static function resultResponse($action,$modelName,$data=[]){
             $modelName = ucfirst(strtolower($modelName));
             switch($action){
             case('fetch'):
-                return $this->result(200,Str::plural($modelName)." has been fetched.",$data);
+                return GenericMethod::result(200,Str::plural($modelName)." has been fetched.",$data);
             break;
             
             case('save'):
-                return $this->result(201,"New ".strtolower($modelName)." has been saved.",$data);
+                return GenericMethod::result(201,"New ".strtolower($modelName)." has been saved.",$data);
             break;
-    
+        
             case('import'):
-                return $this->result(201,Str::plural($modelName)." has been imported.",$data);
+                return GenericMethod::result(201,Str::plural($modelName)." has been imported.",$data);
             break;
             
             case('update'):
-                return $this->result(200,$modelName." has been updated.",$data);
+                return GenericMethod::result(200,$modelName." has been updated.",$data);
             break;
             
             case('archive'):
-                return $this->result(200,$modelName." has been archived.",$data);
+                return GenericMethod::result(200,$modelName." has been archived.",$data);
             break;
-    
+        
             case('restore'):
-                return $this->result(200,$modelName." has been restored.",$data);
+                return GenericMethod::result(200,$modelName." has been restored.",$data);
             break;
             
             case('registered'):
@@ -1410,51 +1886,51 @@ class GenericMethod{
             break;
             
             case('nothing-has-changed'):
-                return $this->result(200,"Nothing has changed.",$data);
+                return GenericMethod::result(200,"Nothing has changed.",$data);
             break;
-    
+        
             case('not-found'):
                 throw new FistoException("No records found.", 404, NULL, $data);
             break;
-    
+        
             case('password-changed'):
-                return $this->result(200,"Password has been changed.",$data);
+                return GenericMethod::result(200,"Password has been changed.",$data);
             break;
-    
+        
             case('password-incorrect'):
                 throw new FistoException("The password you entered is incorrect.", 409, NULL, $data);
             break;
-    
+        
             case('password-error-cred'):
                 throw new FistoException("You don't have the proper credentials to perform this action.", 401, NULL, $data);
             break;
-    
+        
             case('login'):
-                return $this->result(200,"Succesfully login.",$data);
+                return GenericMethod::result(200,"Succesfully login.",$data);
             break;
-    
+        
             case('logout'):
-                return $this->result(200,"User has been logged out.",$data);
+                return GenericMethod::result(200,"User has been logged out.",$data);
             break;
-    
+        
             case('logout-again'):
                 throw new FistoException("User is already logged out.", 401, NULL, []);
             break;
-    
+        
             case('login-error'):
                 throw new FistoException("Invalid username or password.", 409, NULL, $data);
             break;
-    
+        
             case('available'):
-                return $this->result(200,$modelName." is available.",$data);
+                return GenericMethod::result(200,$modelName." is available.",$data);
             break;
-    
+        
             case('password-reset'):
-                return $this->result(200,"User's default password has been restored.",$data);
+                return GenericMethod::result(200,"User's default password has been restored.",$data);
             break;
             }
         }
-
+        
         public static function resultLaravelFormat($column,$message){
 
             if(gettype($column) == "string"){

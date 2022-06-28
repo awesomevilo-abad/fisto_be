@@ -32,7 +32,7 @@ use Illuminate\Support\Arr;
 class UserController extends Controller
 {
     public function departmentValidation(Request $request){
-        $department = Auth::user()->department;
+        $department = Auth::user()->department[0]['name'];
         if(isset($request->department)){
             $department = $request->department;
         }

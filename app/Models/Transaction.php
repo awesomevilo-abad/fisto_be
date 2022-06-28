@@ -102,5 +102,13 @@ class Transaction extends Model
         'payroll_client' => 'array',
     ];
 
+    public function po_details(){
+        return $this->hasMany(POBatch::class,'request_id','request_id');
+    }
+
+    public function users(){
+        return $this->belongsTo(User::class,'users_id','id');
+    }
+
 
 }

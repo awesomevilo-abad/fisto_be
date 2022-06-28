@@ -136,8 +136,16 @@ class MasterlistController extends Controller
 
   }
 
-  public function departmentDropdown(){
-    $data =  array("departments"=>Department::whereNull('deleted_at')->get(['id','department as name']));
+  public function departmentDropdown(Request $request){
+    $departments = Department::when(isset($request['all']), function($query) {
+      return $query->withTrashed();
+    })
+    ->get(['id','department as name']);
+
+    $data = array(
+      "departments" => $departments
+    );
+    
     return $this->resultResponse('fetch','Department',$data);
   }
 }

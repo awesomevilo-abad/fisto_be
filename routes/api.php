@@ -41,7 +41,7 @@ use App\Http\Controllers\PayrollTypeController;
  */
 
 //  Public Routes
-Route::post('/login', [UserController::class, 'login']);
+Route::post('/login', [UserController::class, 'login'])->name('login');
 
 // Protected Routes
 // Route::middleware('auth:sanctum')->get('/authenticated', function (Request $request) {
@@ -166,7 +166,6 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
       
         // USER
         Route::get('users/',[UserController::class,'index']);
-        Route::post('users/department-validation/',[UserController::class,'departmentValidation']);
         Route::patch('users/{id}', [UserController::class, 'change_status']);
         Route::patch('users/reset/{id}', [UserController::class, 'reset']);
         Route::resource('users', UserController::class);
@@ -191,7 +190,11 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         
     });
 
+    // USER
+    Route::post('users/department-validation/',[UserController::class,'departmentValidation']);
+
     // TRANSACTION
+    Route::put('transactions/{id}', [TransactionController::class,'update']);
     Route::resource('transactions/', TransactionController::class);
     Route::get('transactions/logs/request', [TransactionController::class,'viewRequestorLogs']);
     Route::get('transactions/{id}',[TransactionController::class,'showTransaction']);

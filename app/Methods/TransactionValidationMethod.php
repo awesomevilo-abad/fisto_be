@@ -38,6 +38,15 @@ class TransactionValidationMethod
    
     }
 
+
+    public static function validateIfDocumentNoExistUpdate($doc_no,$id){
+        $transactions = DB::table('transactions')
+        ->where('id','<>',$id)
+        ->where('document_no',$doc_no)
+        ->whereNotNull('document_no')->count();
+        return $transactions;
+
+    }
 // CONTINUATION     
     
     public static function fullPOValidation($payment_type,$company_id,$supplier_id,$po_group){

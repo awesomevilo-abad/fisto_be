@@ -17,45 +17,57 @@ class TransactionResource extends JsonResource
     public function toArray($request)
     {
         $document  = [];
-        $po = [];
+        $po_details = [];
         $reference = [];
         $po_no = [];
-        $previous_balance = 0;
+        $previous_balance=0;
+        $keys = [];
 
+        $payment_type = strtoupper($this->payment_type);
         $user = User::where('id',$this->users_id)->get()->first();
-        $po = POBatch::where('request_id',$this->request_id)->get(['po_no as no', 'po_amount as amount','rr_group as rr_no']);
         $po_transaction = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')->get();
+        $po_details = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')
+       ->where('transactions.request_id',$this->request_id)
+        ->when($payment_type === 'PARTIAL',function($q){
+                $q->select(['is_add','is_editable','po_no as no', 'po_amount as amount','previous_balance','balance_po_ref_amount as balance','rr_group as rr_no']);
+            }, function($q){
+                $q->select(['po_no as no', 'po_amount as amount','rr_group as rr_no']);
+            } 
+        )
+        ->get();
+
+        foreach($po_details as $j=>$u){
+            $rr_no = json_decode($po_details[$j]['rr_no']);
+            $po_details[$j]['rr_no'] = $rr_no;
+            $po_details[$j]['is_editable'] = 1;
+            $po_details[$j]['previous_balance'] = $po_details[$j]['amount'];
+        }
+
+       if(strtoupper($this->payment_type) == 'PARTIAL'){
+            $balance = ($po_details->where('is_add',0)->first()->balance);
+            $previous_balance = ($po_details->where('is_add',0)->first()->previous_balance);
+            foreach($po_details as $k=>$v){
+                if($po_details[$k]['is_add']==0){
+                    $keys[] = $k;
+                    $po_details[$k]['previous_balance'] = 0;
+                    $po_details[$k]['balance'] = 0;
+                }
+                unset($po_details[$k]->is_add);
+            }
+
+        $key= current($keys);
+        $po_details[$key]['previous_balance'] = $previous_balance;
+        $po_details[$key]['balance'] = $balance;
+
+       }
         $transaction =($po_transaction->where('request_id',$this->request_id));
         $document_amount = Transaction::where('request_id',$this->request_id)->first()->document_amount;
-        $balance = $document_amount;
-        if(count($transaction)>0){
-            $balance = $po_transaction->where('request_id',$this->request_id)->first()->balance_po_ref_amount;
-            $referrence_amount = $po_transaction->where('request_id',$this->request_id)->first()->referrence_amount;
-            $document_amount = $po_transaction->where('request_id',$this->request_id)->first()->document_amount;
-            $po_no =  $po_transaction->where('request_id',$this->request_id)->first()->po_no;
-        }
-        $previous_balance = $balance + (isset($referrence_amount)?$referrence_amount:$document_amount);
+
         $condition =  ($this->state=='void')? '=': '!=';
         $last_transaction_id = $po_transaction->where('po_no',$po_no)->where('state',$condition,'void')->pluck('id')->last();
         $is_latest_transaction=0;
         if($last_transaction_id == $this->id){
             $is_latest_transaction=1;
-        }
-        $balance  = $this->balance_po_ref_amount;
-        if(empty($this->balance_po_ref_amount)){
-            $balance  = 0;
-        }
-        if(!$po->isEmpty()){
-            $po->mapToGroups(function ($item,$v) use ($balance){
-                return [
-                    $item['previous_balance']=0,
-                    $item['balance']=0,
-                    $item['rr_no']=json_decode($item['rr_no'], true)
-                ];
-            });
-            // Add the current value of balance and previous balance in the first transaction.
-            $po[0]['previous_balance'] = $previous_balance;
-            $po[0]['balance'] = $balance;
         }
 
         switch($this->document_id){
@@ -272,7 +284,7 @@ class TransactionResource extends JsonResource
                 ,"department"=>$this->department_details
             ],
             "document"=>$document
-            ,"po_group"=>$po
+            ,"po_group"=>$po_details
             ,"voucher"=>[
                 "ap_associate"=>null
                 ,"receipt_type"=>null

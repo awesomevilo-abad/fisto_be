@@ -60,13 +60,12 @@ class UserMethod{
         ->exists();
         
        if((in_array('position',$changed_keys) || in_array('role',$changed_keys) || in_array('department',$changed_keys)) && $transaction_exist){
-        throw new FistoException("Cannot archive user with on-going transactions.", 409, NULL, []);
+        throw new FistoException("Cannot modify user with on-going transactions.", 409, NULL, []);
        }
 
     }
     
     public static function userDeleteValidation($specific_user,$id){
-        
         
         $user = User::withTrashed()->find($id);
         $user->role = $specific_user->role;

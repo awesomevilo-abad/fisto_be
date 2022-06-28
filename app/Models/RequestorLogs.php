@@ -11,7 +11,13 @@ class RequestorLogs extends Model
 
     protected $table = 'requestor_logs';
     protected $fillable = ['transaction_id','transaction_no','description','status','date_status','user_id'
-    ,'reason_id','reason_description','reason_remarks'];
+    ,'reason_id','reason_description','reason_remarks','changes'];
+
+
+    protected $casts = [
+      "changes"=>'array'
+    ];
+    
 
     public function transaction()
     {

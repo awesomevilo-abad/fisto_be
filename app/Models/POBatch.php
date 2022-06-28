@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class POBatch extends Model
 {
@@ -13,6 +14,9 @@ class POBatch extends Model
 
     protected $fillable = [
         'request_id',
+        'is_add',
+        'is_editable',
+        'previous_balance',
         'po_no',
         'po_amount',
         'po_qty',

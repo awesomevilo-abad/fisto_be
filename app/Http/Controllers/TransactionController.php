@@ -23,14 +23,7 @@ class TransactionController extends Controller
 {
 
     public function showUserDepartment(){
-
-        $id= Auth::id();
-
-        $departments =  Transaction::where('users_id',$id)
-        ->leftJoin('departments','transactions.department_details','=','departments.department')
-        ->select('departments.id as id','department_details as name')
-        ->get()
-        ->unique();
+        $departments = Auth::user()->department;
 
         if (count($departments)) return $this->resultResponse('fetch', 'Departments', array("departments"=>$departments));
 
@@ -52,7 +45,7 @@ class TransactionController extends Controller
         $search =  $request['search'];
         $state = isset($request['state'])? $request['state']: 'request';
         
-        !empty($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department) ;
+        !empty($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department[0]['name']) ;
 
 
         $transactions = Transaction::select([
@@ -122,6 +115,19 @@ class TransactionController extends Controller
         return $this->resultResponse('fetch','Transaction details',$singleTransaction->first());
     }
 
+    public function showCurrentPO($id)
+    {
+        // $transaction = DB::table('transactions')->where('id',$id)->first();
+        $transaction = Transaction::where('id',$id)->get();
+        $singleTransaction = TransactionResource::collection($transaction);
+        
+        
+        if(count($singleTransaction)!=true){
+            throw new FistoException("No records found.", 404, NULL, []);
+        }
+        return $singleTransaction->first();
+    }
+
     public function store(TransactionPostRequest $request)
     {
         $fields=$request->validated();
@@ -152,7 +158,7 @@ class TransactionController extends Controller
                    return $this->resultResponse('invalid','',$errorMessage);
                 }
 
-                GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
+                GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                 $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                 $request_id,$date_requested,$fields);
                 if(isset($transaction->transaction_id)){
@@ -276,7 +282,10 @@ class TransactionController extends Controller
                     if(isset($duplicateRef)){
                         return $this->resultResponse('invalid','',$duplicateRef);   
                     }
+                    
+                     $fields['po_group'] =  GenericMethod::ValidateIfPOExists($fields['po_group'],$fields['document']['company']['id']);
 
+            
                     $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],last($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
                     if(gettype($getAndValidatePOBalance) == 'object'){
                         return $this->resultResponse('invalid','',$getAndValidatePOBalance);  
@@ -326,15 +335,19 @@ class TransactionController extends Controller
         return $this->resultResponse('not-exist','Document number',[]);
     }
     
-    public function update (Request $request, $id)
+    public function update (TransactionPostRequest $request, $id)
     {
         
         $fields=$request->validated();
+        $date_requested = date('Y-m-d H:i:s');
+        $request_id = $request['transaction']['request_id'];
 
         switch($fields['document']['id']){
             case 1: //PAD
             case 4: //Contractor's Billing
         
+                GenericMethod::documentNoValidationUpdate($request['document']['no'],$id);
+
                 if (empty($fields['po_group']) ) 
                 {
                     $errorMessage = GenericMethod::resultLaravelFormat('po_group',["PO group required"]);
@@ -345,28 +358,44 @@ class TransactionController extends Controller
                 if(isset($duplicatePO)){
                     return $this->resultResponse('invalid','',$duplicatePO);
                 }
-               
+                
                 $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
                 if ($fields['document']['amount'] != $po_total_amount){
-                   $errorMessage = GenericMethod::resultLaravelFormat('po_group.amount',["Document amount (".$fields['document']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
-                   return $this->resultResponse('invalid','',$errorMessage);
+                    $errorMessage = GenericMethod::resultLaravelFormat('po_group.amount',["Document amount (".$fields['document']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
+                    return $this->resultResponse('invalid','',$errorMessage);
                 }
+                
+                $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+                GenericMethod::updatePO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']),$id);
 
-                // GenericMethod::insertPO($request_id,$fields['po_group']);
-                // $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
-                // $request_id,$date_requested,$fields);
-                // if(isset($transaction->transaction_id)){
-                //    return $this->resultResponse('save','Transaction',[]);
-                // }
-            break;
+                $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
+                $request_id,$date_requested,$request,0,$changes);
 
-            case 2: //PRM Common
-                $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
-                $request_id,$date_requested,$fields);
+                if($transaction == "Nothing Has Changed"){
+                    return $this->resultResponse('nothing-has-changed',"Transaction",[]);
+                }
                 if(isset($transaction->transaction_id)){
-                   return $this->resultResponse('save','Transaction',[]);
+                   return $this->resultResponse('update','Transaction number '.$transaction->transaction_id,[]);
                 }
             break;
+            
+            case 2: //PRM Common
+                $po_total_amount=NULL;
+               GenericMethod::documentNoValidationUpdate($request['document']['no'],$id);
+               
+               $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+
+               $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
+               $request_id,$date_requested,$request,0,$changes);
+
+               if($transaction == "Nothing Has Changed"){
+                   return $this->resultResponse('nothing-has-changed',"Transaction",[]);
+               }
+               if(isset($transaction->transaction_id)){
+                  return $this->resultResponse('update','Transaction number '.$transaction->transaction_id,[]);
+               }
+            break;
+
         }
 
         return $this->resultResponse('not-exist','Document number',[]);
