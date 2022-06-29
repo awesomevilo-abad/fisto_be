@@ -108,7 +108,7 @@ class TransactionResource extends JsonResource
                         "id"=>$this->document_id
                         ,"name"=>$this->document_type
                         ,"no"=>$this->document_no
-                        ,"capex"=>$this->capex_no
+                        ,"capex_no"=>$this->capex_no
                         ,"date"=>$this->document_date
                         ,"payment_type"=>$this->payment_type
                         ,"amount"=>$this->document_amount
