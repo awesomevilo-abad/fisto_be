@@ -553,47 +553,11 @@ class GenericMethod{
 
                     
                 ]);
-            }else if($fields['document']['id'] == 5){
-                
-                $new_transaction = Transaction::create([
-                    'transaction_id' => $transaction_id
-                    , "users_id" => $fields['requestor']['id']
-                    , "id_prefix" => $fields['requestor']['id_prefix']
-                    , "id_no" => $fields['requestor']['id_no']
-                    , "first_name" => $fields['requestor']['first_name']
-                    , "middle_name" => $fields['requestor']['middle_name']
-                    , "last_name" => $fields['requestor']['last_name']
-                    , "suffix" => $fields['requestor']['suffix']
-                    , "department_details" => $fields['requestor']['department']
-        
-                    , "document_id" => $fields['document']['id']
-                    , "capex_no" => $fields['document']['capex_no']
-                    , "category_id" => $fields['document']['category']['id']
-                    , "category" => $fields['document']['category']['name']
-                    , "company_id" => $fields['document']['company']['id']
-                    , "company" => $fields['document']['company']['name']
-                    , "department_id" => $fields['document']['department']['id']
-                    , "department" => $fields['document']['department']['name']
-                    , "location_id" => $fields['document']['location']['id']
-                    , "location" => $fields['document']['location']['name']
-                    , "supplier_id" => $fields['document']['supplier']['id']
-                    , "supplier" => $fields['document']['supplier']['name']
-                    , "payment_type" => $fields['document']['payment_type']
-                    , "document_no" => $fields['document']['no']
-                    , "document_date" => $fields['document']['date']
-                    , "document_amount" => $fields['document']['amount']
-                    , "remarks" => $fields['document']['remarks']
-                    , "document_type" => $fields['document']['name']
-        
-                    , "po_total_amount" => $po_total_amount
-        
-                    , "request_id" => $request_id
-                    , "tagging_tag_id" => 0
-                    , "date_requested" => $date_requested
-                    , "status" => "Pending"
-                ]);
             }
             else{
+
+                $capex_no = (isset($fields['document']['capex_no'])?$fields['document']['capex_no']:NULL);
+
                 $currentTransaction->transaction_id = $fields['transaction']['no'];
                 $currentTransaction->users_id= $fields['requestor']['id'];
                 $currentTransaction->id_prefix= $fields['requestor']['id_prefix'];
@@ -604,6 +568,7 @@ class GenericMethod{
                 $currentTransaction->suffix= $fields['requestor']['suffix'];
                 $currentTransaction->department_details= $fields['requestor']['department'];
                 $currentTransaction->document_id= $fields['document']['id'];
+                $currentTransaction->capex_no= $capex_no;
                 $currentTransaction->category_id= $fields['document']['category']['id'];
                 $currentTransaction->category= $fields['document']['category']['name'];
                 $currentTransaction->company_id= $fields['document']['company']['id'];
@@ -1329,7 +1294,8 @@ class GenericMethod{
             return $errorBag;
         }
 
-        public static function validateTransactionByDateRange($from,$to,$company_id,$department_id,$location_id,$category){
+        public static function validateTransactionByDateRange($from,$to,$company_id,$department_id,$location_id,$category,$id=0){
+            return $id;
             $transactions = DB::table('transactions')
             ->where(function ($query) use($from,$to){
                 $query->where(function ($query) use($from,$to){
@@ -1353,6 +1319,9 @@ class GenericMethod{
             ->where('state','!=','void')
             ->where('utilities_location_id',$location_id)
             ->where('utilities_category',$category)
+            ->when($id, function($query, $id){
+                $query->where('id','<>',$id);
+            })
             ->get();
             if(count($transactions)>0){                
                 return GenericMethod::resultLaravelFormat(
@@ -1586,9 +1555,11 @@ class GenericMethod{
             ->where('transactions.id','<>',$id)
             ->whereIn('p_o_batches.po_no',$po_nos);
             $validateTransactionCount = $transactions->get();
+            $unique_po = array_unique($validateTransactionCount->pluck('po_no')->toArray());
+            $duplicate_po_nos = GenericMethod::addAnd($unique_po);
             
             if(count($validateTransactionCount)>0){
-                return GenericMethod::resultLaravelFormat('po_group.no',["PO ".$validateTransactionCount->pluck('po_no')->implode(', ')." has already been taken."]);
+                return GenericMethod::resultLaravelFormat('po_group.no',["PO ".$duplicate_po_nos." has already been taken."]);
             }
         }
 

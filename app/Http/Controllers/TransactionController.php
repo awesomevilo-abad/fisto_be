@@ -344,7 +344,7 @@ class TransactionController extends Controller
 
         switch($fields['document']['id']){
             case 1: //PAD
-            case 4: //Contractor's Billing
+            case 5: //Contractor's Billing
         
                 GenericMethod::documentNoValidationUpdate($request['document']['no'],$id);
 
@@ -394,6 +394,28 @@ class TransactionController extends Controller
                if(isset($transaction->transaction_id)){
                   return $this->resultResponse('update','Transaction number '.$transaction->transaction_id,[]);
                }
+            break;
+
+            case 6: //Utilities
+               return $duplicateUtilities = GenericMethod::validateTransactionByDateRange(
+                    $fields['document']['from']
+                    ,$fields['document']['to']
+                    ,$fields['document']['company']['id']
+                    ,$fields['document']['department']['id']
+                    ,$fields['document']['utility']['location']['id']
+                    ,$fields['document']['utility']['category']['name']
+                    ,$id
+                );
+                
+                if(isset($duplicateUtilities)){
+                    return $this->resultResponse('invalid','',$duplicateUtilities);
+                }
+                
+                $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
+                $request_id,$date_requested,$fields);
+                if(isset($transaction->transaction_id)){
+                   return $this->resultResponse('save','Transaction',[]);
+                }
             break;
 
         }

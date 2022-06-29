@@ -31,7 +31,7 @@ class TransactionResource extends JsonResource
         ->when($payment_type === 'PARTIAL',function($q){
                 $q->select(['is_add','is_editable','po_no as no', 'po_amount as amount','previous_balance','balance_po_ref_amount as balance','rr_group as rr_no']);
             }, function($q){
-                $q->select(['po_no as no', 'po_amount as amount','rr_group as rr_no']);
+                $q->select(['po_no as no', 'po_amount as amount','rr_group as rr_no','p_o_batches.request_id']);
             } 
         )
         ->get();
@@ -72,7 +72,6 @@ class TransactionResource extends JsonResource
 
         switch($this->document_id){
             case 1: //PAD
-            case 5: //Contractor's Billing
             case 2: //PRM Common
                 $document = [
                     "id"=>$this->document_id
@@ -103,6 +102,38 @@ class TransactionResource extends JsonResource
                         "name"=>$this->supplier
                     ]
                 ];
+            break;
+            case 5: //Contractor's Billing
+                    $document = [
+                        "id"=>$this->document_id
+                        ,"name"=>$this->document_type
+                        ,"no"=>$this->document_no
+                        ,"capex"=>$this->capex_no
+                        ,"date"=>$this->document_date
+                        ,"payment_type"=>$this->payment_type
+                        ,"amount"=>$this->document_amount
+                        ,"remarks"=>$this->remarks
+                        ,"category"=>[
+                            "id"=>$this->category_id,
+                            "name"=>$this->category
+                        ],
+                        "company"=>[
+                            "id"=>$this->company_id,
+                            "name"=>$this->company
+                        ],
+                        "department"=>[
+                            "id"=>$this->department_id,
+                            "name"=>$this->department
+                        ],
+                        "location"=>[
+                            "id"=>$this->location_id,
+                            "name"=>$this->location
+                        ],
+                        "supplier"=>[
+                            "id"=>$this->supplier_id,
+                            "name"=>$this->supplier
+                        ]
+                    ];
             break;
             
             case 6: //Utilities
