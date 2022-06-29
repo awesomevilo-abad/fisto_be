@@ -392,12 +392,13 @@ class TransactionController extends Controller
                    return $this->resultResponse('nothing-has-changed',"Transaction",[]);
                }
                if(isset($transaction->transaction_id)){
-                  return $this->resultResponse('update','Transaction number '.$transaction->transaction_id,[]);
+                  return $this->resultResponse('update','Transaction',[]);
                }
             break;
 
             case 6: //Utilities
-               return $duplicateUtilities = GenericMethod::validateTransactionByDateRange(
+                $po_total_amount=NULL;
+                $duplicateUtilities = GenericMethod::validateTransactionByDateRange(
                     $fields['document']['from']
                     ,$fields['document']['to']
                     ,$fields['document']['company']['id']
@@ -406,15 +407,65 @@ class TransactionController extends Controller
                     ,$fields['document']['utility']['category']['name']
                     ,$id
                 );
-                
                 if(isset($duplicateUtilities)){
                     return $this->resultResponse('invalid','',$duplicateUtilities);
                 }
-                
+                $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+
+                $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
+                $request_id,$date_requested,$request,0,$changes);
+                if(isset($transaction->transaction_id)){
+                   return $this->resultResponse('update','Transaction',[]);
+                }
+            break;
+            
+            case 7: //Payroll
+                $duplicatePayroll = GenericMethod::validatePayroll(
+                    $fields['document']['from']
+                    ,$fields['document']['to']
+                    ,$fields['document']['company']['id']
+                    ,$fields['document']['location']['id']
+                    ,$fields['document']['supplier']['id']
+                    ,$fields['document']['payroll']['clients']
+                    ,$fields['document']['payroll']['type']
+                    ,$fields['document']['payroll']['category']['name']
+                );
+
+                if(isset($duplicatePayroll)){
+                    return $this->resultResponse('invalid','',$duplicatePayroll);
+                }
+                GenericMethod::insertClient($request_id,$fields['document']['payroll']['clients']);
                 $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
                 $request_id,$date_requested,$fields);
                 if(isset($transaction->transaction_id)){
                    return $this->resultResponse('save','Transaction',[]);
+                }
+                $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+                $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
+                $request_id,$date_requested,$request,0,$changes);
+                if(isset($transaction->transaction_id)){
+                   return $this->resultResponse('update','Transaction',[]);
+                }
+            break;
+
+            case 8: //PCF
+                $duplicatePCF = GenericMethod::validatePCF(
+                    $fields['document']['pcf_batch']['name']
+                    ,$fields['document']['pcf_batch']['date']
+                    ,$fields['document']['pcf_batch']['letter']
+                    ,$fields['document']['company']['id']
+                    ,$fields['document']['supplier']['id']
+                    ,$id
+                );
+                if(isset($duplicatePCF)){
+                    return $this->resultResponse('invalid','',$duplicatePCF);
+                }
+                $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+
+                $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
+                $request_id,$date_requested,$request,0,$changes);
+                if(isset($transaction->transaction_id)){
+                   return $this->resultResponse('update','Transaction',[]);
                 }
             break;
 

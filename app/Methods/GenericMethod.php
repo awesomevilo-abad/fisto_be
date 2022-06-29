@@ -32,6 +32,53 @@ class GenericMethod{
             $current_transaction = Transaction::with('po_details')->findOrFail($id);
             $original_transaction = Transaction::with('po_details')->findOrFail($id);
 
+            $capex_no = (isset($transaction['document']['capex_no'])?$transaction['document']['capex_no']:NULL);
+            $document_no = (isset($transaction['document']['no'])?$transaction['document']['no']:NULL);
+            $document_date = (isset($transaction['document']['date'])?$transaction['document']['date']:NULL);
+            $category_id = (isset($transaction['document']['category']['id'])?$transaction['document']['category']['id']:NULL);
+            $category_name = (isset($transaction['document']['category']['name'])?$transaction['document']['category']['name']:NULL);
+            $document_from = (isset($transaction['document']['from'])?$transaction['document']['from']:NULL);
+            $document_to = (isset($transaction['document']['to'])?$transaction['document']['to']:NULL);
+// ---------------------------------------------------------------------------------------------------------------------------------
+            // Utilities
+            $receipt_no = (isset($transaction['document']['utility']['receipt_no'])?$transaction['document']['utility']['receipt_no']:NULL);
+            $consumption = (isset($transaction['document']['utility']['consumption'])?$transaction['document']['utility']['consumption']:NULL);
+            $location_id = (isset($transaction['document']['utility']['location']['id'])?$transaction['document']['utility']['location']['id']:NULL);
+            $location_name = (isset($transaction['document']['utility']['location']['name'])?$transaction['document']['utility']['location']['name']:NULL);
+            $utility_category_id = (isset($transaction['document']['utility']['category']['id'])?$transaction['document']['utility']['category']['id']:NULL);
+            $utility_category_name = (isset($transaction['document']['utility']['category']['name'])?$transaction['document']['utility']['category']['name']:NULL);
+            $account_no_id = (isset($transaction['document']['utility']['account_no']['id'])?$transaction['document']['utility']['account_no']['id']:NULL);
+            $account_no = (isset($transaction['document']['utility']['account_no']['no'])?$transaction['document']['utility']['account_no']['no']:NULL);
+            
+            $current_transaction->utilities_from = $document_from;
+            $current_transaction->utilities_to = $document_to;
+            $current_transaction->utilities_receipt_no = $receipt_no;
+            $current_transaction->utilities_consumption = $consumption;
+            $current_transaction->utilities_location_id = $location_id;
+            $current_transaction->utilities_location = $location_name;
+            $current_transaction->utilities_category_id = $utility_category_id;
+            $current_transaction->utilities_category = $utility_category_name;
+            $current_transaction->utilities_account_no_id = $account_no_id;
+            $current_transaction->utilities_account_no = $account_no;
+// ---------------------------------------------------------------------------------------------------------------------------------------
+            // Payroll
+            $payroll_type = (isset($transaction['document']['payroll']['type'])?$transaction['document']['payroll']['type']:NULL);
+            $client_id = (isset($transaction['document']['payroll']['clients']['id'])?$transaction['document']['payroll']['clients']['id']:NULL);
+            $client_name = (isset($transaction['document']['payroll']['clients']['name'])?$transaction['document']['payroll']['clients']['name']:NULL);
+            $category_id = (isset($transaction['document']['payroll']['category']['id'])?$transaction['document']['payroll']['category']['id']:NULL);
+            $category_name = (isset($transaction['document']['payroll']['category']['name'])?$transaction['document']['payroll']['category']['name']:NULL);
+           
+            $current_transaction->utilities_from = $document_from;
+            $current_transaction->utilities_to = $document_to;
+            $current_transaction->utilities_receipt_no = $receipt_no;
+            $current_transaction->utilities_consumption = $consumption;
+            $current_transaction->utilities_location_id = $location_id;
+            $current_transaction->utilities_location = $location_name;
+            $current_transaction->utilities_category_id = $utility_category_id;
+            $current_transaction->utilities_category = $utility_category_name;
+            $current_transaction->utilities_account_no_id = $account_no_id;
+            $current_transaction->utilities_account_no = $account_no;
+
 
             $current_transaction->users_id = $transaction['requestor']['id'];
             $current_transaction->id_prefix = $transaction['requestor']['id_prefix'];
@@ -42,15 +89,12 @@ class GenericMethod{
             $current_transaction->suffix = $transaction['requestor']['suffix'];
             $current_transaction->department_details = $transaction['requestor']['department'];
             
+            $current_transaction->document_no = $document_no;
+            $current_transaction->document_date = $document_date;
+            $current_transaction->category_id = $category_id;
+            $current_transaction->category = $category_name;
             $current_transaction->document_id = $transaction['document']['id'];
             $current_transaction->document_type = $transaction['document']['name'];
-            $current_transaction->document_no = $transaction['document']['no'];
-            $current_transaction->document_date = $transaction['document']['date'];
-            $current_transaction->payment_type = $transaction['document']['payment_type'];
-            $current_transaction->document_amount = $transaction['document']['amount'];
-            $current_transaction->remarks = $transaction['document']['remarks'];
-            $current_transaction->category_id = $transaction['document']['category']['id'];
-            $current_transaction->category = $transaction['document']['category']['name'];
             $current_transaction->company_id = $transaction['document']['company']['id'];
             $current_transaction->company = $transaction['document']['company']['name'];
             $current_transaction->department_id = $transaction['document']['department']['id'];
@@ -59,7 +103,10 @@ class GenericMethod{
             $current_transaction->location = $transaction['document']['location']['name'];
             $current_transaction->supplier_id = $transaction['document']['supplier']['id'];
             $current_transaction->supplier = $transaction['document']['supplier']['name'];
-
+            $current_transaction->payment_type = $transaction['document']['payment_type'];
+            $current_transaction->document_amount = $transaction['document']['amount'];
+            $current_transaction->remarks = $transaction['document']['remarks'];
+            
 
             if(isset($transaction['po_group'])){
                 
@@ -395,52 +442,8 @@ class GenericMethod{
             $currentTransaction = Transaction::with('po_details')->where('id',$transaction_id)->first();
             $currentTransaction->isClean();
             $status = 'update';
-            if($fields['document']['id'] == 6){
-                $new_transaction = Transaction::create([
-                    'transaction_id' => $request['transaction']['no']
-                    , "users_id" => $fields['requestor']['id']
-                    , "id_prefix" => $fields['requestor']['id_prefix']
-                    , "id_no" => $fields['requestor']['id_no']
-                    , "first_name" => $fields['requestor']['first_name']
-                    , "middle_name" => $fields['requestor']['middle_name']
-                    , "last_name" => $fields['requestor']['last_name']
-                    , "suffix" => $fields['requestor']['suffix']
-                    , "department_details" => $fields['requestor']['department']
-        
-                    , "document_id" => $fields['document']['id']
-                    , "company_id" => $fields['document']['company']['id']
-                    , "company" => $fields['document']['company']['name']
-                    , "department_id" => $fields['document']['department']['id']
-                    , "department" => $fields['document']['department']['name']
-                    , "location_id" => $fields['document']['location']['id']
-                    , "location" => $fields['document']['location']['name']
-                    , "supplier_id" => $fields['document']['supplier']['id']
-                    , "supplier" => $fields['document']['supplier']['name']
-                    , "payment_type" => $fields['document']['payment_type']
-                    , "document_amount" => $fields['document']['amount']
-                    , "remarks" => $fields['document']['remarks']
-                    , "document_type" => $fields['document']['name']
-        
-                    ,"utilities_from" => $fields['document']['from']
-                    , "utilities_to" => $fields['document']['to']
-
-                    , "utilities_receipt_no" => $fields['document']['utility']['receipt_no']
-                    , "utilities_consumption" => $fields['document']['utility']['consumption']
-                    , "utilities_location_id" => $fields['document']['utility']['location']['id']
-                    , "utilities_location" => $fields['document']['utility']['location']['name']
-                    , "utilities_category_id" => $fields['document']['utility']['category']['id']
-                    , "utilities_category" => $fields['document']['utility']['category']['name']
-                    , "utilities_account_no_id" => $fields['document']['utility']['account_no']['id']
-                    , "utilities_account_no" => $fields['document']['utility']['account_no']['no']
-
-                    , "po_total_amount" => $po_total_amount
-        
-                    , "request_id" => $request_id
-                    , "tagging_tag_id" => 0
-                    , "date_requested" => $date_requested
-                    , "status" => "Pending"
-                ]);
-            }else if($fields['document']['id'] == 8){
+            
+            if($fields['document']['id'] == 8){
                 $new_transaction = Transaction::create([
                     'transaction_id' => $transaction_id
                     , "users_id" => $fields['requestor']['id']
@@ -556,38 +559,93 @@ class GenericMethod{
             }
             else{
 
+                
                 $capex_no = (isset($fields['document']['capex_no'])?$fields['document']['capex_no']:NULL);
+                $document_no = (isset($fields['document']['no'])?$fields['document']['no']:NULL);
+                $document_date = (isset($fields['document']['date'])?$fields['document']['date']:NULL);
+                $category_id = (isset($fields['document']['category']['id'])?$fields['document']['category']['id']:NULL);
+                $category_name = (isset($fields['document']['category']['name'])?$fields['document']['category']['name']:NULL);
+
+                $document_utilities_from = (isset($fields['document']['from'])?$fields['document']['from']:NULL);
+                $document_utilities_to = (isset($fields['document']['to'])?$fields['document']['to']:NULL);
+                $receipt_no = (isset($fields['document']['utility']['receipt_no'])?$fields['document']['utility']['receipt_no']:NULL);
+                $consumption = (isset($fields['document']['utility']['consumption'])?$fields['document']['utility']['consumption']:NULL);
+                $location_id = (isset($fields['document']['utility']['location']['id'])?$fields['document']['utility']['location']['id']:NULL);
+                $location_name = (isset($fields['document']['utility']['location']['name'])?$fields['document']['utility']['location']['name']:NULL);
+                $utility_category_id = (isset($fields['document']['utility']['category']['id'])?$fields['document']['utility']['category']['id']:NULL);
+                $utility_category_name = (isset($fields['document']['utility']['category']['name'])?$fields['document']['utility']['category']['name']:NULL);
+                $account_no_id = (isset($fields['document']['utility']['account_no']['id'])?$fields['document']['utility']['account_no']['id']:NULL);
+                $account_no = (isset($fields['document']['utility']['account_no']['no'])?$fields['document']['utility']['account_no']['no']:NULL);
 
                 $currentTransaction->transaction_id = $fields['transaction']['no'];
-                $currentTransaction->users_id= $fields['requestor']['id'];
-                $currentTransaction->id_prefix= $fields['requestor']['id_prefix'];
-                $currentTransaction->id_no= $fields['requestor']['id_no'];
-                $currentTransaction->first_name= $fields['requestor']['first_name'];
-                $currentTransaction->middle_name= $fields['requestor']['middle_name'];
-                $currentTransaction->last_name= $fields['requestor']['last_name'];
-                $currentTransaction->suffix= $fields['requestor']['suffix'];
-                $currentTransaction->department_details= $fields['requestor']['department'];
-                $currentTransaction->document_id= $fields['document']['id'];
-                $currentTransaction->capex_no= $capex_no;
-                $currentTransaction->category_id= $fields['document']['category']['id'];
-                $currentTransaction->category= $fields['document']['category']['name'];
-                $currentTransaction->company_id= $fields['document']['company']['id'];
-                $currentTransaction->company= $fields['document']['company']['name'];
-                $currentTransaction->department_id= $fields['document']['department']['id'];
-                $currentTransaction->department= $fields['document']['department']['name'];
-                $currentTransaction->location_id= $fields['document']['location']['id'];
-                $currentTransaction->location= $fields['document']['location']['name'];
-                $currentTransaction->supplier_id= $fields['document']['supplier']['id'];
-                $currentTransaction->supplier= $fields['document']['supplier']['name'];
-                $currentTransaction->payment_type= $fields['document']['payment_type'];
-                $currentTransaction->document_no= $fields['document']['no'];
-                $currentTransaction->document_date= $fields['document']['date'];
-                $currentTransaction->document_amount= $fields['document']['amount'];
-                $currentTransaction->remarks= $fields['document']['remarks'];
-                $currentTransaction->document_type= $fields['document']['name'];
+                $currentTransaction->users_id = $fields['requestor']['id'];
+                $currentTransaction->id_prefix = $fields['requestor']['id_prefix'];
+                $currentTransaction->id_no = $fields['requestor']['id_no'];
+                $currentTransaction->first_name = $fields['requestor']['first_name'];
+                $currentTransaction->middle_name = $fields['requestor']['middle_name'];
+                $currentTransaction->last_name = $fields['requestor']['last_name'];
+                $currentTransaction->suffix = $fields['requestor']['suffix'];
+                $currentTransaction->department_details = $fields['requestor']['department'];
+
+                $currentTransaction->document_no = $document_no;
+                $currentTransaction->document_date = $document_date;
+                $currentTransaction->category_id = $category_id;
+                $currentTransaction->category = $category_name;
+                $currentTransaction->document_id = $fields['document']['id'];
+                $currentTransaction->document_type = $fields['document']['name'];
+                $currentTransaction->company_id = $fields['document']['company']['id'];
+                $currentTransaction->company = $fields['document']['company']['name'];
+                $currentTransaction->department_id = $fields['document']['department']['id'];
+                $currentTransaction->department = $fields['document']['department']['name'];
+                $currentTransaction->location_id = $fields['document']['location']['id'];
+                $currentTransaction->location = $fields['document']['location']['name'];
+                $currentTransaction->supplier_id = $fields['document']['supplier']['id'];
+                $currentTransaction->supplier = $fields['document']['supplier']['name'];
+                $currentTransaction->payment_type = $fields['document']['payment_type'];
+                $currentTransaction->document_amount = $fields['document']['amount'];
+                $currentTransaction->remarks = $fields['document']['remarks'];
                 $currentTransaction->po_total_amount= $po_total_amount;
                 $currentTransaction->request_id= $request_id;
                 $currentTransaction->status= "Pending";
+
+                // Utility
+                $currentTransaction->utilities_from = $document_utilities_from;
+                $currentTransaction->utilities_to = $document_utilities_to;
+                $currentTransaction->utilities_receipt_no = $receipt_no;
+                $currentTransaction->utilities_consumption = $consumption;
+                $currentTransaction->utilities_location_id = $location_id;
+                $currentTransaction->utilities_location = $location_name;
+                $currentTransaction->utilities_category_id = $utility_category_id;
+                $currentTransaction->utilities_category = $utility_category_name;
+                $currentTransaction->utilities_account_no_id = $account_no_id;
+                $currentTransaction->utilities_account_no = $account_no;
+                
+                // $currentTransaction->users_id= $fields['requestor']['id'];
+                // $currentTransaction->id_prefix= $fields['requestor']['id_prefix'];
+                // $currentTransaction->id_no= $fields['requestor']['id_no'];
+                // $currentTransaction->first_name= $fields['requestor']['first_name'];
+                // $currentTransaction->middle_name= $fields['requestor']['middle_name'];
+                // $currentTransaction->last_name= $fields['requestor']['last_name'];
+                // $currentTransaction->suffix= $fields['requestor']['suffix'];
+                // $currentTransaction->department_details= $fields['requestor']['department'];
+                // $currentTransaction->document_id= $fields['document']['id'];
+                // $currentTransaction->capex_no= $capex_no;
+                // $currentTransaction->category_id= $fields['document']['category']['id'];
+                // $currentTransaction->category= $fields['document']['category']['name'];
+                // $currentTransaction->company_id= $fields['document']['company']['id'];
+                // $currentTransaction->company= $fields['document']['company']['name'];
+                // $currentTransaction->department_id= $fields['document']['department']['id'];
+                // $currentTransaction->department= $fields['document']['department']['name'];
+                // $currentTransaction->location_id= $fields['document']['location']['id'];
+                // $currentTransaction->location= $fields['document']['location']['name'];
+                // $currentTransaction->supplier_id= $fields['document']['supplier']['id'];
+                // $currentTransaction->supplier= $fields['document']['supplier']['name'];
+                // $currentTransaction->payment_type= $fields['document']['payment_type'];
+                // $currentTransaction->document_no= $fields['document']['no'];
+                // $currentTransaction->document_date= $fields['document']['date'];
+                // $currentTransaction->document_amount= $fields['document']['amount'];
+                // $currentTransaction->remarks= $fields['document']['remarks'];
+                // $currentTransaction->document_type= $fields['document']['name'];
 
             }
 
@@ -1295,7 +1353,6 @@ class GenericMethod{
         }
 
         public static function validateTransactionByDateRange($from,$to,$company_id,$department_id,$location_id,$category,$id=0){
-            return $id;
             $transactions = DB::table('transactions')
             ->where(function ($query) use($from,$to){
                 $query->where(function ($query) use($from,$to){
@@ -1504,7 +1561,7 @@ class GenericMethod{
         //     }
         // }
         
-        public static function validatePCF($pcf_name,$pcf_date,$pcf_letter,$company_id,$supplier_id){
+        public static function validatePCF($pcf_name,$pcf_date,$pcf_letter,$company_id,$supplier_id,$id=0){
             
             $transactions = DB::table('transactions')
                 ->where('pcf_name',$pcf_name)
@@ -1513,6 +1570,9 @@ class GenericMethod{
                 ->where('company_id',$company_id)
                 ->where('supplier_id',$supplier_id)
                 ->where('state','!=','void')
+                ->when($id, function($query, $id){
+                    $query->where('id','<>',$id);
+                })
                 ->get();
 
             if(count($transactions)>0){
