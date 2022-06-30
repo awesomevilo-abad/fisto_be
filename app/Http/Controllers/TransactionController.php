@@ -268,8 +268,7 @@ class TransactionController extends Controller
                        $errorMessage = GenericMethod::resultLaravelFormat('document.amount',["Reference amount (".$fields['document']['reference']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
                        return $this->resultResponse('invalid','',$errorMessage);
                     }
-                    
-                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
+                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                     $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                     $request_id,$date_requested,$fields);
                     if(isset($transaction->transaction_id)){
