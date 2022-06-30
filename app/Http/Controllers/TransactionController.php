@@ -468,6 +468,84 @@ class TransactionController extends Controller
                 }
             break;
 
+            case 4: //Receipt
+                $isFull = strtoupper($fields['document']['payment_type']) === 'FULL';
+                
+                if (empty($fields['po_group']) ) 
+                {
+                    $errorMessage = GenericMethod::resultLaravelFormat('po_group',["PO group required"]);
+                    return $this->resultResponse('invalid','',$errorMessage);
+                }
+                
+                $duplicateRef = GenericMethod::validateReferenceNo($fields,$id);
+                if(isset($duplicateRef)){
+                    return $this->resultResponse('invalid','',$duplicateRef);   
+                }
+
+                if($isFull){
+                    $duplicatePO = GenericMethod::validatePOFullUpdate($fields['document']['company']['id'],$fields['po_group'],$id);
+                    if(isset($duplicatePO)){
+                        return $this->resultResponse('invalid','',$duplicatePO);
+                    }
+                    
+                    $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
+                    if ($fields['document']['reference']['amount'] != $po_total_amount){
+                       $errorMessage = GenericMethod::resultLaravelFormat('document.amount',["Reference amount (".$fields['document']['reference']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
+                       return $this->resultResponse('invalid','',$errorMessage);
+                    }
+                    
+                    $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+                    GenericMethod::updatePO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']),$id);
+                    $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
+                    $request_id,$date_requested,$request,0,$changes);
+                    // if($transaction == "Nothing Has Changed"){
+                    //     return $this->resultResponse('nothing-has-changed',"Transaction",[]);
+                    // }
+                    if(isset($transaction->transaction_id)){
+                       return $this->resultResponse('update','Transaction number '.$transaction->transaction_id,[]);
+                    }
+                }
+                
+                return "Partial";
+
+                $fields['po_group'] =  GenericMethod::ValidateIfPOExists($fields['po_group'],$fields['document']['company']['id']);
+                $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],last($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
+                if(gettype($getAndValidatePOBalance) == 'object'){
+                    return $this->resultResponse('invalid','',$getAndValidatePOBalance);  
+                }
+
+                if(gettype($getAndValidatePOBalance) == 'array'){ //Additional PO Validation
+                    $new_po= $getAndValidatePOBalance['new_po_group'];
+                    $po_total_amount= $getAndValidatePOBalance['po_total_amount'];
+                    $balance_with_additional_total_po_amount= $getAndValidatePOBalance['balance'];
+                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
+                    $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
+                    $request_id,$date_requested,$fields,$balance_with_additional_total_po_amount);
+                    if(isset($transaction->transaction_id)){
+                        return $this->resultResponse('save','Transaction',[]);
+                    }
+                }
+                    
+                $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
+                $balance_po_ref_amount = $po_total_amount - $fields['document']['reference']['amount'];
+                    
+                if($po_total_amount < $fields['document']['reference']['amount']){
+                    $amountValdiation =  GenericMethod::resultLaravelFormat('document.reference.no',["Insufficient PO balance."]);
+                    return $this->resultResponse('invalid','',$amountValdiation);  
+                }
+                
+                if(isset($getAndValidatePOBalance)){
+                    $balance_po_ref_amount = $getAndValidatePOBalance;
+                }
+
+                GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
+                $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
+                $request_id,$date_requested,$fields,$balance_po_ref_amount);
+                if(isset($transaction->transaction_id)){
+                    return $this->resultResponse('save','Transaction',[]);
+                }
+
+            break;
         }
 
         return $this->resultResponse('not-exist','Document number',[]);

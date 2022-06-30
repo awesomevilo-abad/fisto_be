@@ -39,6 +39,8 @@ class GenericMethod{
             $category_name = (isset($transaction['document']['category']['name'])?$transaction['document']['category']['name']:NULL);
             $document_from = (isset($transaction['document']['from'])?$transaction['document']['from']:NULL);
             $document_to = (isset($transaction['document']['to'])?$transaction['document']['to']:NULL);
+            $amount = (isset($transaction['document']['amount'])?$transaction['document']['amount']:$transaction['document']['reference']['amount']);
+           
 // ---------------------------------------------------------------------------------------------------------------------------------
             // Utilities
             $receipt_no = (isset($transaction['document']['utility']['receipt_no'])?$transaction['document']['utility']['receipt_no']:NULL);
@@ -84,6 +86,20 @@ class GenericMethod{
             $current_transaction->pcf_date = $pcf_date;
             $current_transaction->pcf_letter = $pcf_letter;
 // ---------------------------------------------------------------------------------------------------------------------------------------
+  
+// ---------------------------------------------------------------------------------------------------------------------------------------
+            // Receipt
+            $reference_id = (isset($transaction['document']['reference']['id'])?$transaction['document']['reference']['id']:NULL);
+            $reference_type = (isset($transaction['document']['reference']['type'])?$transaction['document']['reference']['type']:NULL);
+            $reference_no = (isset($transaction['document']['reference']['no'])?$transaction['document']['reference']['no']:NULL);
+            $reference_amount = (isset($transaction['document']['reference']['amount'])?$transaction['document']['reference']['amount']:NULL);
+           
+            $current_transaction->referrence_id = $reference_id;
+            $current_transaction->referrence_type = $reference_type;
+            $current_transaction->referrence_no = $reference_no;
+            $current_transaction->referrence_amount = $reference_amount;
+            
+// ---------------------------------------------------------------------------------------------------------------------------------------
            
             $current_transaction->users_id = $transaction['requestor']['id'];
             $current_transaction->id_prefix = $transaction['requestor']['id_prefix'];
@@ -111,7 +127,7 @@ class GenericMethod{
             $current_transaction->supplier_id = $transaction['document']['supplier']['id'];
             $current_transaction->supplier = $transaction['document']['supplier']['name'];
             $current_transaction->payment_type = $transaction['document']['payment_type'];
-            $current_transaction->document_amount = $transaction['document']['amount'];
+            $current_transaction->document_amount = $amount;
             $current_transaction->remarks = $transaction['document']['remarks'];
             
             if(isset($transaction['po_group'])){
@@ -440,136 +456,104 @@ class GenericMethod{
             $currentTransaction->isClean();
             $status = 'update';
 
-            if($fields['document']['id'] == 4){
-                $new_transaction = Transaction::create([
-                    'transaction_id' => $transaction_id
-                    , "users_id" => $fields['requestor']['id']
-                    , "id_prefix" => $fields['requestor']['id_prefix']
-                    , "id_no" => $fields['requestor']['id_no']
-                    , "first_name" => $fields['requestor']['first_name']
-                    , "middle_name" => $fields['requestor']['middle_name']
-                    , "last_name" => $fields['requestor']['last_name']
-                    , "suffix" => $fields['requestor']['suffix']
-                    , "department_details" => $fields['requestor']['department']
-        
-                    , "document_id" => $fields['document']['id']
-                    , "category_id" => $fields['document']['category']['id']
-                    , "category" => $fields['document']['category']['name']
-                    , "company_id" => $fields['document']['company']['id']
-                    , "company" => $fields['document']['company']['name']
-                    , "department_id" => $fields['document']['department']['id']
-                    , "department" => $fields['document']['department']['name']
-                    , "location_id" => $fields['document']['location']['id']
-                    , "location" => $fields['document']['location']['name']
-                    , "supplier_id" => $fields['document']['supplier']['id']
-                    , "supplier" => $fields['document']['supplier']['name']
-                    , "payment_type" => $fields['document']['payment_type']
-                    , "document_date" => $fields['document']['date']
-                    , "remarks" => $fields['document']['remarks']
-                    , "document_type" => $fields['document']['name']
-        
-                    , "po_total_amount" => $po_total_amount    
-                    , "balance_po_ref_amount" => $balance_po_ref_amount   
-                    
-                    , "referrence_type" => $fields['document']['reference']['type']
-                    , "referrence_no" => $fields['document']['reference']['no']
-                    , "referrence_amount" => $fields['document']['reference']['amount']
-                    , "referrence_id" => $fields['document']['reference']['id'] 
+            $capex_no = (isset($fields['document']['capex_no'])?$fields['document']['capex_no']:NULL);
+            $document_no = (isset($fields['document']['no'])?$fields['document']['no']:NULL);
+            $document_date = (isset($fields['document']['date'])?$fields['document']['date']:NULL);
+            $category_id = (isset($fields['document']['category']['id'])?$fields['document']['category']['id']:NULL);
+            $category_name = (isset($fields['document']['category']['name'])?$fields['document']['category']['name']:NULL);
+            $document_from = (isset($fields['document']['from'])?$fields['document']['from']:NULL);
+            $document_to = (isset($fields['document']['to'])?$fields['document']['to']:NULL);
+            $amount = (isset($fields['document']['amount'])?$fields['document']['amount']:$fields['document']['reference']['amount']);
+           
+            // Utilities
+            $receipt_no = (isset($fields['document']['utility']['receipt_no'])?$fields['document']['utility']['receipt_no']:NULL);
+            $consumption = (isset($fields['document']['utility']['consumption'])?$fields['document']['utility']['consumption']:NULL);
+            $location_id = (isset($fields['document']['utility']['location']['id'])?$fields['document']['utility']['location']['id']:NULL);
+            $location_name = (isset($fields['document']['utility']['location']['name'])?$fields['document']['utility']['location']['name']:NULL);
+            $utility_category_id = (isset($fields['document']['utility']['category']['id'])?$fields['document']['utility']['category']['id']:NULL);
+            $utility_category_name = (isset($fields['document']['utility']['category']['name'])?$fields['document']['utility']['category']['name']:NULL);
+            $account_no_id = (isset($fields['document']['utility']['account_no']['id'])?$fields['document']['utility']['account_no']['id']:NULL);
+            $account_no = (isset($fields['document']['utility']['account_no']['no'])?$fields['document']['utility']['account_no']['no']:NULL);
 
-                    , "request_id" => $request_id
-                    , "tagging_tag_id" => 0
-                    , "date_requested" => $date_requested
-                    , "status" => "Pending"
+            // Payroll
+            $payroll_type = (isset($fields['document']['payroll']['type'])?$fields['document']['payroll']['type']:NULL);
+            $category_id = (isset($fields['document']['payroll']['category']['id'])?$fields['document']['payroll']['category']['id']:NULL);
+            $category_name = (isset($fields['document']['payroll']['category']['name'])?$fields['document']['payroll']['category']['name']:NULL);
+            $clients = (isset($fields['document']['payroll']['clients'])?$fields['document']['payroll']['clients']:NULL);
+            
+            // PCF
+            $pcf_name = (isset($fields['document']['pcf_batch']['name'])?$fields['document']['pcf_batch']['name']:NULL);
+            $pcf_date = (isset($fields['document']['pcf_batch']['date'])?$fields['document']['pcf_batch']['date']:NULL);
+            $pcf_letter = (isset($fields['document']['pcf_batch']['letter'])?$fields['document']['pcf_batch']['letter']:NULL);
 
-                    
-                ]);
-            }
-            else{
-                
-                $capex_no = (isset($fields['document']['capex_no'])?$fields['document']['capex_no']:NULL);
-                $document_no = (isset($fields['document']['no'])?$fields['document']['no']:NULL);
-                $document_date = (isset($fields['document']['date'])?$fields['document']['date']:NULL);
-                $category_id = (isset($fields['document']['category']['id'])?$fields['document']['category']['id']:NULL);
-                $category_name = (isset($fields['document']['category']['name'])?$fields['document']['category']['name']:NULL);
+            // Receipt
+            $reference_id = (isset($fields['document']['reference']['id'])?$fields['document']['reference']['id']:NULL);
+            $reference_type = (isset($fields['document']['reference']['type'])?$fields['document']['reference']['type']:NULL);
+            $reference_no = (isset($fields['document']['reference']['no'])?$fields['document']['reference']['no']:NULL);
+            $reference_amount = (isset($fields['document']['reference']['amount'])?$fields['document']['reference']['amount']:NULL);
 
-                $document_from = (isset($fields['document']['from'])?$fields['document']['from']:NULL);
-                $document_to = (isset($fields['document']['to'])?$fields['document']['to']:NULL);
-                $receipt_no = (isset($fields['document']['utility']['receipt_no'])?$fields['document']['utility']['receipt_no']:NULL);
-                $consumption = (isset($fields['document']['utility']['consumption'])?$fields['document']['utility']['consumption']:NULL);
-                $location_id = (isset($fields['document']['utility']['location']['id'])?$fields['document']['utility']['location']['id']:NULL);
-                $location_name = (isset($fields['document']['utility']['location']['name'])?$fields['document']['utility']['location']['name']:NULL);
-                $utility_category_id = (isset($fields['document']['utility']['category']['id'])?$fields['document']['utility']['category']['id']:NULL);
-                $utility_category_name = (isset($fields['document']['utility']['category']['name'])?$fields['document']['utility']['category']['name']:NULL);
-                $account_no_id = (isset($fields['document']['utility']['account_no']['id'])?$fields['document']['utility']['account_no']['id']:NULL);
-                $account_no = (isset($fields['document']['utility']['account_no']['no'])?$fields['document']['utility']['account_no']['no']:NULL);
+            $currentTransaction->transaction_id = $fields['transaction']['no'];
+            $currentTransaction->users_id = $fields['requestor']['id'];
+            $currentTransaction->id_prefix = $fields['requestor']['id_prefix'];
+            $currentTransaction->id_no = $fields['requestor']['id_no'];
+            $currentTransaction->first_name = $fields['requestor']['first_name'];
+            $currentTransaction->middle_name = $fields['requestor']['middle_name'];
+            $currentTransaction->last_name = $fields['requestor']['last_name'];
+            $currentTransaction->suffix = $fields['requestor']['suffix'];
+            $currentTransaction->department_details = $fields['requestor']['department'];
 
-                // Payroll
-                $payroll_type = (isset($fields['document']['payroll']['type'])?$fields['document']['payroll']['type']:NULL);
-                $category_id = (isset($fields['document']['payroll']['category']['id'])?$fields['document']['payroll']['category']['id']:NULL);
-                $category_name = (isset($fields['document']['payroll']['category']['name'])?$fields['document']['payroll']['category']['name']:NULL);
-                $clients = (isset($fields['document']['payroll']['clients'])?$fields['document']['payroll']['clients']:NULL);
-                
-                // PCF
-                $pcf_name = (isset($fields['document']['pcf_batch']['name'])?$fields['document']['pcf_batch']['name']:NULL);
-                $pcf_date = (isset($fields['document']['pcf_batch']['date'])?$fields['document']['pcf_batch']['date']:NULL);
-                $pcf_letter = (isset($fields['document']['pcf_batch']['letter'])?$fields['document']['pcf_batch']['letter']:NULL);
+            $currentTransaction->document_no = $document_no;
+            $currentTransaction->document_date = $document_date;
+            $currentTransaction->category_id = $category_id;
+            $currentTransaction->category = $category_name;
+            $currentTransaction->document_id = $fields['document']['id'];
+            $currentTransaction->document_type = $fields['document']['name'];
+            $currentTransaction->company_id = $fields['document']['company']['id'];
+            $currentTransaction->company = $fields['document']['company']['name'];
+            $currentTransaction->department_id = $fields['document']['department']['id'];
+            $currentTransaction->department = $fields['document']['department']['name'];
+            $currentTransaction->location_id = $fields['document']['location']['id'];
+            $currentTransaction->location = $fields['document']['location']['name'];
+            $currentTransaction->supplier_id = $fields['document']['supplier']['id'];
+            $currentTransaction->supplier = $fields['document']['supplier']['name'];
+            $currentTransaction->payment_type = $fields['document']['payment_type'];
+            $currentTransaction->document_amount = $amount;
+            $currentTransaction->remarks = $fields['document']['remarks'];
+            $currentTransaction->po_total_amount= $po_total_amount;
+            $currentTransaction->request_id= $request_id;
+            $currentTransaction->status= "Pending";
 
-                $currentTransaction->transaction_id = $fields['transaction']['no'];
-                $currentTransaction->users_id = $fields['requestor']['id'];
-                $currentTransaction->id_prefix = $fields['requestor']['id_prefix'];
-                $currentTransaction->id_no = $fields['requestor']['id_no'];
-                $currentTransaction->first_name = $fields['requestor']['first_name'];
-                $currentTransaction->middle_name = $fields['requestor']['middle_name'];
-                $currentTransaction->last_name = $fields['requestor']['last_name'];
-                $currentTransaction->suffix = $fields['requestor']['suffix'];
-                $currentTransaction->department_details = $fields['requestor']['department'];
+            // Utility
+            $currentTransaction->utilities_from = $document_from;
+            $currentTransaction->utilities_to = $document_to;
+            $currentTransaction->utilities_receipt_no = $receipt_no;
+            $currentTransaction->utilities_consumption = $consumption;
+            $currentTransaction->utilities_location_id = $location_id;
+            $currentTransaction->utilities_location = $location_name;
+            $currentTransaction->utilities_category_id = $utility_category_id;
+            $currentTransaction->utilities_category = $utility_category_name;
+            $currentTransaction->utilities_account_no_id = $account_no_id;
+            $currentTransaction->utilities_account_no = $account_no;
+            
+            // Payroll
+            $currentTransaction->payroll_from = $document_from;
+            $currentTransaction->payroll_to = $document_to;
+            $currentTransaction->payroll_type = $payroll_type;
+            $currentTransaction->payroll_category_id = $category_id;
+            $currentTransaction->payroll_category = $category_name;
+            $currentTransaction->payroll_client = $clients;
 
-                $currentTransaction->document_no = $document_no;
-                $currentTransaction->document_date = $document_date;
-                $currentTransaction->category_id = $category_id;
-                $currentTransaction->category = $category_name;
-                $currentTransaction->document_id = $fields['document']['id'];
-                $currentTransaction->document_type = $fields['document']['name'];
-                $currentTransaction->company_id = $fields['document']['company']['id'];
-                $currentTransaction->company = $fields['document']['company']['name'];
-                $currentTransaction->department_id = $fields['document']['department']['id'];
-                $currentTransaction->department = $fields['document']['department']['name'];
-                $currentTransaction->location_id = $fields['document']['location']['id'];
-                $currentTransaction->location = $fields['document']['location']['name'];
-                $currentTransaction->supplier_id = $fields['document']['supplier']['id'];
-                $currentTransaction->supplier = $fields['document']['supplier']['name'];
-                $currentTransaction->payment_type = $fields['document']['payment_type'];
-                $currentTransaction->document_amount = $fields['document']['amount'];
-                $currentTransaction->remarks = $fields['document']['remarks'];
-                $currentTransaction->po_total_amount= $po_total_amount;
-                $currentTransaction->request_id= $request_id;
-                $currentTransaction->status= "Pending";
+            // PCF
+            $currentTransaction->pcf_name = $pcf_name;
+            $currentTransaction->pcf_date = $pcf_date;
+            $currentTransaction->pcf_letter = $pcf_letter;
 
-                // Utility
-                $currentTransaction->utilities_from = $document_from;
-                $currentTransaction->utilities_to = $document_to;
-                $currentTransaction->utilities_receipt_no = $receipt_no;
-                $currentTransaction->utilities_consumption = $consumption;
-                $currentTransaction->utilities_location_id = $location_id;
-                $currentTransaction->utilities_location = $location_name;
-                $currentTransaction->utilities_category_id = $utility_category_id;
-                $currentTransaction->utilities_category = $utility_category_name;
-                $currentTransaction->utilities_account_no_id = $account_no_id;
-                $currentTransaction->utilities_account_no = $account_no;
-                
-                // Payroll
-                $currentTransaction->payroll_from = $document_from;
-                $currentTransaction->payroll_to = $document_to;
-                $currentTransaction->payroll_type = $payroll_type;
-                $currentTransaction->payroll_category_id = $category_id;
-                $currentTransaction->payroll_category = $category_name;
-                $currentTransaction->payroll_client = $clients;
-
-                // PCF
-                $currentTransaction->pcf_name = $pcf_name;
-                $currentTransaction->pcf_date = $pcf_date;
-                $currentTransaction->pcf_letter = $pcf_letter;
-            }
+            // Receipt
+            $currentTransaction->referrence_id = $reference_id;
+            $currentTransaction->referrence_type = $reference_type;
+            $currentTransaction->referrence_no = $reference_no;
+            $currentTransaction->referrence_amount = $reference_amount;
+           
 
         // if(count($currentTransaction->getDirty()) == 0){
         //     return "Nothing Has Changed";
@@ -1407,11 +1391,13 @@ class GenericMethod{
 
         }
 
-        public static function validateReferenceNo($fields){
+        public static function validateReferenceNo($fields,$id=0){
             $validateTransactionCount =  Transaction::where('company_id',$fields['document']['company']['id'])
             ->where('referrence_no',$fields['document']['reference']['no'])
+            ->when($id,function($query,$id){
+                $query->where('id','<>',$id);
+            })
             ->where('state','!=','void')->get();
-
             if(count($validateTransactionCount)>0){
                 return GenericMethod::resultLaravelFormat('document.reference.no',["Reference number already exist."]);
             }
