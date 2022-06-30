@@ -50,6 +50,7 @@ class TransactionController extends Controller
 
         $transactions = Transaction::select([
             'id',
+            'users_id',
             'date_requested',
             'transaction_id',
             'document_type',
