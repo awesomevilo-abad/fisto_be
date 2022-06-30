@@ -446,6 +446,7 @@ class TransactionController extends Controller
             break;
 
             case 8: //PCF
+                $po_total_amount=NULL;
                 $duplicatePCF = GenericMethod::validatePCF(
                     $fields['document']['pcf_batch']['name']
                     ,$fields['document']['pcf_batch']['date']

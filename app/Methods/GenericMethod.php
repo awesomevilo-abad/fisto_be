@@ -74,6 +74,17 @@ class GenericMethod{
             $current_transaction->payroll_category = $category_name;
             $current_transaction->payroll_client = $clients;
 
+// ---------------------------------------------------------------------------------------------------------------------------------------
+            // PCF
+            $pcf_name = (isset($transaction['document']['pcf_batch']['name'])?$transaction['document']['pcf_batch']['name']:NULL);
+            $pcf_date = (isset($transaction['document']['pcf_batch']['date'])?$transaction['document']['pcf_batch']['date']:NULL);
+            $pcf_letter = (isset($transaction['document']['pcf_batch']['letter'])?$transaction['document']['pcf_batch']['letter']:NULL);
+           
+            $current_transaction->pcf_name = $pcf_name;
+            $current_transaction->pcf_date = $pcf_date;
+            $current_transaction->pcf_letter = $pcf_letter;
+// ---------------------------------------------------------------------------------------------------------------------------------------
+           
             $current_transaction->users_id = $transaction['requestor']['id'];
             $current_transaction->id_prefix = $transaction['requestor']['id_prefix'];
             $current_transaction->id_no = $transaction['requestor']['id_no'];
@@ -83,6 +94,8 @@ class GenericMethod{
             $current_transaction->suffix = $transaction['requestor']['suffix'];
             $current_transaction->department_details = $transaction['requestor']['department'];
             
+
+
             $current_transaction->document_no = $document_no;
             $current_transaction->document_date = $document_date;
             $current_transaction->category_id = $category_id;
@@ -427,41 +440,7 @@ class GenericMethod{
             $currentTransaction->isClean();
             $status = 'update';
 
-            if($fields['document']['id'] == 8){
-                $new_transaction = Transaction::create([
-                    'transaction_id' => $transaction_id
-                    , "users_id" => $fields['requestor']['id']
-                    , "id_prefix" => $fields['requestor']['id_prefix']
-                    , "id_no" => $fields['requestor']['id_no']
-                    , "first_name" => $fields['requestor']['first_name']
-                    , "middle_name" => $fields['requestor']['middle_name']
-                    , "last_name" => $fields['requestor']['last_name']
-                    , "suffix" => $fields['requestor']['suffix']
-                    , "department_details" => $fields['requestor']['department']
-        
-                    , "document_id" => $fields['document']['id']
-                    , "company_id" => $fields['document']['company']['id']
-                    , "company" => $fields['document']['company']['name']
-                    , "department_id" => $fields['document']['department']['id']
-                    , "department" => $fields['document']['department']['name']
-                    , "location_id" => $fields['document']['location']['id']
-                    , "location" => $fields['document']['location']['name']
-                    , "supplier_id" => $fields['document']['supplier']['id']
-                    , "supplier" => $fields['document']['supplier']['name']
-                    , "payment_type" => $fields['document']['payment_type']
-                    , "document_date" => $fields['document']['date']
-                    , "document_amount" => $fields['document']['amount']
-                    , "remarks" => $fields['document']['remarks']
-                    , "document_type" => $fields['document']['name']
-        
-                    , "pcf_name" => $fields['document']['pcf_batch']['name']
-                    , "pcf_date" => $fields['document']['pcf_batch']['date']
-                    , "pcf_letter" => $fields['document']['pcf_batch']['letter']
-                    , "request_id" => $request_id
-                    , "tagging_tag_id" => 0
-                    , "date_requested" => $date_requested
-                ]);
-            }else if($fields['document']['id'] == 4){
+            if($fields['document']['id'] == 4){
                 $new_transaction = Transaction::create([
                     'transaction_id' => $transaction_id
                     , "users_id" => $fields['requestor']['id']
@@ -530,6 +509,11 @@ class GenericMethod{
                 $category_name = (isset($fields['document']['payroll']['category']['name'])?$fields['document']['payroll']['category']['name']:NULL);
                 $clients = (isset($fields['document']['payroll']['clients'])?$fields['document']['payroll']['clients']:NULL);
                 
+                // PCF
+                $pcf_name = (isset($fields['document']['pcf_batch']['name'])?$fields['document']['pcf_batch']['name']:NULL);
+                $pcf_date = (isset($fields['document']['pcf_batch']['date'])?$fields['document']['pcf_batch']['date']:NULL);
+                $pcf_letter = (isset($fields['document']['pcf_batch']['letter'])?$fields['document']['pcf_batch']['letter']:NULL);
+
                 $currentTransaction->transaction_id = $fields['transaction']['no'];
                 $currentTransaction->users_id = $fields['requestor']['id'];
                 $currentTransaction->id_prefix = $fields['requestor']['id_prefix'];
@@ -581,6 +565,10 @@ class GenericMethod{
                 $currentTransaction->payroll_category = $category_name;
                 $currentTransaction->payroll_client = $clients;
 
+                // PCF
+                $currentTransaction->pcf_name = $pcf_name;
+                $currentTransaction->pcf_date = $pcf_date;
+                $currentTransaction->pcf_letter = $pcf_letter;
             }
 
         // if(count($currentTransaction->getDirty()) == 0){
