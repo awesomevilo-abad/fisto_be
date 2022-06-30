@@ -420,6 +420,7 @@ class TransactionController extends Controller
             break;
             
             case 7: //Payroll
+                $po_total_amount=NULL;
                 $duplicatePayroll = GenericMethod::validatePayroll(
                     $fields['document']['from']
                     ,$fields['document']['to']
@@ -429,18 +430,14 @@ class TransactionController extends Controller
                     ,$fields['document']['payroll']['clients']
                     ,$fields['document']['payroll']['type']
                     ,$fields['document']['payroll']['category']['name']
+                    ,$id
                 );
 
                 if(isset($duplicatePayroll)){
                     return $this->resultResponse('invalid','',$duplicatePayroll);
                 }
-                GenericMethod::insertClient($request_id,$fields['document']['payroll']['clients']);
-                $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
-                $request_id,$date_requested,$fields);
-                if(isset($transaction->transaction_id)){
-                   return $this->resultResponse('save','Transaction',[]);
-                }
                 $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+                GenericMethod::updateClients($request_id,$fields['document']['payroll']['clients'],$id);
                 $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
                 $request_id,$date_requested,$request,0,$changes);
                 if(isset($transaction->transaction_id)){
