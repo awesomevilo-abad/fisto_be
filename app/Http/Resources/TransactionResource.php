@@ -43,8 +43,9 @@ class TransactionResource extends JsonResource
             $po_details[$j]['previous_balance'] = $po_details[$j]['amount'];
         }
         
-        $is_latest_transaction=0;
+        $is_latest_transaction=1;
        if(strtoupper($this->payment_type) == 'PARTIAL'){
+        $is_latest_transaction=0;
             $balance = ($po_details->where('is_add',0)->first()->balance);
             $previous_balance = ($po_details->where('is_add',0)->first()->previous_balance);
             foreach($po_details as $k=>$v){
