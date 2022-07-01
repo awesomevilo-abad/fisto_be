@@ -42,34 +42,36 @@ class TransactionResource extends JsonResource
             $po_details[$j]['is_editable'] = 1;
             $po_details[$j]['previous_balance'] = $po_details[$j]['amount'];
         }
-
+        
+        $is_latest_transaction=0;
        if(strtoupper($this->payment_type) == 'PARTIAL'){
             $balance = ($po_details->where('is_add',0)->first()->balance);
             $previous_balance = ($po_details->where('is_add',0)->first()->previous_balance);
             foreach($po_details as $k=>$v){
+
+                $po_no = $po_details[$k]['no'];
                 if($po_details[$k]['is_add']==0){
                     $keys[] = $k;
                     $po_details[$k]['previous_balance'] = 0;
                     $po_details[$k]['balance'] = 0;
                 }
                 unset($po_details[$k]->is_add);
+
+                $condition =  ($this->state=='void')? '=': '!=';
+                $last_transaction_id = $po_transaction->where('po_no',$po_no)->where('state',$condition,'void')->pluck('id')->last();
+                
+                if($last_transaction_id == $this->id){
+                    $is_latest_transaction=1;
+                }
             }
 
         $key= current($keys);
         $po_details[$key]['previous_balance'] = $previous_balance;
         $po_details[$key]['balance'] = $balance;
-
-       }
+    }
         $transaction =($po_transaction->where('request_id',$this->request_id));
         $document_amount = Transaction::where('request_id',$this->request_id)->first()->document_amount;
-
-        $condition =  ($this->state=='void')? '=': '!=';
-        $last_transaction_id = $po_transaction->where('po_no',$po_no)->where('state',$condition,'void')->pluck('id')->last();
-        $is_latest_transaction=0;
-        if($last_transaction_id == $this->id){
-            $is_latest_transaction=1;
-        }
-
+ 
         switch($this->document_id){
             case 1: //PAD
             case 2: //PRM Common

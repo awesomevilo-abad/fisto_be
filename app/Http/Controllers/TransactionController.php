@@ -294,7 +294,7 @@ class TransactionController extends Controller
                         $new_po= $getAndValidatePOBalance['new_po_group'];
                         $po_total_amount= $getAndValidatePOBalance['po_total_amount'];
                         $balance_with_additional_total_po_amount= $getAndValidatePOBalance['balance'];
-                       GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
+                       GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                        $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                        $request_id,$date_requested,$fields,$balance_with_additional_total_po_amount);
                        if(isset($transaction->transaction_id)){
@@ -313,20 +313,12 @@ class TransactionController extends Controller
                     if(isset($getAndValidatePOBalance)){
                         $balance_po_ref_amount = $getAndValidatePOBalance;
                     }
-                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
+                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                     $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                     $request_id,$date_requested,$fields,$balance_po_ref_amount);
                     if(isset($transaction->transaction_id)){
                        return $this->resultResponse('save','Transaction',[]);
                     }
-                }
-
-                if($isQty && $isFull){
-                    return "Qty based and Full payment";
-                }
-
-                if($isQty && !$isFull){
-                    return "Payment Type does not exist in DR Qty";
                 }
 
             break;
