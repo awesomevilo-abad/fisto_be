@@ -24,9 +24,7 @@ class TransactionController extends Controller
 
     public function showUserDepartment(){
         $departments = Auth::user()->department;
-
         if (count($departments)) return $this->resultResponse('fetch', 'Departments', array("departments"=>$departments));
-
         return $this->resultResponse('not-found', 'Transaction', []);
     }
 
@@ -108,8 +106,6 @@ class TransactionController extends Controller
         // $transaction = DB::table('transactions')->where('id',$id)->first();
         $transaction = Transaction::where('id',$id)->get();
         $singleTransaction = TransactionResource::collection($transaction);
-        
-        
         if(count($singleTransaction)!=true){
             throw new FistoException("No records found.", 404, NULL, []);
         }
@@ -118,11 +114,8 @@ class TransactionController extends Controller
 
     public function showCurrentPO($id)
     {
-        // $transaction = DB::table('transactions')->where('id',$id)->first();
         $transaction = Transaction::where('id',$id)->get();
         $singleTransaction = TransactionResource::collection($transaction);
-        
-        
         if(count($singleTransaction)!=true){
             throw new FistoException("No records found.", 404, NULL, []);
         }
@@ -323,13 +316,11 @@ class TransactionController extends Controller
 
             break;
         }
-
         return $this->resultResponse('not-exist','Document number',[]);
     }
     
     public function update (TransactionPostRequest $request, $id)
     {
-        
         $fields=$request->validated();
         $date_requested = date('Y-m-d H:i:s');
         $request_id = $request['transaction']['request_id'];
@@ -496,10 +487,9 @@ class TransactionController extends Controller
                         return $this->resultResponse('update','Transaction',[]);
                     }
                 }
-                return "Partial";
 
-                $fields['po_group'] =  GenericMethod::ValidateIfPOExists($fields['po_group'],$fields['document']['company']['id']);
-                $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],last($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
+                $fields['po_group'] =  GenericMethod::ValidateIfPOExists($fields['po_group'],$fields['document']['company']['id'],$id);
+                $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],last($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group'],$id);
                 if(gettype($getAndValidatePOBalance) == 'object'){
                     return $this->resultResponse('invalid','',$getAndValidatePOBalance);  
                 }
@@ -508,14 +498,15 @@ class TransactionController extends Controller
                     $new_po= $getAndValidatePOBalance['new_po_group'];
                     $po_total_amount= $getAndValidatePOBalance['po_total_amount'];
                     $balance_with_additional_total_po_amount= $getAndValidatePOBalance['balance'];
-                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
-                    $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
-                    $request_id,$date_requested,$fields,$balance_with_additional_total_po_amount);
+
+                    $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+                    GenericMethod::updatePO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']),$id);
+                  return  $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
+                    $request_id,$date_requested,$request,$balance_with_additional_total_po_amount,$changes);
                     if(isset($transaction->transaction_id)){
-                        return $this->resultResponse('save','Transaction',[]);
+                        return $this->resultResponse('update','Transaction',[]);
                     }
                 }
-                    
                 $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
                 $balance_po_ref_amount = $po_total_amount - $fields['document']['reference']['amount'];
                     
@@ -528,11 +519,12 @@ class TransactionController extends Controller
                     $balance_po_ref_amount = $getAndValidatePOBalance;
                 }
 
-                GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount);
-                $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
-                $request_id,$date_requested,$fields,$balance_po_ref_amount);
+                $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+                GenericMethod::updatePO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']),$id);
+                $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
+                $request_id,$date_requested,$request,$balance_po_ref_amount,$changes);
                 if(isset($transaction->transaction_id)){
-                    return $this->resultResponse('save','Transaction',[]);
+                    return $this->resultResponse('update','Transaction',[]);
                 }
 
             break;

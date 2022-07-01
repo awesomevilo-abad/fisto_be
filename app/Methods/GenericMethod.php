@@ -491,6 +491,7 @@ class GenericMethod{
             $reference_type = (isset($fields['document']['reference']['type'])?$fields['document']['reference']['type']:NULL);
             $reference_no = (isset($fields['document']['reference']['no'])?$fields['document']['reference']['no']:NULL);
             $reference_amount = (isset($fields['document']['reference']['amount'])?$fields['document']['reference']['amount']:NULL);
+            $balance_po_ref_amount = (isset($balance_po_ref_amount)?$balance_po_ref_amount:NULL);
 
             $currentTransaction->transaction_id = $fields['transaction']['no'];
             $currentTransaction->users_id = $fields['requestor']['id'];
@@ -553,6 +554,7 @@ class GenericMethod{
             $currentTransaction->referrence_type = $reference_type;
             $currentTransaction->referrence_no = $reference_no;
             $currentTransaction->referrence_amount = $reference_amount;
+            $currentTransaction->balance_po_ref_amount = $balance_po_ref_amount;
            
 
         // if(count($currentTransaction->getDirty()) == 0){
@@ -1404,9 +1406,12 @@ class GenericMethod{
         }
 
         
-        public static function getAndValidatePOBalance($company_id,$po_no,float $reference_amount,$po_group){
+        public static function getAndValidatePOBalance($company_id,$po_no,float $reference_amount,$po_group,$id){
              $balance_po_ref_amount = Transaction::leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
             ->where('transactions.company_id',$company_id)
+            ->when($id,function($query,$id){
+                $query->where('transactions.id','<>',$id);
+            })
             ->where('transactions.state','!=','void')
             ->where('p_o_batches.po_no',$po_no)
             ->orderBy('transactions.id', 'desc')
@@ -1428,6 +1433,9 @@ class GenericMethod{
             foreach($po_group as $k=>$v){
                 if(!POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')
                 ->where('company_id','=',$company_id)
+                ->when($id,function($query,$id){
+                    $query->where('transactions.id','<>',$id);
+                })
                 ->where('p_o_batches.po_no','=',$po_group[$k]['no'])
                 ->where('state','!=','void')->exists()){
                     $additional_po_group[$k]['no'] = $po_group[$k]['no'] ;
@@ -1731,7 +1739,7 @@ class GenericMethod{
 
         }
 
-        public static function validateIfPOExists($po_group,$company_id){
+        public static function validateIfPOExists($po_group,$company_id,$id=0){
 
             $po_total_amount = 0;
 
@@ -1740,7 +1748,11 @@ class GenericMethod{
             foreach($po_group as $k=>$v){
                 $po_no = $po_group[$k]['no'];
 
-                $existingTransaction = Transaction::with('po_details')->where('company_id',$company_id)
+                $existingTransaction = Transaction::with('po_details')
+                ->where('company_id',$company_id)
+                ->when($id,function($query,$id){
+                    $query->where('id','<>',$id);
+                })
                 ->whereHas('po_details',function($q) use($po_no){$q->where('po_no',$po_no);})
                 ->exists();
             }
@@ -1748,7 +1760,11 @@ class GenericMethod{
             foreach($po_group as $k=>$v){
                $po_no = $po_group[$k]['no'];
 
-               $transaction = Transaction::with('po_details')->where('company_id',$company_id)
+               $transaction = Transaction::with('po_details')
+               ->where('company_id',$company_id)
+               ->when($id,function($query,$id){
+                   $query->where('id','<>',$id);
+               })
                 ->whereHas('po_details',function($q) use($po_no){$q->where('po_no',$po_no);})
                 ->get();
                 if($transaction->count() > 0){
@@ -1756,6 +1772,9 @@ class GenericMethod{
                     $po_group[$k]['is_editable'] = 0;
                     $po_group[$k]['previous_balance'] = Transaction::with('po_details')
                         ->where('company_id',$company_id)
+                        ->when($id,function($query,$id){
+                            $query->where('id','<>',$id);
+                        })
                         ->without('po_details')
                         ->whereHas('po_details',function($q) use($po_no){$q->where('po_no',$po_no);})
                         ->whereHas('po_details',function($q) {$q->where('is_add',0);})
