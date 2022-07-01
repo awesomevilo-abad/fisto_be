@@ -375,7 +375,7 @@ class TransactionController extends Controller
                     return $this->resultResponse('nothing-has-changed',"Transaction",[]);
                 }
                 if(isset($transaction->transaction_id)){
-                   return $this->resultResponse('update','Transaction number '.$transaction->transaction_id,[]);
+                    return $this->resultResponse('update','Transaction',[]);
                 }
             break;
             
@@ -501,7 +501,7 @@ class TransactionController extends Controller
                     //     return $this->resultResponse('nothing-has-changed',"Transaction",[]);
                     // }
                     if(isset($transaction->transaction_id)){
-                       return $this->resultResponse('update','Transaction number '.$transaction->transaction_id,[]);
+                        return $this->resultResponse('update','Transaction',[]);
                     }
                 }
                 
