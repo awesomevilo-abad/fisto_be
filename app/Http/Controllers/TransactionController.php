@@ -278,7 +278,6 @@ class TransactionController extends Controller
                     
                      $fields['po_group'] =  GenericMethod::ValidateIfPOExists($fields['po_group'],$fields['document']['company']['id']);
 
-            
                     $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],last($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
                     if(gettype($getAndValidatePOBalance) == 'object'){
                         return $this->resultResponse('invalid','',$getAndValidatePOBalance);  

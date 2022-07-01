@@ -1406,7 +1406,7 @@ class GenericMethod{
         }
 
         
-        public static function getAndValidatePOBalance($company_id,$po_no,float $reference_amount,$po_group,$id){
+        public static function getAndValidatePOBalance($company_id,$po_no,float $reference_amount,$po_group,$id=0){
              $balance_po_ref_amount = Transaction::leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
             ->where('transactions.company_id',$company_id)
             ->when($id,function($query,$id){
