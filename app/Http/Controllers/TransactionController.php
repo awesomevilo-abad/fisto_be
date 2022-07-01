@@ -504,7 +504,6 @@ class TransactionController extends Controller
                         return $this->resultResponse('update','Transaction',[]);
                     }
                 }
-                
                 return "Partial";
 
                 $fields['po_group'] =  GenericMethod::ValidateIfPOExists($fields['po_group'],$fields['document']['company']['id']);

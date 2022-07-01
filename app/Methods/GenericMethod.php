@@ -65,15 +65,15 @@ class GenericMethod{
 // ---------------------------------------------------------------------------------------------------------------------------------------
             // Payroll
             $payroll_type = (isset($transaction['document']['payroll']['type'])?$transaction['document']['payroll']['type']:NULL);
-            $category_id = (isset($transaction['document']['payroll']['category']['id'])?$transaction['document']['payroll']['category']['id']:NULL);
-            $category_name = (isset($transaction['document']['payroll']['category']['name'])?$transaction['document']['payroll']['category']['name']:NULL);
+            $payroll_category_id = (isset($transaction['document']['payroll']['category']['id'])?$transaction['document']['payroll']['category']['id']:NULL);
+            $payroll_category_name = (isset($transaction['document']['payroll']['category']['name'])?$transaction['document']['payroll']['category']['name']:NULL);
             $clients = (isset($transaction['document']['payroll']['clients'])?$transaction['document']['payroll']['clients']:NULL);
            
             $current_transaction->payroll_from = $document_from;
             $current_transaction->payroll_to = $document_to;
             $current_transaction->payroll_type = $payroll_type;
-            $current_transaction->payroll_category_id = $category_id;
-            $current_transaction->payroll_category = $category_name;
+            $current_transaction->payroll_category_id = $payroll_category_id;
+            $current_transaction->payroll_category = $payroll_category_name;
             $current_transaction->payroll_client = $clients;
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -477,8 +477,8 @@ class GenericMethod{
 
             // Payroll
             $payroll_type = (isset($fields['document']['payroll']['type'])?$fields['document']['payroll']['type']:NULL);
-            $category_id = (isset($fields['document']['payroll']['category']['id'])?$fields['document']['payroll']['category']['id']:NULL);
-            $category_name = (isset($fields['document']['payroll']['category']['name'])?$fields['document']['payroll']['category']['name']:NULL);
+            $payroll_category_id = (isset($fields['document']['payroll']['category']['id'])?$fields['document']['payroll']['category']['id']:NULL);
+            $payroll_category_name = (isset($fields['document']['payroll']['category']['name'])?$fields['document']['payroll']['category']['name']:NULL);
             $clients = (isset($fields['document']['payroll']['clients'])?$fields['document']['payroll']['clients']:NULL);
             
             // PCF
@@ -539,8 +539,8 @@ class GenericMethod{
             $currentTransaction->payroll_from = $document_from;
             $currentTransaction->payroll_to = $document_to;
             $currentTransaction->payroll_type = $payroll_type;
-            $currentTransaction->payroll_category_id = $category_id;
-            $currentTransaction->payroll_category = $category_name;
+            $currentTransaction->payroll_category_id = $payroll_category_id;
+            $currentTransaction->payroll_category = $payroll_category_name;
             $currentTransaction->payroll_client = $clients;
 
             // PCF
