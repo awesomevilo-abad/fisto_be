@@ -500,7 +500,7 @@ class TransactionController extends Controller
 
                     $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
                     GenericMethod::updatePO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']),$id);
-                  return  $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
+                    $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
                     $request_id,$date_requested,$request,$balance_with_additional_total_po_amount,$changes);
                     if(isset($transaction->transaction_id)){
                         return $this->resultResponse('update','Transaction',[]);

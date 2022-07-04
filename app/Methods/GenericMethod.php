@@ -101,6 +101,9 @@ class GenericMethod{
             
 // ---------------------------------------------------------------------------------------------------------------------------------------
            
+            // Contractor's Billing
+            $current_transaction->capex_no = $capex_no;
+
             $current_transaction->users_id = $transaction['requestor']['id'];
             $current_transaction->id_prefix = $transaction['requestor']['id_prefix'];
             $current_transaction->id_no = $transaction['requestor']['id_no'];
@@ -137,41 +140,60 @@ class GenericMethod{
             $po_changes = [];
             $modifiedPO = [];
             $newPO = [];
+            $old = [];
             foreach($current_transaction->po_details as $k=>$v){
-                 foreach($transaction['po_group'] as $l=>$w){
-                    if($current_transaction->po_details[$k]->request_id == $transaction['po_group'][$l]['request_id']){
-                        if(
-                            ($current_transaction->po_details[$k]->po_no != $transaction['po_group'][$l]['no'])||
-                            ($current_transaction->po_details[$k]->po_amount != $transaction['po_group'][$l]['amount'])||
-                            ($current_transaction->po_details[$k]->rr_group) != ($transaction['po_group'][$l]['rr_no'])
-                        
-                        ){
-                            $modifiedPO[$k] = [
-                                "old"=>[
-                                    "po_no"=>$current_transaction->po_details[$k]->po_no,
-                                    "po_amount"=>$current_transaction->po_details[$k]->po_amount,
-                                    "rr_group"=>$current_transaction->po_details[$k]->rr_group
-                                ]
-                                ,
+                
+                    if(isset($transaction['po_group'][$k]['request_id'])){
+
+                        if($current_transaction->po_details[$k]->request_id == $transaction['po_group'][$k]['request_id']){
+                            if(
+                                ($current_transaction->po_details[$k]->po_no != $transaction['po_group'][$k]['no'])||
+                                ($current_transaction->po_details[$k]->po_amount != $transaction['po_group'][$k]['amount'])||
+                                ($current_transaction->po_details[$k]->rr_group) != ($transaction['po_group'][$k]['rr_no'])
+                            
+                            ){
+                                foreach($current_transaction->po_details as $l=>$v){
+                                    $old[$l] =[
+                                        
+                                        "po_no"=>$current_transaction->po_details[$l]->po_no,
+                                        "po_amount"=>$current_transaction->po_details[$l]->po_amount,
+                                        "rr_group"=>$current_transaction->po_details[$l]->rr_group
+                                    ];
+                                }
+
+                                $modifiedPO[$k] = [
+                                    
+                                    "old"=>$old
+                                    ,
+                                    "new"=>[
+                                        "po_no"=>$transaction['po_group'][$k]['no'],
+                                        "po_amount"=>$transaction['po_group'][$k]['amount'],
+                                        "rr_group"=>($transaction['po_group'][$k]['rr_no'])
+                                    ]
+                                ];
+                            }
+    
+                        }else{
+                            $newPO[$k] = [
                                 "new"=>[
-                                    "po_no"=>$transaction['po_group'][$l]['no'],
-                                    "po_amount"=>$transaction['po_group'][$l]['amount'],
-                                    "rr_group"=>($transaction['po_group'][$l]['rr_no'])
+                                    "po_no"=>$transaction['po_group'][$k]['no'],
+                                    "po_amount"=>$transaction['po_group'][$k]['amount'],
+                                    "rr_group"=>($transaction['po_group'][$k]['rr_no'])
                                 ]
                             ];
                         }
-
-                    }else{
-                        $newPO[$l] = [
-                            "new"=>[
-                                "po_no"=>$transaction['po_group'][$l]['no'],
-                                "po_amount"=>$transaction['po_group'][$l]['amount'],
-                                "rr_group"=>($transaction['po_group'][$l]['rr_no'])
-                            ]
-                        ];
                     }
-                    
-                }
+                    // else{
+                    //     return $modifiedPO;
+                    //     return $modifiedPO[0]['old'][$k]=[
+                    //             "po_no"=>$current_transaction->po_details[$k]->po_no,
+                    //             "po_amount"=>$current_transaction->po_details[$k]->po_amount,
+                    //             "rr_group"=>$current_transaction->po_details[$k]->rr_group
+                    //     ];
+                    //     // $modifiedPO[$k]['old'];
+                    // }
+
+
             }
 
             $newPO = array_values($newPO);
@@ -523,6 +545,9 @@ class GenericMethod{
             $currentTransaction->po_total_amount= $po_total_amount;
             $currentTransaction->request_id= $request_id;
             $currentTransaction->status= "Pending";
+
+            // Contractor's Billing
+            $currentTransaction->capex_no = $capex_no;
 
             // Utility
             $currentTransaction->utilities_from = $document_from;
