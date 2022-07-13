@@ -3,6 +3,7 @@
 namespace App\Methods;
 
 use App\Exceptions\FistoException;
+use App\Exceptions\FistoLaravelException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 // For Pagination with Collection
@@ -134,70 +135,74 @@ class GenericMethod{
             $current_transaction->remarks = $transaction['document']['remarks'];
             
             if(isset($transaction['po_group'])){
-                
-            }
-            
-            $po_changes = [];
-            $modifiedPO = [];
-            $newPO = [];
-            $old = [];
-            foreach($current_transaction->po_details as $k=>$v){
-                
-                    if(isset($transaction['po_group'][$k]['request_id'])){
+                $original_po_no = $original_transaction->po_details->pluck('po_no'); //628,629
+                $input_po_no = GenericMethod::arrayPluck($transaction->po_group,'no'); //628
 
-                        if($current_transaction->po_details[$k]->request_id == $transaction['po_group'][$k]['request_id']){
-                            if(
-                                ($current_transaction->po_details[$k]->po_no != $transaction['po_group'][$k]['no'])||
-                                ($current_transaction->po_details[$k]->po_amount != $transaction['po_group'][$k]['amount'])||
-                                ($current_transaction->po_details[$k]->rr_group) != ($transaction['po_group'][$k]['rr_no'])
-                            
-                            ){
-                                foreach($current_transaction->po_details as $l=>$v){
-                                    $old[$l] =[
-                                        
-                                        "po_no"=>$current_transaction->po_details[$l]->po_no,
-                                        "po_amount"=>$current_transaction->po_details[$l]->po_amount,
-                                        "rr_group"=>$current_transaction->po_details[$l]->rr_group
-                                    ];
-                                }
-
-                                $modifiedPO[$k] = [
-                                    
-                                    "old"=>$old
-                                    ,
-                                    "new"=>[
-                                        "po_no"=>$transaction['po_group'][$k]['no'],
-                                        "po_amount"=>$transaction['po_group'][$k]['amount'],
-                                        "rr_group"=>($transaction['po_group'][$k]['rr_no'])
-                                    ]
-                                ];
-                            }
-    
-                        }else{
-                            $newPO[$k] = [
-                                "new"=>[
-                                    "po_no"=>$transaction['po_group'][$k]['no'],
-                                    "po_amount"=>$transaction['po_group'][$k]['amount'],
-                                    "rr_group"=>($transaction['po_group'][$k]['rr_no'])
-                                ]
-                            ];
+                $existing=[];
+                $additional=[];
+                $for_remove=[];
+                foreach($original_po_no as $k=>$v){
+                    if(in_array($v,$input_po_no)){
+                        if($original_transaction->po_details[$k]->id == null){
+                             array_push($additional,$v);
                         }
-                    }
-                    // else{
-                    //     return $modifiedPO;
-                    //     return $modifiedPO[0]['old'][$k]=[
-                    //             "po_no"=>$current_transaction->po_details[$k]->po_no,
-                    //             "po_amount"=>$current_transaction->po_details[$k]->po_amount,
-                    //             "rr_group"=>$current_transaction->po_details[$k]->rr_group
-                    //     ];
-                    //     // $modifiedPO[$k]['old'];
-                    // }
 
+                    //    echo $original_transaction->po_details[$k]->id.'_';
+                    //    echo $original_transaction->po_details[$k]->po_no.'_';
+                    //    echo $v.'_||||';
+                        // array_push($existing,$v);
+
+                    }else{
+                        array_push($for_remove,$v);
+                    }
+                }
 
             }
+            return $additional;
+            
+            $newPO = [];
+            $modifiedPO = [];
+        //     $po_changes = [];
+        //     $old = [];
+        //     foreach($current_transaction->po_details as $k=>$v){
+        //         foreach($transaction['po_group'] as $l=>$w){
+        //            if($current_transaction->po_details[$k]->request_id == $transaction['po_group'][$l]['request_id']){
+        //                if(
+        //                    ($current_transaction->po_details[$k]->po_no != $transaction['po_group'][$l]['no'])||
+        //                    ($current_transaction->po_details[$k]->po_amount != $transaction['po_group'][$l]['amount'])||
+        //                    ($current_transaction->po_details[$k]->rr_group) != ($transaction['po_group'][$l]['rr_no'])
+                       
+        //                ){
+        //                    $modifiedPO[$k] = [
+        //                        "old"=>[
+        //                            "po_no"=>$current_transaction->po_details[$k]->po_no,
+        //                            "po_amount"=>$current_transaction->po_details[$k]->po_amount,
+        //                            "rr_group"=>$current_transaction->po_details[$k]->rr_group
+        //                        ]
+        //                        ,
+        //                        "new"=>[
+        //                            "po_no"=>$transaction['po_group'][$l]['no'],
+        //                            "po_amount"=>$transaction['po_group'][$l]['amount'],
+        //                            "rr_group"=>($transaction['po_group'][$l]['rr_no'])
+        //                        ]
+        //                    ];
+        //                }
 
-            $newPO = array_values($newPO);
-            $modifiedPO = array_values($modifiedPO);
+        //            }else{
+        //                $newPO[$l] = [
+        //                    "new"=>[
+        //                        "po_no"=>$transaction['po_group'][$l]['no'],
+        //                        "po_amount"=>$transaction['po_group'][$l]['amount'],
+        //                        "rr_group"=>($transaction['po_group'][$l]['rr_no'])
+        //                    ]
+        //                ];
+        //            }
+                   
+        //        }
+        //    }
+
+            // $newPO = array_values($newPO);
+            // $modifiedPO = array_values($modifiedPO);
             
             // $newPO = array_unique($newPO, 'new');
             $po_changes = [
@@ -218,6 +223,12 @@ class GenericMethod{
                 "new"=>$current_transaction->getDirty(),    
                 "po_details"=>$po_changes
             ];
+        }
+
+        public static function arrayPluck($array,$key){
+            return array_map(function($object) use($key){
+                return $object[$key];
+            }, $array);
         }
 
         public static function insertTransaction($transaction_id,$po_total_amount=0,
@@ -1264,11 +1275,11 @@ class GenericMethod{
         public static function documentNoValidation($doc_no){
             if(!isset($doc_no)){
                 
-                throw new FistoException("Document number is empty.", 404, NULL, []);
+                throw new FistoLaravelException("Document number is empty.", 404, NULL, []);
             }
             
             if(TransactionValidationMethod::validateIfDocumentNoExist($doc_no) > 0){
-                throw new FistoException("The given data was invalid.", 422, NULL, collect(["document.no"=>["The Document number has already been taken."]]));
+                throw new FistoLaravelException("The given data was invalid.", 422, NULL, collect(["document.no"=>["The Document number has already been taken."]]));
             }
         }
         
@@ -1279,7 +1290,7 @@ class GenericMethod{
             }
             
             if(TransactionValidationMethod::validateIfDocumentNoExistUpdate($doc_no,$id) > 0){
-                throw new FistoException("The given data was invalid.", 422, NULL, collect(["document.no"=>["The Document number has already been taken."]]));
+                throw new FistoLaravelException("The given data was invalid.", 422, NULL, collect(["document.no"=>["The Document number has already been taken."]]));
             }
         }
             

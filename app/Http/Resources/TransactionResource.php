@@ -21,17 +21,18 @@ class TransactionResource extends JsonResource
         $reference = [];
         $po_no = [];
         $previous_balance=0;
+        $first_transaction_keys = [];
         $keys = [];
 
         $payment_type = strtoupper($this->payment_type);
         $user = User::where('id',$this->users_id)->get()->first();
         $po_transaction = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')->get();
         $po_details = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')
-       ->where('transactions.request_id',$this->request_id)
+        ->where('transactions.request_id',$this->request_id)
         ->when($payment_type === 'PARTIAL',function($q){
-                $q->select(['is_add','is_editable','po_no as no', 'po_amount as amount','previous_balance','balance_po_ref_amount as balance','rr_group as rr_no']);
+                $q->select(['is_add','is_editable','p_o_batches.id as id','po_no as no', 'po_amount as amount','previous_balance','balance_po_ref_amount as balance','rr_group as rr_no']);
             }, function($q){
-                $q->select(['po_no as no', 'po_amount as amount','rr_group as rr_no','p_o_batches.request_id']);
+                $q->select(['p_o_batches.id as id','po_no as no', 'po_amount as amount','rr_group as rr_no','p_o_batches.request_id']);
             } 
         )
         ->get();
@@ -43,32 +44,52 @@ class TransactionResource extends JsonResource
             $po_details[$j]['previous_balance'] = $po_details[$j]['amount'];
         }
         
-        $is_latest_transaction=1;
+       $is_latest_transaction=1;
        if(strtoupper($this->payment_type) == 'PARTIAL'){
         $is_latest_transaction=0;
+
+            $first_po_no = $po_details->where('is_add',0)->last()->no;
+            $with_linked_transactions = $po_transaction->where('po_no',$first_po_no)->where('id','<',$this->id)->pluck('id');
             $balance = ($po_details->where('is_add',0)->first()->balance);
             $previous_balance = ($po_details->where('is_add',0)->first()->previous_balance);
-            foreach($po_details as $k=>$v){
 
+            foreach($po_details as $k=>$v){
                 $po_no = $po_details[$k]['no'];
-                if($po_details[$k]['is_add']==0){
-                    $keys[] = $k;
+                if(($po_details[$k]['is_add']==0) AND (count($with_linked_transactions) == 0)){
+                    $first_transaction_keys[] = $k;
+                    $po_details[$k]['previous_balance'] = $po_details[$k]['amount'];
+                    $po_details[$k]['balance'] = 0;
+                }
+                else if(($po_details[$k]['is_add']==0) AND (count($with_linked_transactions) > 0)){
+                    $old_po_with_linked_transaction_keys[] = $k;
                     $po_details[$k]['previous_balance'] = 0;
                     $po_details[$k]['balance'] = 0;
                 }
-                unset($po_details[$k]->is_add);
-
+            //     else if($po_details[$k]['is_add']==0 ){
+            //         $keys[] = $k;
+            //         $po_details[$k]['previous_balance'] = 0;
+            //         $po_details[$k]['balance'] = 0;
+            //     }
+            //     // unset($po_details[$k]->is_add);
                 $condition =  ($this->state=='void')? '=': '!=';
                 $last_transaction_id = $po_transaction->where('po_no',$po_no)->where('state',$condition,'void')->pluck('id')->last();
-                
                 if($last_transaction_id == $this->id){
                     $is_latest_transaction=1;
                 }
             }
 
-        $key= current($keys);
-        $po_details[$key]['previous_balance'] = $previous_balance;
-        $po_details[$key]['balance'] = $balance;
+            // return current($old_po_with_linked_transaction_keys);
+            
+            if(!empty($first_transaction_keys)){
+                $key = current($first_transaction_keys);
+                $po_details[$key]['balance'] = $balance;
+            }else if(!empty($old_po_with_linked_transaction_keys)){
+                $last_transaction_no =  $with_linked_transactions->last();
+                $previous_balance = $po_transaction->firstWhere('id',$last_transaction_no)->balance_po_ref_amount;
+                $key = current($old_po_with_linked_transaction_keys);
+                $po_details[$key]['previous_balance'] = $previous_balance;
+            }else{
+            }
     }
         $transaction =($po_transaction->where('request_id',$this->request_id));
         $document_amount = Transaction::where('request_id',$this->request_id)->first()->document_amount;
@@ -319,58 +340,58 @@ class TransactionResource extends JsonResource
             ],
             "document"=>$document
             ,"po_group"=>$po_details
-            ,"voucher"=>[
-                "ap_associate"=>null
-                ,"receipt_type"=>null
-                ,"witholding_tax"=>null
-                ,"percentage_tax"=>null
-                ,"gross_amount"=>null
-                ,"net_amount"=>null
-                ,"month_in"=>null
-                ,"no"=>null
-                ,"date"=>null
-                ,"account_title"=>[
-                    "total_amount"=>null
-                    ,"account_title_details"=>[[
-                        "id"=>null
-                        ,"name"=>null
-                        ,"type"=>null
-                        ,"amount"=>null
-                    ]]
-                ]
-            ]
-            ,"cheque"=>[
-                "company"=>[
-                    "id"=>null,
-                    "name"=>null
-                ]
-                ,"supplier"=>[
-                    "id"=>null,
-                    "name"=>null
-                    ,"term"=>null
-                ]
-                ,"total_amount"=>null
-                ,"cheque_details"=>[
-                    [
-                    "no"=>null
-                    ,"date"=>null
-                    ,"amount"=>null
-                    ,"bank"=>[
-                        "id"=>null
-                        ,"name"=>null
-                    ]
-                    ]
-                ]
-                ,"account_title"=>[
-                    "total_amount"=>null
-                    ,"account_title_details"=>[[
-                        "id"=>null
-                        ,"name"=>null
-                        ,"type"=>null
-                        ,"amount"=>null
-                    ]]
-                ]
-            ]
+            // ,"voucher"=>[
+            //     "ap_associate"=>null
+            //     ,"receipt_type"=>null
+            //     ,"witholding_tax"=>null
+            //     ,"percentage_tax"=>null
+            //     ,"gross_amount"=>null
+            //     ,"net_amount"=>null
+            //     ,"month_in"=>null
+            //     ,"no"=>null
+            //     ,"date"=>null
+            //     ,"account_title"=>[
+            //         "total_amount"=>null
+            //         ,"account_title_details"=>[[
+            //             "id"=>null
+            //             ,"name"=>null
+            //             ,"type"=>null
+            //             ,"amount"=>null
+            //         ]]
+            //     ]
+            // ]
+            // ,"cheque"=>[
+            //     "company"=>[
+            //         "id"=>null,
+            //         "name"=>null
+            //     ]
+            //     ,"supplier"=>[
+            //         "id"=>null,
+            //         "name"=>null
+            //         ,"term"=>null
+            //     ]
+            //     ,"total_amount"=>null
+            //     ,"cheque_details"=>[
+            //         [
+            //         "no"=>null
+            //         ,"date"=>null
+            //         ,"amount"=>null
+            //         ,"bank"=>[
+            //             "id"=>null
+            //             ,"name"=>null
+            //         ]
+            //         ]
+            //     ]
+            //     ,"account_title"=>[
+            //         "total_amount"=>null
+            //         ,"account_title_details"=>[[
+            //             "id"=>null
+            //             ,"name"=>null
+            //             ,"type"=>null
+            //             ,"amount"=>null
+            //         ]]
+            //     ]
+            // ]
         ];
     }
 }

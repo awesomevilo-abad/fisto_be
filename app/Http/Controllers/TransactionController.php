@@ -27,7 +27,6 @@ class TransactionController extends Controller
         if (count($departments)) return $this->resultResponse('fetch', 'Departments', array("departments"=>$departments));
         return $this->resultResponse('not-found', 'Transaction', []);
     }
-
     public function index(Request $request)
     {
        $dateToday = Carbon::now()->timezone('Asia/Manila');
@@ -49,18 +48,37 @@ class TransactionController extends Controller
         $transactions = Transaction::select([
             'id',
             'users_id',
-            'date_requested',
+            'request_id',
+            'supplier_id',
+            'document_id',
+            
             'transaction_id',
             'document_type',
-            'company',
-            'supplier',
-            'po_total_amount',
-            'referrence_total_amount',
-            'referrence_amount',
-            'document_amount',
             'payment_type',
+            'supplier',
+            'remarks',
+            'date_requested',
+
+            'company',
+            'department',
+            'location',
+
+            'document_no',
+            'document_amount',
+            'referrence_no',
+            'referrence_amount',
+
             'status'
         ])
+        ->with('users', function ($query) {
+            return $query->select(['id', 'first_name', 'middle_name', 'last_name', 'users.department', 'position']);
+        })
+        ->with('supplier.supplier_type', function ($query) {
+            return $query->select(['id', 'type as name','transaction_days']);
+        })
+        ->with('po_details', function ($query) {
+            return $query->select(['id', 'request_id', 'po_no', 'po_total_amount']);
+        })
         ->when(!empty($document_ids),function($query) use ($document_ids){
             $query->whereIn('document_id',$document_ids);
         })
@@ -276,8 +294,7 @@ class TransactionController extends Controller
                         return $this->resultResponse('invalid','',$duplicateRef);   
                     }
                     
-                     $fields['po_group'] =  GenericMethod::ValidateIfPOExists($fields['po_group'],$fields['document']['company']['id']);
-
+                    $fields['po_group'] =  GenericMethod::ValidateIfPOExists($fields['po_group'],$fields['document']['company']['id']);
                     $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],last($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
                     if(gettype($getAndValidatePOBalance) == 'object'){
                         return $this->resultResponse('invalid','',$getAndValidatePOBalance);  
@@ -347,7 +364,7 @@ class TransactionController extends Controller
                     return $this->resultResponse('invalid','',$errorMessage);
                 }
                 
-                $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+              return  $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
                 GenericMethod::updatePO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']),$id);
 
                 $transaction = GenericMethod::updateTransaction($id,$po_total_amount,

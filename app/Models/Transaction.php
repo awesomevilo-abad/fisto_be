@@ -110,5 +110,7 @@ class Transaction extends Model
         return $this->belongsTo(User::class,'users_id','id');
     }
 
-
+    public function supplier(){
+        return $this->belongsTo(Supplier::class,'supplier_id','id')->select(['id', 'supplier_type_id', 'name']);
+    }
 }
