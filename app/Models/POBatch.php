@@ -30,4 +30,9 @@ class POBatch extends Model
         'rr_group' => 'array'
     ];
 
+
+    public function transaction_ids()
+    {
+      return $this->belongsTo(Transaction::class,'request_id', 'request_id')->select(['transactions.id','request_id']);
+    }
 }

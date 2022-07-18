@@ -12,6 +12,7 @@ use App\Models\POBatch;
 use App\Models\RequestorLogs;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\TransactionResource;
+use App\Http\Resources\TransactionIndex;
 use App\Http\Resources\RequestLog;
 use App\Exceptions\FistoException;
 use Carbon\Carbon;
@@ -55,7 +56,6 @@ class TransactionController extends Controller
             'transaction_id',
             'document_type',
             'payment_type',
-            'supplier',
             'remarks',
             'date_requested',
 
@@ -113,6 +113,9 @@ class TransactionController extends Controller
 
         ->latest('updated_at')
         ->paginate($rows);
+
+
+         TransactionIndex::collection($transactions);
 
         if (count($transactions)) return $this->resultResponse('fetch', 'Transaction', $transactions);
 
@@ -578,14 +581,17 @@ class TransactionController extends Controller
             $po_group = collect();
             $balance =  $po_details->last()->po_balance;
             $po_details = POBatch::where('request_id',$po_details->last()->request_id)->orderByDesc('id')->get(['request_id as batch','po_no as no','po_amount as amount','rr_group as rr_no']);
+            
             $po_details->mapToGroups(function ($item,$v) use ($balance){
                 return [
                     $item['balance']=0,
-                    $item['rr_no']=json_decode($item['rr_no'], true)
+                    $item['rr_no']=json_decode($item['rr_no'], true),
                 ];
             });
-             $po_details[0]['balance'] = $balance;
-             $po_object =  (object) array("po_group"=>$po_details);
+            
+            $po_details = $po_details->reverse()->values();
+            $po_details->first()->balance = $balance;
+            $po_object =  (object) array("po_group"=>$po_details);
             return $this->resultResponse('fetch','PO number',$po_object);   
         }
         return $this->resultResponse('success-no-content','',[]);  
