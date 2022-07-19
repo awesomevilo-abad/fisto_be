@@ -33,6 +33,8 @@ class POBatch extends Model
 
     public function transaction_ids()
     {
-      return $this->belongsTo(Transaction::class,'request_id', 'request_id')->select(['transactions.id','request_id']);
+      return $this->belongsTo(Transaction::class,'request_id', 'request_id')
+      ->where('transactions.state','!=','void')
+      ->select(['transactions.id','request_id']);
     }
 }

@@ -25,7 +25,10 @@ class TransactionIndex extends JsonResource
                ->select(['request_id','po_no'])
                ->get();
 
-               if ($this->id == $transactions_ids->pluck(['transaction_ids'])->last()->id){
+            $transaction_obj = $transactions_ids->pluck(['transaction_ids']);
+            $transaction_obj = $transaction_obj->filter();
+
+               if ($this->id == $transaction_obj->last()->id){
                    $is_latest = 1;
                }
                 
