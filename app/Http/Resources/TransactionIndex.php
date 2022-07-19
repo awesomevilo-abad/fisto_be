@@ -58,10 +58,6 @@ class TransactionIndex extends JsonResource
             ];
            }
            
-           if( strtoupper($this->payment_type) == "FULL"){
-                $is_latest=1;
-           }
-
            $transactions_details = [
             "id"=> $this->id,
             "is_latest_transaction"=> $is_latest,

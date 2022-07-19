@@ -32,7 +32,7 @@ class TransactionResource extends JsonResource
         ->when($payment_type === 'PARTIAL',function($q){
                 $q->select(['is_add','is_editable','p_o_batches.id as id','po_no as no', 'po_amount as amount','previous_balance','balance_po_ref_amount as balance','rr_group as rr_no']);
             }, function($q){
-                $q->select(['p_o_batches.id as id','po_no as no', 'po_amount as amount','rr_group as rr_no','p_o_batches.request_id']);
+                $q->select(['p_o_batches.id as id','po_no as no', 'po_amount as amount', 'po_amount as balance','rr_group as rr_no','p_o_batches.request_id']);
             } 
         )
         ->get();
