@@ -24,6 +24,7 @@ class TransactionResource extends JsonResource
         $first_transaction_keys = [];
         $keys = [];
 
+        $document_amount = Transaction::where('request_id',$this->request_id)->first()->document_amount;
         $payment_type = strtoupper($this->payment_type);
         $user = User::where('id',$this->users_id)->get()->first();
         $po_transaction = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')->get();
@@ -32,7 +33,7 @@ class TransactionResource extends JsonResource
         ->when($payment_type === 'PARTIAL',function($q){
                 $q->select(['is_add','is_editable','p_o_batches.id as id','po_no as no', 'po_amount as amount','previous_balance','balance_po_ref_amount as balance','rr_group as rr_no']);
             }, function($q){
-                $q->select(['p_o_batches.id as id','po_no as no', 'po_amount as amount', 'po_amount as balance','rr_group as rr_no','p_o_batches.request_id']);
+                $q->select(['p_o_batches.id as id','po_no as no', 'po_amount as amount','rr_group as rr_no','p_o_batches.request_id']);
             } 
         )
         ->get();
@@ -42,6 +43,7 @@ class TransactionResource extends JsonResource
             $po_details[$j]['rr_no'] = $rr_no;
             $po_details[$j]['is_editable'] = 1;
             $po_details[$j]['previous_balance'] = $po_details[$j]['amount'];
+            $po_details[$j]['balance'] = $document_amount - ($po_details->pluck('amount'))->sum();
         }
         
        $is_latest_transaction=1;
@@ -92,7 +94,6 @@ class TransactionResource extends JsonResource
             }
     }
         $transaction =($po_transaction->where('request_id',$this->request_id));
-        $document_amount = Transaction::where('request_id',$this->request_id)->first()->document_amount;
  
         switch($this->document_id){
             case 1: //PAD
