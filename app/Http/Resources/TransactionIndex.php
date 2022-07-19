@@ -15,6 +15,7 @@ class TransactionIndex extends JsonResource
      */
     public function toArray($request)
     {
+        $is_latest = 0;
         if(!empty($this->po_details)){
           if($this->po_details->last()!= null){
                $po_no = $this->po_details->last()->po_no;
@@ -24,7 +25,6 @@ class TransactionIndex extends JsonResource
                ->select(['request_id','po_no'])
                ->get();
 
-               $is_latest = 0;
                if ($this->id == $transactions_ids->pluck(['transaction_ids'])->last()->id){
                    $is_latest = 1;
                }
@@ -55,9 +55,13 @@ class TransactionIndex extends JsonResource
             ];
            }
            
+           if( strtoupper($this->payment_type) == "FULL"){
+                $is_latest=1;
+           }
+
            $transactions_details = [
             "id"=> $this->id,
-            "is_latest_transaction"=> 1,
+            "is_latest_transaction"=> $is_latest,
             "users_id"=>  $this->users_id,
             "request_id"=> $this->request_id,
             "supplier_id"=> $this->supplier_id,
