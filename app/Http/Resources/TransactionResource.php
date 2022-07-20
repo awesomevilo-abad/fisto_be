@@ -43,7 +43,6 @@ class TransactionResource extends JsonResource
             $po_details[$j]['rr_no'] = $rr_no;
             $po_details[$j]['is_editable'] = 1;
             $po_details[$j]['previous_balance'] = $po_details[$j]['amount'];
-            $po_details[$j]['balance'] = $document_amount - ($po_details->pluck('amount'))->sum();
         }
         
        $is_latest_transaction=1;
