@@ -1778,14 +1778,13 @@ class GenericMethod{
         public static function validateIfPOExists($po_group,$company_id,$id=0){
 
             $po_total_amount = 0;
-
             $existingTransaction = [];
-            // return validateIfFirstTransaction = 
             foreach($po_group as $k=>$v){
                 $po_no = $po_group[$k]['no'];
 
                 $existingTransaction = Transaction::with('po_details')
                 ->where('company_id',$company_id)
+                ->where('state','!=','void')
                 ->when($id,function($query,$id){
                     $query->where('id','<>',$id);
                 })
@@ -1798,6 +1797,7 @@ class GenericMethod{
 
                $transaction = Transaction::with('po_details')
                ->where('company_id',$company_id)
+               ->where('state','!=','void')
                ->when($id,function($query,$id){
                    $query->where('id','<>',$id);
                })
@@ -1808,6 +1808,7 @@ class GenericMethod{
                     $po_group[$k]['is_editable'] = 0;
                     $po_group[$k]['previous_balance'] = Transaction::with('po_details')
                         ->where('company_id',$company_id)
+                        ->where('state','!=','void')
                         ->when($id,function($query,$id){
                             $query->where('id','<>',$id);
                         })
