@@ -24,11 +24,16 @@ class TransactionResource extends JsonResource
         $first_transaction_keys = [];
         $keys = [];
 
-        $document_amount = Transaction::where('request_id',$this->request_id)->first()->document_amount;
+        
+        $condition =  ($this->state=='void')? '=': '!=';
+        $document_amount = Transaction::where('request_id',$this->request_id)->where('state',$condition,'void')->first()->document_amount;
         $payment_type = strtoupper($this->payment_type);
         $user = User::where('id',$this->users_id)->get()->first();
-        $po_transaction = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')->get();
+        $po_transaction = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')
+        ->where('transactions.state',$condition,'void')
+        ->get();
         $po_details = POBatch::leftJoin('transactions','p_o_batches.request_id','=','transactions.request_id')
+        ->where('transactions.state',$condition,'void')
         ->where('transactions.request_id',$this->request_id)
         ->when($payment_type === 'PARTIAL',function($q){
                 $q->select(['is_add','is_editable','p_o_batches.id as id','po_no as no', 'po_amount as amount','previous_balance','balance_po_ref_amount as balance','rr_group as rr_no']);
@@ -72,7 +77,6 @@ class TransactionResource extends JsonResource
             //         $po_details[$k]['balance'] = 0;
             //     }
             //     // unset($po_details[$k]->is_add);
-                $condition =  ($this->state=='void')? '=': '!=';
                 $last_transaction_id = $po_transaction->where('po_no',$po_no)->where('state',$condition,'void')->pluck('id')->last();
                 if($last_transaction_id == $this->id){
                     $is_latest_transaction=1;
