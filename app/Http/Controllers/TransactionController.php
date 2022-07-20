@@ -91,14 +91,34 @@ class TransactionController extends Controller
         })
         ->where(function ($query) use ($search) {
             $query->where('date_requested', 'like', '%' . $search . '%')
+            ->orWhere('remarks', 'like', '%' . $search . '%')
             ->orWhere('transaction_id', 'like', '%' . $search . '%')
             ->orWhere('document_amount', 'like', '%' . $search . '%')
             ->orWhere('document_type', 'like', '%' . $search . '%')
             ->orWhere('payment_type', 'like', '%' . $search . '%')
             ->orWhere('company', 'like', '%' . $search . '%')
+            ->orWhere('department', 'like', '%' . $search . '%')
+            ->orWhere('location', 'like', '%' . $search . '%')
             ->orWhere('supplier', 'like', '%' . $search . '%')
+            ->orWhere('document_no', 'like', '%' . $search . '%')
+            ->orWhere('referrence_no', 'like', '%' . $search . '%')
             ->orWhere('po_total_amount', 'like', '%' . $search . '%')
-            ->orWhere('referrence_total_amount', 'like', '%' . $search . '%');
+            ->orWhere('referrence_total_amount', 'like', '%' . $search . '%')
+            ->orWhereHas('po_details', function ($query) use ($search){
+                $query->where('po_no', 'like', '%' . $search . '%');
+            })
+            ->orWhereHas('users',function ($query) use ($search){
+                $query->where(DB::raw(
+                    "REPLACE(
+                        CONCAT(
+                            COALESCE(first_name,''),' ',
+                            COALESCE(last_name,''),
+                            COALESCE(suffix,'')
+                        ),
+                    '  ',' ')"
+                ),
+            'like', '%' . $search . '%');
+            });
         })
         ->when($role === 'Requestor',function($query) use($department){
             $query->whereIn('department_details',$department);
