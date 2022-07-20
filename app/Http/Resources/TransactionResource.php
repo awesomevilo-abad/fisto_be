@@ -24,7 +24,7 @@ class TransactionResource extends JsonResource
         $first_transaction_keys = [];
         $keys = [];
 
-        
+        // LIMAY THE WONDERER
         $condition =  ($this->state=='void')? '=': '!=';
         $document_amount = Transaction::where('request_id',$this->request_id)->where('state',$condition,'void')->first()->document_amount;
         $payment_type = strtoupper($this->payment_type);
