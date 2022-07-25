@@ -188,11 +188,11 @@ class TransactionController extends Controller
                 }
                
                 $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
-                if ($fields['document']['amount'] != $po_total_amount){
-                   $errorMessage = GenericMethod::resultLaravelFormat('po_group.amount',["Document amount (".$fields['document']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
-                   return $this->resultResponse('invalid','',$errorMessage);
+               
+                $errorMessage = GenericMethod::validateWith1PesoDifference('po_group.amount','Document',$fields['document']['amount'],$po_total_amount);
+                if(! empty($errorMessage)){
+                    return GenericMethod::resultResponse('invalid','',$errorMessage);
                 }
-
                 GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                 $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                 $request_id,$date_requested,$fields);
@@ -298,10 +298,12 @@ class TransactionController extends Controller
                     }
                     
                     $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
-                    if ($fields['document']['reference']['amount'] != $po_total_amount){
-                       $errorMessage = GenericMethod::resultLaravelFormat('document.amount',["Reference amount (".$fields['document']['reference']['amount'].") and total PO amount (".$po_total_amount.")  are not equal."]);
-                       return $this->resultResponse('invalid','',$errorMessage);
+                    
+                    $errorMessage = GenericMethod::validateWith1PesoDifference('document.amount','Reference',$fields['document']['reference']['amount'],$po_total_amount);
+                    if(! empty($errorMessage)){
+                        return GenericMethod::resultResponse('invalid','',$errorMessage);
                     }
+
                     GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                     $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                     $request_id,$date_requested,$fields);

@@ -29,6 +29,16 @@ class GenericMethod{
     #########################################      REUSABLE FUNCTION    ######################################
     ##########################################################################################################
 
+        public static function validateWith1PesoDifference($affeced_field,$type,$transaction_amount,$po_total_amount){
+            if(
+                !(((abs($transaction_amount - $po_total_amount) ) >= 0.00) 
+                && 
+                ((abs($transaction_amount - $po_total_amount) ) <= 1.00)) 
+            ){
+                return $errorMessage = GenericMethod::resultLaravelFormat($affeced_field,[$type." amount (".$transaction_amount.") and total PO amount (".$po_total_amount.")  are not equal."]);
+            }
+        }
+
         public static function getTransactionChanges($request_id,$transaction,$id){
             $current_transaction = Transaction::with('po_details')->findOrFail($id);
             $original_transaction = Transaction::with('po_details')->findOrFail($id);
@@ -1937,6 +1947,10 @@ class GenericMethod{
         
             case('password-reset'):
                 return GenericMethod::result(200,"User's default password has been restored.",$data);
+            break;
+
+            case('invalid'):
+              throw new FistoLaravelException("The given data was invalid.", 422, NULL, $data);
             break;
             }
         }
