@@ -70,7 +70,12 @@ class MasterlistController extends Controller
   }
 
   public function associateDropdown(){
-    $data =  array("associates"=>User::where('role','AP Associate')->whereNull('deleted_at')->get(['id',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS name")]));
+    $data =  array("associates"=>User::where(function ($query){
+      $query->where('role','AP Associate')
+      ->orWhere('role','AP Specialist');
+    })
+    ->whereNull('deleted_at')
+    ->get(['id',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS name")]));
     return $this->resultResponse('fetch','AP Associate',$data);
   }
 

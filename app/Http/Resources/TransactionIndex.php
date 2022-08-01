@@ -61,7 +61,7 @@ class TransactionIndex extends JsonResource
                             "document_amount"=> $this->document_amount,
                             "referrence_no"=> $this->referrence_no,
                             "referrence_amount"=> $this->referrence_amount,
-                            "status"=> $this->status,
+                            "status"=> $this->state,
                             "users"=> $this->users,
                             "po_details"=> $this->po_details
                         ];
@@ -89,7 +89,7 @@ class TransactionIndex extends JsonResource
             "document_amount"=> $this->document_amount,
             "referrence_no"=> $this->referrence_no,
             "referrence_amount"=> $this->referrence_amount,
-            "status"=> $this->status,
+            "status"=> $this->state,
             "users"=> $this->users,
             "po_details"=> $this->po_details
         ];

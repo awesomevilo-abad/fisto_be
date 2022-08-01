@@ -61,7 +61,7 @@ class CreateTransactionsTable extends Migration
             $table->float('balance_po_ref_amount')->nullable();
             $table->float('balance_po_ref_qty')->nullable();
             
-            $table->bigInteger('tagging_tag_id')->nullable();
+            $table->bigInteger('tag_no')->nullable();
             $table->bigInteger('utilities_category_id')->nullable();
             $table->string('utilities_category')->nullable();
             $table->bigInteger('utilities_account_no_id')->nullable();

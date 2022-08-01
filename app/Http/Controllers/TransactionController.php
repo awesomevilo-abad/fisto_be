@@ -42,33 +42,15 @@ class TransactionController extends Controller
         $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday->endOfDay()->format('Y-m-d H:i:s');
         $search =  $request['search'];
         $state = isset($request['state'])? $request['state']: 'request';
-        
         !empty($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department[0]['name']) ;
 
+        $request_window = ['Requestor'];
+        $tag_window = ['AP Tagging'];
+        $voucher_window = ['AP Associate','AP Specialist','Approver'];
+        $ChequeCreate_window = ['Treasury Associate'];
 
         $transactions = Transaction::select([
-            'id',
-            'users_id',
-            'request_id',
-            'supplier_id',
-            'document_id',
-            
-            'transaction_id',
-            'document_type',
-            'payment_type',
-            'remarks',
-            'date_requested',
-
-            'company',
-            'department',
-            'location',
-
-            'document_no',
-            'document_amount',
-            'referrence_no',
-            'referrence_amount',
-
-            'status'
+            'id'
         ])
         ->with('users', function ($query) {
             return $query->select(['id', 'first_name', 'middle_name', 'last_name', 'users.department', 'position']);
@@ -120,25 +102,67 @@ class TransactionController extends Controller
             'like', '%' . $search . '%');
             });
         })
-        ->when($role === 'Requestor',function($query) use($department){
-            $query->whereIn('department_details',$department);
+        ->when(in_array($role,$request_window),function($query) use($department){
+            $query->whereIn('department_details',$department)
+            ->select([
+                'id',
+                'users_id',
+                'request_id',
+                'supplier_id',
+                'document_id',
+                
+                'transaction_id',
+                'document_type',
+                'payment_type',
+                'remarks',
+                'date_requested',
+    
+                'company',
+                'department',
+                'location',
+    
+                'document_no',
+                'document_amount',
+                'referrence_no',
+                'referrence_amount',
+    
+                'status',
+                'state'
+            ]);
         })
-        ->where('state',$state)
-        // ->when($role === 'Approver',function($query){
-        //     $query->where('users_id',Auth::id());
-        // })
-        // ->when($role === 'Requestor',function($query){
-        //     $query->where('users_id',Auth::id());
-        // })
-
+        ->when(in_array($role,$tag_window),function($query) use($department){
+            $query->select([
+                'id',
+                'users_id',
+                'request_id',
+                'supplier_id',
+                'document_id',
+                'tag_no',
+                
+                'transaction_id',
+                'document_type',
+                'payment_type',
+                'remarks',
+                'date_requested',
+    
+                'company',
+                'department',
+                'location',
+    
+                'document_no',
+                'document_amount',
+                'referrence_no',
+                'referrence_amount',
+    
+                'status',
+                'state'
+            ]);
+        })
+        ->where('status',$status)
         ->latest('updated_at')
         ->paginate($rows);
-
-
          TransactionIndex::collection($transactions);
-
         if (count($transactions)) return $this->resultResponse('fetch', 'Transaction', $transactions);
-
         return $this->resultResponse('not-found', 'Transaction', []);
     }
 

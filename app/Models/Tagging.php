@@ -12,11 +12,12 @@ class Tagging extends Model
     protected $fillable = [
         'transaction_id',
         'description',
-        'date_received',
         'status',
         'date_status',
         'reason_id',
-        'remarks'
+        'remarks',
+        'distributed_id',
+        'distributed_name'
 
     ];
 }

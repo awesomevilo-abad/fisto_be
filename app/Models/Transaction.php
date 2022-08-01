@@ -65,7 +65,7 @@ class Transaction extends Model
         ,"balance_document_ref_amount"
         ,"balance_po_ref_amount"
         ,"balance_po_ref_qty"
-        ,"tagging_tag_id"
+        ,"tag_no"
 
         ,"utilities_category_id"
         ,"utilities_category"

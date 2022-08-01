@@ -17,7 +17,7 @@ class CreateTaggingsTable extends Migration
             $table->id();
             $table->string('transaction_id');
             $table->string('description')->nullable();
-            $table->date('date_received');
+            $table->date('date_received')->nullable();
             $table->string('status');
             $table->date('date_status');
             $table->bigInteger('reason_id')->nullable();

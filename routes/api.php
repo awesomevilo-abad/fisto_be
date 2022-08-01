@@ -68,6 +68,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::get('user/departments/',[TransactionController::class,'showUserDepartment']);
         Route::get('references/', [ReferrenceController::class, 'index']);
         Route::get('reason/', [ReasonController::class, 'index']);
+        Route::get('associate',[MasterlistController::class,'associateDropdown']);
 
         // TRANSACTION
         Route::get('company',[CompanyController::class,'index']);
@@ -206,10 +207,11 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::post('transactions/validate-pcf-name/',[TransactionController::class,'validatePCFName']);
  
     // TRANSACTION FLOW
-    Route::get('transactions/flow/',[TransactionFlowController::class,'pullRequest']);
-    Route::get('transactions/flow/{id}',[TransactionFlowController::class,'pullSingleRequest']);
-    Route::post('transactions/flow/update-status/{id}',[TransactionFlowController::class,'receivedRequest']);
-    Route::post('transactions/flow/search',[TransactionFlowController::class,'searchRequest']);
+    Route::post('transactions/flow/update-transaction/{id}',[TransactionFlowController::class,'updateInTransactionFlow']);
+    // Route::get('transactions/flow/',[TransactionFlowController::class,'pullRequest']);
+    // Route::get('transactions/flow/{id}',[TransactionFlowController::class,'pullSingleRequest']);
+    // Route::post('transactions/flow/update-status/{id}',[TransactionFlowController::class,'receivedRequest']);
+    // Route::post('transactions/flow/search',[TransactionFlowController::class,'searchRequest']);
 });
 
 

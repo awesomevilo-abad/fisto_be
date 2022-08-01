@@ -24,11 +24,62 @@ use App\Models\ChequeInfo;
 use App\Models\ChequeReleased;
 use App\Models\ChequeClearing;
 use App\Methods\GenericMethod;
+use Carbon\Carbon;
 
 class TransactionFlow{
 
+
+    public static function updateInTransactionFlow ($request,$id) {
+        $tag_no = GenericMethod::generateTagNo();
+        $process =  $request['process'];
+        $subprocess =  $request['subprocess'];
+        $distributed_to =  $request['distributed_to'];
+        $reason_id = (isset($request['reason_id'])?$request['reason_id']:null);
+        $date_now= Carbon::now('Asia/Manila')->format('Y-m-d');
+     
+        $transaction= Transaction::select(
+            'transaction_id'
+            ,'remarks'
+            )->find($id);
+            
+        $transaction_id = $transaction->transaction_id;
+        $remarks = $transaction->remarks;
+
+        if($process == 'tag'){
+            $model = new Tagging;
+            if($subprocess == 'receive'){
+                $status= 'tag-receive';
+                $state= 'receive';
+            }else if($subprocess == 'hold'){
+                $status= 'tag-hold';
+                $state= 'hold';
+            }else if($subprocess == 'unhold'){
+                $status= 'tag-unhold';
+                $state= 'unhold';
+            }else if($subprocess == 'unhold'){
+                $status= 'tag-unhold';
+                $state= 'unhold';
+            }else if($subprocess == 'return'){
+                $status= 'tag-return';
+                $state= 'return';
+            }else if($subprocess == 'void'){
+                $status= 'tag-void';
+                $state= 'void';
+            }else if($subprocess == 'tag'){
+                $status= 'tag-tag';
+                $state= 'tag';
+            }
+
+            GenericMethod::tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$status,$distributed_to );
+            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+        }else if($process == 'voucher'){
+
+        }
+        return GenericMethod::resultResponse($state,'','');
+    }
+
     public static function getStatusAndTableFromProcessAndSubProcess($process,$subprocess){
-        if($process == 'ap tagging'){
+        if($process == 'tag'){
             if($subprocess == 'pending'){
                 $status = ["pending","received (tagging)","unhold (tagging)"];
             }else if($subprocess == 'hold'){
@@ -185,27 +236,26 @@ class TransactionFlow{
     public static function pullSingleRequest($process,$subprocess,$id){
         $result = TransactionFlow::getStatusAndTableFromProcessAndSubProcess($process,$subprocess);
 
-        $transactions = DB::table('transactions')
+        $transactions = Transaction::where('id',$id)
         ->whereIn('status',$result['status'])
-        ->where('id',$id)
-        ->get();
+        ->get()->first();
 
 
-        $transaction_format =  GenericMethod::getTransactionFormat($transactions, $result['table']);
+        return $transaction_format =  GenericMethod::getTransactionFormat($transactions, $result['table']);
 
         return $transaction_format;
     }
 
     public static function receivedRequest($request, $id){
 
-        $max_tag_no = GenericMethod::generateTagNo();
 
         $process =  $request['process'];
-        $transactions = TransactionFlow::pullSingleRequest($process,$id);
-        $transaction_id =  $transactions[0]->transaction_id;
-        $tagging_tag_id =  $transactions[0]->tagging_tag_id;
-
         $subprocess =  $request['subprocess'];
+        $transactions = TransactionFlow::pullSingleRequest($process,$subprocess,$id);
+
+        return $transactions;
+        $transaction_id =  $transactions['transaction_id'];
+        $tag_no =  $transactions['tag_no'];
         $description = $request['description'];
         $reason_id = $request['reason_id'];
         $remarks = $request['remarks'];
@@ -216,7 +266,7 @@ class TransactionFlow{
         }else{
             $date_received = $request['date_received'];
         }
-        if($process == 'ap tagging'){
+        if($process == 'tag'){
             if($subprocess == 'receive'){
                 $status = 'received (tagging)';
                 $tag_no = 0;
@@ -242,6 +292,8 @@ class TransactionFlow{
                 $tag_no = 0;
             }
 
+            return $tag_no;
+
             //CREATE
             Tagging::Create([
                 "transaction_id"=>$transaction_id,
@@ -253,7 +305,7 @@ class TransactionFlow{
                 "remarks"=>$remarks
             ]);
             // UPDATE
-            GenericMethod::updateTransactionStatus($transaction_id,$status);
+            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status);
 
         }else if($process == 'gas'){
 
@@ -281,7 +333,7 @@ class TransactionFlow{
 
             //CREATE
             Gas::Create([
-                "tag_id"=>$tagging_tag_id,
+                "tag_id"=>$tag_no,
                 "receipt_type"=>$receipt_type,
                 "date_received"=>$date_received,
                 "status"=>$status,

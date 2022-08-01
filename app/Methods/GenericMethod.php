@@ -29,6 +29,30 @@ class GenericMethod{
     #########################################      REUSABLE FUNCTION    ######################################
     ##########################################################################################################
 
+        public static function isTransactionExistInFlow($model,$transaction_id,$status){
+            if($model::where('transaction_id',$transaction_id)->where('status',$status)->exists()){
+                return GenericMethod::resultResponse('exist-flow','received',[]);
+            }
+        }
+
+        public static function tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$status,$distributed_to=[] ){
+            $distributed_id =null;
+            $distributed_name =null;
+            if(!empty($distributed_to)){
+                $distributed_id=$distributed_to['id'];
+                $distributed_name=$distributed_to['name'];
+            }
+            $model::Create([
+                "transaction_id"=>$transaction_id,
+                "description"=>$remarks,
+                "status"=>$status,
+                "date_status"=>$date_now,
+                "reason_id"=>$reason_id,
+                "distributed_id"=>$distributed_id,
+                "distributed_name"=>$distributed_name
+            ]);
+        }
+
         public static function validateWith1PesoDifference($affeced_field,$type,$transaction_amount,$po_total_amount){
             if(
                 !(((abs($transaction_amount - $po_total_amount) ) >= 0.00) 
@@ -746,11 +770,15 @@ class GenericMethod{
             return new LengthAwarePaginator($items->forPage($page, $perPage)->values(), $items->count(), $perPage, $page, $options);
         }
 
-        public static function updateTransactionStatus($transaction_id,$status)
+        public static function updateTransactionStatus($transaction_id,$tag_no,$status,$state)
         {
             DB::table('transactions')
                 ->where('transaction_id', $transaction_id)
-                ->update(['status' => $status]);
+                ->update([
+                    'status' => $status
+                    ,'state' => $state
+                    ,'tag_no' => $tag_no
+                ]);
         }
 
         public static function addAND($array)
@@ -792,10 +820,7 @@ class GenericMethod{
         }
 
         public static function generateTagNo(){
-            $tag_no = DB::select(DB::raw('
-            SELECT MAX(tagging_request_id) as max_tag_no FROM transactions'));
-
-            return $tag_no[0]->max_tag_no;
+            return Transaction::max('tag_no')+1;
         }
 
         public static function countTableById($table,$id){
@@ -1060,10 +1085,9 @@ class GenericMethod{
             return $get_category_ids;
         }
 
-        public static function getTransactionFormat($transactions, $table){
+        public static function getTransactionFormat($transaction, $table){
 
             $result = collect();
-            foreach($transactions as $transaction){
 
                 if($table == 'taggings'){
                     $remarks = DB::table($table)
@@ -1188,13 +1212,14 @@ class GenericMethod{
                         'balance_document_ref_amount'=>$transaction->balance_document_ref_amount,
                         'balance_po_ref_amount'=>$transaction->balance_po_ref_amount
                     ]);
-            }
 
-            $resultTransaction =$result->sortDesc();
-            $resultTransaction = $resultTransaction->values();
-            return GenericMethod::paginateme($resultTransaction);
-            // return $result->paginateme(5);
-        }
+                    
+                    $resultTransaction =$result->sortDesc();
+                    // $resultTransaction = $resultTransaction->values();
+                    // return GenericMethod::paginateme($resultTransaction);
+                    return $result->paginateme(5);
+                    return $resultTransaction;
+                }
 
         public static function getPOTotalAmount($request_id,$po_group){
             $po_count = count($po_group);
@@ -1857,6 +1882,24 @@ class GenericMethod{
         public static function resultResponse($action,$modelName,$data=[]){
             $modelName = ucfirst(strtolower($modelName));
             switch($action){
+            case('receive'):
+                return GenericMethod::result(200,"Transaction has been received.",[]);
+            break;
+            case('hold'):
+                return GenericMethod::result(200,"Transaction has been hold.",[]);
+            break;
+            case('unhold'):
+                return GenericMethod::result(200,"Transaction has been unhold.",[]);
+            break;
+            case('return'):
+                return GenericMethod::result(200,"Transaction has been returned.",[]);
+            break;
+            case('void'):
+                return GenericMethod::result(200,"Transaction has been voied.",[]);
+            break;
+            case('tag'):
+                return GenericMethod::result(200,"Transaction has been tagged.",[]);
+            break;
             case('fetch'):
                 return GenericMethod::result(200,Str::plural($modelName)." has been fetched.",$data);
             break;
@@ -1895,6 +1938,10 @@ class GenericMethod{
                 
             case('exist'):
                 throw new FistoException($modelName." already exist.", 409, NULL, $data);
+            break;
+            
+            case('exist-flow'):
+                throw new FistoException("Transaction already ".strtolower($modelName).".", 409, NULL, $data);
             break;
             
             case('import-error'):
