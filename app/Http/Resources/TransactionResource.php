@@ -17,6 +17,7 @@ class TransactionResource extends JsonResource
     public function toArray($request)
     {
         $document  = [];
+        $tag  = [];
         $po_details = [];
         $reference = [];
         $po_no = [];
@@ -24,11 +25,17 @@ class TransactionResource extends JsonResource
         $first_transaction_keys = [];
         $keys = [];
 
-        // LIMAY THE WONDERER
+        // TAG PROCESS
         $transaction =  Transaction::where('id',$this->id)->get()->first();
         $transaction_tag= $transaction->tag->first();
+        (isset($transaction['document']['capex_no'])?$transaction['document']['capex_no']:NULL);
+        $transaction_tag_no= (isset($transaction->tag_no)?$transaction->tag_no:NULL);
+        $transaction_tag_date= (isset($transaction_tag->date)?$transaction_tag->date:NULL);
+        $transaction_tag_status= (isset($transaction_tag->status)?$transaction_tag->status:NULL);
+        $transaction_tag_distributed_id= (isset($transaction_tag->distributed_id)?$transaction_tag->distributed_id:NULL);
+        $transaction_tag_distributed_name= (isset($transaction_tag->distributed_name)?$transaction_tag->distributed_name:NULL);
+        // END TAG PROCESS
 
-        $transaction_tag_no= $transaction->tag_no;
 
 
         $condition =  ($this->state=='void')? '=': '!=';
@@ -321,6 +328,19 @@ class TransactionResource extends JsonResource
             break;
         }
 
+        if(isset($transaction_tag_status)){
+            $tag = [
+                    "no"=>$transaction_tag_no,
+                    "date"=>$transaction_tag_date,
+                    "status"=>$transaction_tag_status,
+                    "distributed_to"=>[
+                        "id"=>$transaction_tag_distributed_id,
+                        "name"=>$transaction_tag_distributed_name
+                    ]
+                ];
+        }
+        
+
         return [
             "transaction"=>[
                 "id"=>$this->id
@@ -350,15 +370,7 @@ class TransactionResource extends JsonResource
             ],
             "document"=>$document
             ,"po_group"=>$po_details
-            ,"tag"=>[
-                "no"=>$transaction_tag_no,
-                "date"=>$transaction_tag->date,
-                "status"=>$transaction_tag->status,
-                "distributed_to"=>[
-                    "id"=>$transaction_tag->distributed_id,
-                    "name"=>$transaction_tag->distributed_name
-                ]
-            ]
+            ,"tag"=> $tag
             // ,"voucher"=>[
             //     "ap_associate"=>null
             //     ,"receipt_type"=>null
