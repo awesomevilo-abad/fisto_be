@@ -137,8 +137,13 @@ class TransactionController extends Controller
                 'state'
             ]);
         })
-        ->when(in_array($role,$tag_window),function($query){
-            $query->select([
+        ->when(in_array($role,$tag_window),function($query) use ($status){
+            $query->when(strtoupper($status) == "PENDING", function ($query){
+                $query->whereIn('status',['pending']);
+            },function ($query) use($status){
+                $query->where('status',preg_replace('/\s+/', '', $status));
+            })
+            ->select([
                 'id',
                 'users_id',
                 'request_id',

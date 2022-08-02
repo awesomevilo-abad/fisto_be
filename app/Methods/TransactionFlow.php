@@ -32,7 +32,7 @@ class TransactionFlow{
 
 
     public static function updateInTransactionFlow ($request,$id) {
-        $tag_no = GenericMethod::generateTagNo();
+        $tag_no = 0;
         $process =  $request['process'];
         $subprocess =  $request['subprocess'];
         $distributed_to =  $request['distributed_to'];
@@ -49,8 +49,8 @@ class TransactionFlow{
         $remarks = $transaction->remarks;
         $users_id = $transaction->users_id;
 
-        $reason_description= $request['reason']['description'];
-        $reason_remarks=  $request['reason']['remarks'];
+        $reason_description= isset($request['reason']['description'])?$request['reason']['description']:null;
+        $reason_remarks=  isset($request['reason']['remarks'])?$request['reason']['remarks']:null;
 
         if($process == 'requestor'){
             $model = new RequestorLogs;

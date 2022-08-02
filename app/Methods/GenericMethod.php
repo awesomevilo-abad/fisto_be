@@ -778,7 +778,6 @@ class GenericMethod{
                 ->update([
                     'status' => $status
                     ,'state' => $state
-                    ,'tag_no' => $tag_no
                 ]);
         }
 
