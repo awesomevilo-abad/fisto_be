@@ -43,6 +43,7 @@ class TransactionIndex extends JsonResource
                         }
                         $transactions_details = [
                             "id"=> $this->id,
+                            "tag_no"=> $this->tag_no,
                             "is_latest_transaction"=> $is_latest,
                             "users_id"=>  $this->users_id,
                             "request_id"=> $this->request_id,
@@ -71,6 +72,7 @@ class TransactionIndex extends JsonResource
            
            $transactions_details = [
             "id"=> $this->id,
+            "tag_no"=> $this->tag_no,
             "is_latest_transaction"=> $is_latest,
             "users_id"=>  $this->users_id,
             "request_id"=> $this->request_id,

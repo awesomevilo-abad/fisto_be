@@ -45,10 +45,11 @@ class TransactionController extends Controller
         !empty($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department[0]['name']) ;
 
         $request_window = ['Requestor'];
+        $admin_window = ['Administrator'];
         $tag_window = ['AP Tagging'];
         $voucher_window = ['AP Associate','AP Specialist','Approver'];
         $ChequeCreate_window = ['Treasury Associate'];
-
+        
         $transactions = Transaction::select([
             'id'
         ])
@@ -102,14 +103,20 @@ class TransactionController extends Controller
             'like', '%' . $search . '%');
             });
         })
-        ->when(in_array($role,$request_window),function($query) use($department){
-            $query->whereIn('department_details',$department)
+        ->when(in_array($role,$request_window),function($query) use($status,$department){
+            $query->when(strtoupper($status) == "PENDING", function ($query){
+                $query->whereNotIn('status',['requestor-void','tag-hold','tag-void','tag-return']);
+            },function ($query) use($status){
+                $query->where('status',preg_replace('/\s+/', '', $status));
+            })
+            ->whereIn('department_details',$department)
             ->select([
                 'id',
                 'users_id',
                 'request_id',
                 'supplier_id',
                 'document_id',
+                'tag_no',
                 
                 'transaction_id',
                 'document_type',
@@ -130,7 +137,7 @@ class TransactionController extends Controller
                 'state'
             ]);
         })
-        ->when(in_array($role,$tag_window),function($query) use($department){
+        ->when(in_array($role,$tag_window),function($query){
             $query->select([
                 'id',
                 'users_id',
@@ -158,9 +165,9 @@ class TransactionController extends Controller
                 'state'
             ]);
         })
-        ->where('status',$status)
         ->latest('updated_at')
         ->paginate($rows);
+
          TransactionIndex::collection($transactions);
         if (count($transactions)) return $this->resultResponse('fetch', 'Transaction', $transactions);
         return $this->resultResponse('not-found', 'Transaction', []);
@@ -705,7 +712,7 @@ class TransactionController extends Controller
         return $this->resultResponse('not-found', 'Transaction', []);
        }
       
-       $transaction->status = 'Requestor - Voided';
+       $transaction->status = 'requestor-void';
        $transaction->state = 'void';
        $transaction->reason_id = $request->id;
        $transaction->reason = $request->description;

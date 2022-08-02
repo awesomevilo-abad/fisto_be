@@ -70,7 +70,8 @@ class MasterlistController extends Controller
   }
 
   public function associateDropdown(){
-    $data =  array("associates"=>User::where(function ($query){
+    $data =  array("associates"=>User::with('companies')
+     ->where(function ($query){
       $query->where('role','AP Associate')
       ->orWhere('role','AP Specialist');
     })

@@ -35,7 +35,7 @@ class GenericMethod{
             }
         }
 
-        public static function tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$status,$distributed_to=[] ){
+        public static function tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to=[] ){
             $distributed_id =null;
             $distributed_name =null;
             if(!empty($distributed_to)){
@@ -48,6 +48,7 @@ class GenericMethod{
                 "status"=>$status,
                 "date_status"=>$date_now,
                 "reason_id"=>$reason_id,
+                "remarks"=>$reason_remarks,
                 "distributed_id"=>$distributed_id,
                 "distributed_name"=>$distributed_name
             ]);
@@ -1895,7 +1896,7 @@ class GenericMethod{
                 return GenericMethod::result(200,"Transaction has been returned.",[]);
             break;
             case('void'):
-                return GenericMethod::result(200,"Transaction has been voied.",[]);
+                return GenericMethod::result(200,"Transaction has been voided.",[]);
             break;
             case('tag'):
                 return GenericMethod::result(200,"Transaction has been tagged.",[]);

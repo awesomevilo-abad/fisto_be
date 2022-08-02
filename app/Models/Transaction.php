@@ -93,7 +93,7 @@ class Transaction extends Model
 
     protected $attributes = [
         "status"=>"Pending",
-        "state"=>"request"
+        "state"=>"pending"
     ];
 
     protected $casts = [
@@ -112,5 +112,9 @@ class Transaction extends Model
 
     public function supplier(){
         return $this->belongsTo(Supplier::class,'supplier_id','id')->select(['id', 'supplier_type_id', 'name']);
+    }
+
+    public function tag(){
+        return $this->hasMany(Tagging::class,'transaction_id','transaction_id')->select('transaction_id','date_status as date','status','distributed_id','distributed_name')->latest()->limit(1);
     }
 }

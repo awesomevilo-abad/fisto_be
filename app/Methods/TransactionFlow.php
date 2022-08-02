@@ -23,6 +23,8 @@ use App\Models\ChequeCreation;
 use App\Models\ChequeInfo;
 use App\Models\ChequeReleased;
 use App\Models\ChequeClearing;
+use App\Models\Reason;
+use App\Models\RequestorLogs;
 use App\Methods\GenericMethod;
 use Carbon\Carbon;
 
@@ -34,18 +36,34 @@ class TransactionFlow{
         $process =  $request['process'];
         $subprocess =  $request['subprocess'];
         $distributed_to =  $request['distributed_to'];
-        $reason_id = (isset($request['reason_id'])?$request['reason_id']:null);
+        $reason_id = (isset($request['reason']['id']) ? $request['reason']['id']:null);
         $date_now= Carbon::now('Asia/Manila')->format('Y-m-d');
      
         $transaction= Transaction::select(
             'transaction_id'
+            ,'users_id'
             ,'remarks'
             )->find($id);
             
         $transaction_id = $transaction->transaction_id;
         $remarks = $transaction->remarks;
+        $users_id = $transaction->users_id;
 
-        if($process == 'tag'){
+        $reason_description= $request['reason']['description'];
+        $reason_remarks=  $request['reason']['remarks'];
+
+        if($process == 'requestor'){
+            $model = new RequestorLogs;
+            if($subprocess == 'void'){
+                $status= 'requestor-void';
+                $state= 'void';
+            }
+            
+            GenericMethod::insertRequestorLogs($id,$transaction_id,$date_now,$remarks,
+            $users_id,$status,$reason_id,$reason_description,$reason_remarks);
+            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+        
+        }else if($process == 'tag'){
             $model = new Tagging;
             if($subprocess == 'receive'){
                 $status= 'tag-receive';
@@ -69,11 +87,47 @@ class TransactionFlow{
                 $status= 'tag-tag';
                 $state= 'tag';
             }
-
-            GenericMethod::tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$status,$distributed_to );
+            GenericMethod::tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+        
         }else if($process == 'voucher'){
 
+            $model = new Associate;
+            if($subprocess == 'receive'){
+                $status= 'tag-receive';
+                $state= 'receive';
+            }else if($subprocess == 'hold'){
+                $status= 'tag-hold';
+                $state= 'hold';
+            }else if($subprocess == 'unhold'){
+                $status= 'tag-unhold';
+                $state= 'unhold';
+            }else if($subprocess == 'unhold'){
+                $status= 'tag-unhold';
+                $state= 'unhold';
+            }else if($subprocess == 'return'){
+                $status= 'tag-return';
+                $state= 'return';
+            }else if($subprocess == 'void'){
+                $status= 'tag-void';
+                $state= 'void';
+            }else if($subprocess == 'tag'){
+                $status= 'tag-tag';
+                $state= 'tag';
+            }
+            
+            //CREATE
+            Associate::Create([
+                "tag_id"=>$tag_no,
+                "date_received"=>$date_received,
+                "status"=>$status,
+                "date_status"=>$date_status,
+                "reason_id"=>$reason_id,
+                "remarks"=>$reason_remarks
+            ]);
+
+            GenericMethod::tagTransaction($model,$transaction_id,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
+            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
         }
         return GenericMethod::resultResponse($state,'','');
     }

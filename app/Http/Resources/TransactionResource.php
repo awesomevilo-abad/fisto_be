@@ -25,6 +25,12 @@ class TransactionResource extends JsonResource
         $keys = [];
 
         // LIMAY THE WONDERER
+        $transaction =  Transaction::where('id',$this->id)->get()->first();
+        $transaction_tag= $transaction->tag->first();
+
+        $transaction_tag_no= $transaction->tag_no;
+
+
         $condition =  ($this->state=='void')? '=': '!=';
         $document_amount = Transaction::where('request_id',$this->request_id)->where('state',$condition,'void')->first()->document_amount;
         $payment_type = strtoupper($this->payment_type);
@@ -344,6 +350,15 @@ class TransactionResource extends JsonResource
             ],
             "document"=>$document
             ,"po_group"=>$po_details
+            ,"tag"=>[
+                "no"=>$transaction_tag_no,
+                "date"=>$transaction_tag->date,
+                "status"=>$transaction_tag->status,
+                "distributed_to"=>[
+                    "id"=>$transaction_tag->distributed_id,
+                    "name"=>$transaction_tag->distributed_name
+                ]
+            ]
             // ,"voucher"=>[
             //     "ap_associate"=>null
             //     ,"receipt_type"=>null

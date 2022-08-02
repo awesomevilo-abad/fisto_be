@@ -15,7 +15,7 @@ class Company extends Model
 
     protected $table = 'companies';
     protected $fillable = ['code', 'company'];
-    protected $hidden = ['created_at'];
+    protected $hidden = ['created_at','pivot'];
 
     public function getCreatedAtAttribute($value){
         $date = Carbon::parse($value);

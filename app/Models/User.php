@@ -70,4 +70,8 @@ class User extends Authenticatable
         return "User has been {$eventName}.";
     }
 
+    public function companies(){
+        return $this->belongsToMany(Company::class,'company_users','user_id','company_id')->select('companies.id','companies.company as name');
+    }
+
 }
