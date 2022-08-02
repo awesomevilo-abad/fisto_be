@@ -115,6 +115,6 @@ class Transaction extends Model
     }
 
     public function tag(){
-        return $this->hasMany(Tagging::class,'transaction_id','transaction_id')->select('transaction_id','date_status as date','status','distributed_id','distributed_name')->latest()->limit(1);
+        return $this->hasMany(Tagging::class,'transaction_id','transaction_id')->select('transaction_id','date_status as date','status','distributed_id','distributed_name','reason_id','remarks')->latest()->limit(1);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 use App\Models\User;
 use App\Models\POBatch;
 use App\Models\Transaction;
+use App\Models\Reason;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TransactionResource extends JsonResource
@@ -34,9 +35,10 @@ class TransactionResource extends JsonResource
         $transaction_tag_status= (isset($transaction_tag->status)?$transaction_tag->status:NULL);
         $transaction_tag_distributed_id= (isset($transaction_tag->distributed_id)?$transaction_tag->distributed_id:NULL);
         $transaction_tag_distributed_name= (isset($transaction_tag->distributed_name)?$transaction_tag->distributed_name:NULL);
+        $reason_id = (isset($transaction_tag->reason_id)?$transaction_tag->reason_id:NULL);
+        $reason = (isset($transaction_tag->reason_id)?Reason::find($transaction_tag->reason_id)->reason:NULL);
+        $reason_remarks = (isset($transaction_tag->remarks)?$transaction_tag->remarks:NULL);
         // END TAG PROCESS
-
-
 
         $condition =  ($this->state=='void')? '=': '!=';
         $document_amount = Transaction::where('request_id',$this->request_id)->where('state',$condition,'void')->first()->document_amount;
@@ -336,6 +338,11 @@ class TransactionResource extends JsonResource
                     "distributed_to"=>[
                         "id"=>$transaction_tag_distributed_id,
                         "name"=>$transaction_tag_distributed_name
+                    ],
+                    "reason"=>[
+                        "id"=>$reason_id,
+                        "reason"=>$reason,
+                        "remarks"=>$reason_remarks
                     ]
                 ];
         }

@@ -771,13 +771,20 @@ class GenericMethod{
             return new LengthAwarePaginator($items->forPage($page, $perPage)->values(), $items->count(), $perPage, $page, $options);
         }
 
-        public static function updateTransactionStatus($transaction_id,$tag_no,$status,$state)
+        public static function updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks)
         {
+            if($status != 'tag-tag'){
+                $tag_no = 0;
+            }
             DB::table('transactions')
                 ->where('transaction_id', $transaction_id)
                 ->update([
                     'status' => $status
                     ,'state' => $state
+                    ,'tag_no' => $tag_no
+                    ,'reason_id' => $reason_id
+                    ,'reason' => $reason
+                    ,'reason_remarks' => $reason_remarks
                 ]);
         }
 

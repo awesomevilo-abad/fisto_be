@@ -32,7 +32,8 @@ class TransactionFlow{
 
 
     public static function updateInTransactionFlow ($request,$id) {
-        $tag_no = 0;
+        
+        $tag_no = GenericMethod::generateTagNo();
         $process =  $request['process'];
         $subprocess =  $request['subprocess'];
         $distributed_to =  $request['distributed_to'];
@@ -61,7 +62,7 @@ class TransactionFlow{
             
             GenericMethod::insertRequestorLogs($id,$transaction_id,$date_now,$remarks,
             $users_id,$status,$reason_id,$reason_description,$reason_remarks);
-            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks);
         
         }else if($process == 'tag'){
             $model = new Tagging;
@@ -88,7 +89,7 @@ class TransactionFlow{
                 $state= 'tag';
             }
             GenericMethod::tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
-            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks);
         
         }else if($process == 'voucher'){
 

@@ -49,7 +49,7 @@ class TransactionController extends Controller
         $tag_window = ['AP Tagging'];
         $voucher_window = ['AP Associate','AP Specialist','Approver'];
         $ChequeCreate_window = ['Treasury Associate'];
-        
+
         $transactions = Transaction::select([
             'id'
         ])
@@ -138,10 +138,14 @@ class TransactionController extends Controller
             ]);
         })
         ->when(in_array($role,$tag_window),function($query) use ($status){
-            $query->when(strtoupper($status) == "PENDING", function ($query){
-                $query->whereIn('status',['pending']);
-            },function ($query) use($status){
-                $query->where('status',preg_replace('/\s+/', '', $status));
+            $query->when(strtolower($status) == "tag-receive", function ($query) {
+                $query->whereIn('status',['tag-receive','tag-unhold']);
+            }, function ($query) use ($status) {
+                $query->when(strtolower($status) == "pending", function ($query){
+                    $query->whereIn('status',['pending']);
+                },function ($query) use($status){
+                    $query->where('status',preg_replace('/\s+/', '', $status));
+                });
             })
             ->select([
                 'id',
