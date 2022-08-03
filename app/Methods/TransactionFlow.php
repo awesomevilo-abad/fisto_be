@@ -33,7 +33,11 @@ class TransactionFlow{
 
     public static function updateInTransactionFlow ($request,$id) {
         
-        $tag_no = GenericMethod::generateTagNo();
+       $transaction = Transaction::find($id);
+        if(!isset($transaction)){
+            return GenericMethod::resultResponse('not-found','transaction',[]);
+        }
+        $tag_no = (($transaction->tag_no)!=0?$transaction->tag_no:GenericMethod::generateTagNo());
         $process =  $request['process'];
         $subprocess =  $request['subprocess'];
         $distributed_to =  $request['distributed_to'];
@@ -59,11 +63,9 @@ class TransactionFlow{
                 $status= 'requestor-void';
                 $state= 'void';
             }
-            
             GenericMethod::insertRequestorLogs($id,$transaction_id,$date_now,$remarks,
             $users_id,$status,$reason_id,$reason_description,$reason_remarks);
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks);
-        
         }else if($process == 'tag'){
             $model = new Tagging;
             if($subprocess == 'receive'){
@@ -72,9 +74,6 @@ class TransactionFlow{
             }else if($subprocess == 'hold'){
                 $status= 'tag-hold';
                 $state= 'hold';
-            }else if($subprocess == 'unhold'){
-                $status= 'tag-unhold';
-                $state= 'unhold';
             }else if($subprocess == 'unhold'){
                 $status= 'tag-unhold';
                 $state= 'unhold';
@@ -92,43 +91,191 @@ class TransactionFlow{
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks);
         
         }else if($process == 'voucher'){
-
             $model = new Associate;
             if($subprocess == 'receive'){
-                $status= 'tag-receive';
+                $status= 'voucher-receive';
                 $state= 'receive';
             }else if($subprocess == 'hold'){
-                $status= 'tag-hold';
+                $status= 'voucher-hold';
                 $state= 'hold';
             }else if($subprocess == 'unhold'){
-                $status= 'tag-unhold';
-                $state= 'unhold';
-            }else if($subprocess == 'unhold'){
-                $status= 'tag-unhold';
+                $status= 'voucher-unhold';
                 $state= 'unhold';
             }else if($subprocess == 'return'){
-                $status= 'tag-return';
+                $status= 'voucher-return';
                 $state= 'return';
             }else if($subprocess == 'void'){
-                $status= 'tag-void';
+                $status= 'voucher-void';
                 $state= 'void';
-            }else if($subprocess == 'tag'){
-                $status= 'tag-tag';
-                $state= 'tag';
+            }else if($subprocess == 'voucher'){
+                $status= 'voucher-voucher';
+                $state= 'voucher';
             }
             
-            //CREATE
-            Associate::Create([
-                "tag_id"=>$tag_no,
-                "date_received"=>$date_received,
-                "status"=>$status,
-                "date_status"=>$date_status,
-                "reason_id"=>$reason_id,
-                "remarks"=>$reason_remarks
-            ]);
+            // //CREATE
+            // Associate::Create([
+            //     "tag_id"=>$tag_no,
+            //     "date_received"=>$date_received,
+            //     "status"=>$status,
+            //     "date_status"=>$date_status,
+            //     "reason_id"=>$reason_id,
+            //     "remarks"=>$reason_remarks
+            // ]);
 
-            GenericMethod::tagTransaction($model,$transaction_id,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
-            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+            // GenericMethod::tagTransaction($model,$transaction_id,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
+            // GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+        }else if($process == 'approval'){
+            $model = new Approver;
+            if($subprocess == 'receive'){
+                $status= 'approval-receive';
+                $state= 'receive';
+            }else if($subprocess == 'hold'){
+                $status= 'approval-hold';
+                $state= 'hold';
+            }else if($subprocess == 'unhold'){
+                $status= 'approval-unhold';
+                $state= 'unhold';
+            }else if($subprocess == 'return'){
+                $status= 'approval-return';
+                $state= 'return';
+            }else if($subprocess == 'void'){
+                $status= 'approval-void';
+                $state= 'void';
+            }else if($subprocess == 'approve'){
+                $status= 'approval-approve';
+                $state= 'approve';
+            }
+            
+            // //CREATE
+            // Approver::Create([
+            //     "tag_id"=>$tag_no,
+            //     "date_received"=>$date_received,
+            //     "status"=>$status,
+            //     "date_status"=>$date_status,
+            //     "reason_id"=>$reason_id,
+            //     "remarks"=>$reason_remarks
+            // ]);
+
+            // GenericMethod::tagTransaction($model,$transaction_id,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
+            // GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+        }else if($process == 'transmit'){
+            $model = new Transmit;
+            if($subprocess == 'receive'){
+                $status= 'transmit-receive';
+                $state= 'receive';
+            }else if($subprocess == 'transmit'){
+                $status= 'transmit-transmit';
+                $state= 'transmit';
+            }
+            
+            // //CREATE
+            // Transmit::Create([
+            //     "tag_id"=>$tag_no,
+            //     "date_received"=>$date_received,
+            //     "status"=>$status,
+            //     "date_status"=>$date_status,
+            //     "reason_id"=>$reason_id,
+            //     "remarks"=>$reason_remarks
+            // ]);
+
+            // GenericMethod::tagTransaction($model,$transaction_id,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
+            // GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+        }else if($process == 'chequeCreate'){
+            $model = new Treasury;
+            if($subprocess == 'receive'){
+                $status= 'chequeCreate-receive';
+                $state= 'receive';
+            }else if($subprocess == 'hold'){
+                $status= 'chequeCreate-hold';
+                $state= 'hold';
+            }else if($subprocess == 'unhold'){
+                $status= 'chequeCreate-unhold';
+                $state= 'unhold';
+            }else if($subprocess == 'return'){
+                $status= 'chequeCreate-return';
+                $state= 'return';
+            }else if($subprocess == 'void'){
+                $status= 'chequeCreate-void';
+                $state= 'void';
+            }else if($subprocess == 'approve'){
+                $status= 'chequeCreate-create';
+                $state= 'create';
+            }else if($subprocess == 'release'){
+                $status= 'chequeCreate-release';
+                $state= 'release';
+            }else if($subprocess == 'reverse'){
+                $status= 'chequeCreate-reverse';
+                $state= 'reverse';
+            }
+            
+            // //CREATE
+            // Approver::Create([
+            //     "tag_id"=>$tag_no,
+            //     "date_received"=>$date_received,
+            //     "status"=>$status,
+            //     "date_status"=>$date_status,
+            //     "reason_id"=>$reason_id,
+            //     "remarks"=>$reason_remarks
+            // ]);
+
+            // GenericMethod::tagTransaction($model,$transaction_id,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
+            // GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+        }else if($process == 'chequeRelease'){
+            $model = new chequeReleased;
+            if($subprocess == 'receive'){
+                $status= 'chequeRelease-receive';
+                $state= 'receive';
+            }else if($subprocess == 'return'){
+                $status= 'chequeRelease-return';
+                $state= 'return';
+            }else if($subprocess == 'requestReturn'){
+                $status= 'chequeRelease-requestReturn';
+                $state= 'requestReturn';
+            }else if($subprocess == 'release'){
+                $status= 'chequeRelease-release';
+                $state= 'release';
+            }
+            
+            // //CREATE
+            // chequeReleased::Create([
+            //     "tag_id"=>$tag_no,
+            //     "date_received"=>$date_received,
+            //     "status"=>$status,
+            //     "date_status"=>$date_status,
+            //     "reason_id"=>$reason_id,
+            //     "remarks"=>$reason_remarks
+            // ]);
+
+            // GenericMethod::tagTransaction($model,$transaction_id,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
+            // GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+        }else if($process == 'file'){
+            $model = new Filing;
+            if($subprocess == 'receive'){
+                $status= 'file-receive';
+                $state= 'receive';
+            }else if($subprocess == 'file'){
+                $status= 'file-file';
+                $state= 'file';
+            }else if($subprocess == 'accept'){
+                $status= 'file-accept';
+                $state= 'accept';
+            }else if($subprocess == 'return'){
+                $status= 'file-return';
+                $state= 'return';
+            }
+            
+            // //CREATE
+            // Filing::Create([
+            //     "tag_id"=>$tag_no,
+            //     "date_received"=>$date_received,
+            //     "status"=>$status,
+            //     "date_status"=>$date_status,
+            //     "reason_id"=>$reason_id,
+            //     "remarks"=>$reason_remarks
+            // ]);
+
+            // GenericMethod::tagTransaction($model,$transaction_id,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
+            // GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
         }
         return GenericMethod::resultResponse($state,'','');
     }

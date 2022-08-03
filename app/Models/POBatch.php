@@ -36,6 +36,7 @@ class POBatch extends Model
       return $this->belongsTo(Transaction::class,'request_id', 'request_id')
       ->where('transactions.payment_type','=','partial')
       ->where('transactions.state','!=','void')
-      ->select(['transactions.id','request_id']);
+      ->select(['transactions.id','request_id'])
+      ->orderByDesc('transactions.updated_at');
     }
 }

@@ -591,6 +591,10 @@ class GenericMethod{
             $currentTransaction->po_total_amount= $po_total_amount;
             $currentTransaction->request_id= $request_id;
             $currentTransaction->status= "Pending";
+            $currentTransaction->state= "pending";
+            $currentTransaction->reason_id= NULL;
+            $currentTransaction->reason= NULL;
+            $currentTransaction->reason_remarks= NULL;
 
             // Contractor's Billing
             $currentTransaction->capex_no = $capex_no;
@@ -773,9 +777,12 @@ class GenericMethod{
 
         public static function updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks)
         {
-            if($status != 'tag-tag'){
-                $tag_no = 0;
-            }
+            // return Transaction::where('tag_no',$tag_no)->get();
+            // if($status != 'tag-tag'){
+            //     $tag_no = 0;
+            // }else if (Transaction::where('tag_no',$tag_no)->get()){
+
+            // }
             DB::table('transactions')
                 ->where('transaction_id', $transaction_id)
                 ->update([

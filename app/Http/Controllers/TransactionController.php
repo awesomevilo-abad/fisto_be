@@ -138,11 +138,90 @@ class TransactionController extends Controller
             ]);
         })
         ->when(in_array($role,$tag_window),function($query) use ($status){
-            $query->when(strtolower($status) == "tag-receive", function ($query) {
+            $query
+            ->when(strtolower($status) == "tag-receive", function ($query) {
                 $query->whereIn('status',['tag-receive','tag-unhold']);
+                }, function ($query) use ($status) {
+                    $query->when(strtolower($status) == "pending", function ($query){
+                        $query->whereIn('status',['pending']);
+                    },function ($query) use($status){
+                        $query->when(strtolower($status) == "pending", function ($query){
+                            $query->whereIn('status',['pending']);
+                        },function ($query) use($status){
+                            $query->where('status',preg_replace('/\s+/', '', $status));
+                        });
+                    });
+                })
+            ->select([
+                'id',
+                'users_id',
+                'request_id',
+                'supplier_id',
+                'document_id',
+                'tag_no',
+                
+                'transaction_id',
+                'document_type',
+                'payment_type',
+                'remarks',
+                'date_requested',
+    
+                'company',
+                'department',
+                'location',
+    
+                'document_no',
+                'document_amount',
+                'referrence_no',
+                'referrence_amount',
+    
+                'status',
+                'state'
+            ]);
+        })
+        ->when(in_array($role,$voucher_window),function($query) use ($status){
+            $query->when(strtolower($status) == "voucher-receive", function ($query) {
+                $query->whereIn('status',['voucher-receive','voucher-unhold']);
             }, function ($query) use ($status) {
                 $query->when(strtolower($status) == "pending", function ($query){
-                    $query->whereIn('status',['pending']);
+                    $query->whereIn('status',['tag-tag']);
+                },function ($query) use($status){
+                    $query->where('status',preg_replace('/\s+/', '', $status));
+                });
+            })
+            ->select([
+                'id',
+                'users_id',
+                'request_id',
+                'supplier_id',
+                'document_id',
+                'tag_no',
+                
+                'transaction_id',
+                'document_type',
+                'payment_type',
+                'remarks',
+                'date_requested',
+    
+                'company',
+                'department',
+                'location',
+    
+                'document_no',
+                'document_amount',
+                'referrence_no',
+                'referrence_amount',
+    
+                'status',
+                'state'
+            ]);
+        })
+        ->when(in_array($role,$ChequeCreate_window),function($query) use ($status){
+            $query->when(strtolower($status) == "chequeCreate-receive-receive", function ($query) {
+                $query->whereIn('status',['chequeCreate-receive-receive','chequeCreate-receive-unhold']);
+            }, function ($query) use ($status) {
+                $query->when(strtolower($status) == "pending", function ($query){
+                    $query->whereIn('status',['transmit-transmit']);
                 },function ($query) use($status){
                     $query->where('status',preg_replace('/\s+/', '', $status));
                 });
