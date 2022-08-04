@@ -166,6 +166,7 @@ class TransactionController extends Controller
                 'remarks',
                 'date_requested',
     
+                'company_id',
                 'company',
                 'department',
                 'location',
