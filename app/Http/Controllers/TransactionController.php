@@ -51,7 +51,8 @@ class TransactionController extends Controller
         $ChequeCreate_window = ['Treasury Associate'];
 
         $transactions = Transaction::select([
-            'id'
+            'id',
+            'company_id'
         ])
         ->with('users', function ($query) {
             return $query->select(['id', 'first_name', 'middle_name', 'last_name', 'users.department', 'position']);
