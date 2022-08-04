@@ -331,19 +331,30 @@ class TransactionResource extends JsonResource
         }
 
         if(isset($transaction_tag_status)){
+
+            $reason = null;
+            $distributed_to = null;
+
+            if(isset($transaction_tag_distributed_id)){
+                $distributed_to = [
+                    "id"=>$transaction_tag_distributed_id,
+                    "name"=>$transaction_tag_distributed_name
+                ];
+            }
+            if(isset($reason_id)){
+                $reason = [
+                    "id"=>$reason_id,
+                    "reason"=>$reason,
+                    "remarks"=>$reason_remarks
+                ];
+            }
+
             $tag = [
                     "no"=>$transaction_tag_no,
                     "date"=>$transaction_tag_date,
                     "status"=>$transaction_tag_status,
-                    "distributed_to"=>[
-                        "id"=>$transaction_tag_distributed_id,
-                        "name"=>$transaction_tag_distributed_name
-                    ],
-                    "reason"=>[
-                        "id"=>$reason_id,
-                        "reason"=>$reason,
-                        "remarks"=>$reason_remarks
-                    ]
+                    "distributed_to"=>$distributed_to,
+                    "reason"=>$reason
                 ];
         }
         
