@@ -69,14 +69,27 @@ class MasterlistController extends Controller
     return $this->resultResponse('fetch','Company',$data);
   }
 
-  public function associateDropdown(){
+  public function associateDropdown(Request $request){
+    $company_id = $request['company_id'];
     $data =  array("associates"=>User::with('companies')
+    ->when(isset($company_id), function ($query) use($company_id) {
+      $query->whereHas('companies', function ($query) use($company_id) {
+          $query->where('companies.id',$company_id);
+      })
+      ->without('companies');
+    })
      ->where(function ($query){
       $query->where('role','AP Associate')
       ->orWhere('role','AP Specialist');
     })
     ->whereNull('deleted_at')
     ->get(['id',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS name")]));
+
+
+    if(count($data['associates'])==0){
+      return $this->resultResponse('not-found','',[]);
+    }
+    
     return $this->resultResponse('fetch','AP Associate',$data);
   }
 
