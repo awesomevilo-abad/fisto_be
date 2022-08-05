@@ -356,6 +356,32 @@ class TransactionResource extends JsonResource
                     "distributed_to"=>$distributed_to,
                     "reason"=>$reason
                 ];
+                
+                // EXPPECTED OUTPUT IN JSON
+                      // If properties inside the object are null or empty value the object must have a null value
+                // BEFORE
+                // "tag": {
+                //     "no": 47,
+                //     "date": "2022-08-03",
+                //     "status": "tag-tag",
+                //     "distributed_to": {
+                //         "id": 5,
+                //         "name": "Hernanie Pabustan"
+                //     },
+                //     "reason": {
+                //         "id": 5,
+                //         "name": "Missing Receipt"  
+                //      }
+                // }
+
+                // AFTER
+                // "tag": {
+                //     "no": 47,
+                //     "date": "2022-08-03",
+                //     "status": "tag-tag",
+                //     "distributed_to": null,
+                //     "reason": null
+                // }
         }
         
 

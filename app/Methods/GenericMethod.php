@@ -12,6 +12,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 
 use App\Models\User;
+use App\Models\VoucherAccountTitle;
 use App\Models\POBatch;
 use App\Models\TransactionClient;
 use App\Models\ReferrenceBatch;
@@ -53,6 +54,75 @@ class GenericMethod{
                 "distributed_name"=>$distributed_name
             ]);
         }
+        
+        public static function voucherTransaction(
+            $model,$transaction_id,$tag_no,$reason_remarks,$date_now,
+            $reason_id,$status,$receipt_type,$percentage_tax,$witholding_tax,$net_amount,
+            $voucher_no,$approver,$account_titles ){
+
+            $approver_id =null;
+            $approver_name =null;
+            if(!empty($approver_id)){
+                $approver_id=$approver_id['id'];
+                $approver_name=$approver_name['name'];
+            }
+            
+
+
+           $voucher_transaction= $model::Create([
+                "transaction_id"=>$transaction_id,
+                "tag_id"=>$tag_no,
+                "receipt_type"=>$receipt_type,
+                "percentage_tax"=>$percentage_tax,
+                "witholding_tax"=>$witholding_tax,
+                "net_amount"=>$net_amount,
+                "approver_id"=>$approver_id,
+                "approver_name"=>$approver_name,
+                "status"=>$status,
+                "date_status"=>$date_now,
+                "reason_id"=>$reason_id,
+                "remarks"=>$reason_remarks,
+            ]);
+            
+            if(isset($account_titles)){
+                if(count($account_titles) > 0){
+                    $associate_id = $voucher_transaction->id;
+                    return GenericMethod::addAccountTitleEntry($associate_id,NULL,$account_titles);
+                } 
+                
+            }
+
+
+        }
+
+        public static function addAccountTitleEntry($associate_id,$treasury_id,$account_titles){
+
+            foreach( $account_titles as $specific_account_title){
+                $specific_account_title['account_title']['id'];
+                $entry = $specific_account_title['entry'];
+                $account_title_id = $specific_account_title['account_title']['id'];
+                $account_title_name = $specific_account_title['account_title']['name'];
+                $amount = $specific_account_title['amount'];
+                $remarks = $specific_account_title['remarks'];
+                
+                VoucherAccountTitle::Create([
+                    "associate_id"=>$associate_id
+                    ,"treasury_id"=>$treasury_id
+                    ,"entry"=>$entry
+                    ,"account_title_id"=>$account_title_id
+                    ,"account_title_name"=>$account_title_name
+                    ,"amount"=>$amount
+                    ,"remarks"=>$remarks
+                ]);
+                
+            }
+            
+
+            
+        }
+
+
+        
 
         public static function validateWith1PesoDifference($affeced_field,$type,$transaction_amount,$po_total_amount){
             if(
@@ -193,7 +263,7 @@ class GenericMethod{
                 }
 
             }
-            return $additional;
+            // return $additional;
             
             $newPO = [];
             $modifiedPO = [];
@@ -1913,6 +1983,15 @@ class GenericMethod{
             break;
             case('tag'):
                 return GenericMethod::result(200,"Transaction has been tagged.",[]);
+            break;
+            case('voucher'):
+                return GenericMethod::result(200,"Transaction has been vouchered.",[]);
+            break;
+            case('approval'):
+                return GenericMethod::result(200,"Transaction has been approved.",[]);
+            break;
+            case('transmit'):
+                return GenericMethod::result(200,"Transaction has been transmitted.",[]);
             break;
             case('fetch'):
                 return GenericMethod::result(200,Str::plural($modelName)." has been fetched.",$data);

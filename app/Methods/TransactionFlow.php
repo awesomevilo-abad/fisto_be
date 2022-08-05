@@ -40,22 +40,33 @@ class TransactionFlow{
         $tag_no = (($transaction->tag_no)!=0?$transaction->tag_no:GenericMethod::generateTagNo());
         $process =  $request['process'];
         $subprocess =  $request['subprocess'];
-        $distributed_to =  $request['distributed_to'];
         $reason_id = (isset($request['reason']['id']) ? $request['reason']['id']:null);
         $date_now= Carbon::now('Asia/Manila')->format('Y-m-d');
      
         $transaction= Transaction::select(
             'transaction_id'
+            ,'tag_no'
+            ,'voucher_no'
             ,'users_id'
             ,'remarks'
             )->find($id);
-            
+
         $transaction_id = $transaction->transaction_id;
         $remarks = $transaction->remarks;
         $users_id = $transaction->users_id;
+        $tag_no = $transaction->tag_no;
 
         $reason_description= isset($request['reason']['description'])?$request['reason']['description']:null;
         $reason_remarks=  isset($request['reason']['remarks'])?$request['reason']['remarks']:null;
+        $receipt_type= isset($request['tax']['receipt_type'])?$request['tax']['receipt_type']:null;
+        $percentage_tax=  isset($request['tax']['percentage_tax'])?$request['tax']['percentage_tax']:null;
+        $withholding_tax= isset($request['tax']['withholding_tax'])?$request['tax']['withholding_tax']:null;
+        $net_amount=  isset($request['tax']['net_amount'])?$request['tax']['net_amount']:null;
+        $voucher_no= isset($request['voucher']['no'])?$request['voucher']['no']:null;
+        $voucher_month=  isset($request['voucher']['month'])?$request['voucher']['month']:null;
+        $approver= isset($request['approver'])?$request['approver']:null;
+        $distributed_to=  isset($request['distributed_to'])?$request['distributed_to']:null;
+        $account_titles=  isset($request['accounts'])?$request['accounts']:null;
 
         if($process == 'requestor'){
             $model = new RequestorLogs;
@@ -112,18 +123,8 @@ class TransactionFlow{
                 $state= 'voucher';
             }
             
-            // //CREATE
-            // Associate::Create([
-            //     "tag_id"=>$tag_no,
-            //     "date_received"=>$date_received,
-            //     "status"=>$status,
-            //     "date_status"=>$date_status,
-            //     "reason_id"=>$reason_id,
-            //     "remarks"=>$reason_remarks
-            // ]);
-
-            // GenericMethod::tagTransaction($model,$transaction_id,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
-            // GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+            GenericMethod::voucherTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$receipt_type,$percentage_tax,$withholding_tax,$net_amount,$voucher_no,$approver,$account_titles );
+            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks);
         }else if($process == 'approval'){
             $model = new Approver;
             if($subprocess == 'receive'){

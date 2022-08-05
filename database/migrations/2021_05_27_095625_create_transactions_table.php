@@ -62,6 +62,7 @@ class CreateTransactionsTable extends Migration
             $table->float('balance_po_ref_qty')->nullable();
             
             $table->bigInteger('tag_no')->nullable();
+            $table->string('voucher_no')->nullable();
             $table->bigInteger('utilities_category_id')->nullable();
             $table->string('utilities_category')->nullable();
             $table->bigInteger('utilities_account_no_id')->nullable();
@@ -82,7 +83,9 @@ class CreateTransactionsTable extends Migration
             $table->float('referrence_qty')->nullable();
             $table->bigInteger('referrence_id')->nullable();
 
-            $table->timestamps();
+            // $table->timestamps();
+            $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
 
             // TAGGINGS
             // $table->foreign('transaction_id')->references('transaction_id')->on('taggings')->onDelete('cascade');
