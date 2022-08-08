@@ -17,7 +17,7 @@ class CreateAssociatesTable extends Migration
             $table->id();
             $table->string('transaction_id')->nullable();
             $table->unsignedBigInteger('tag_id');
-            $table->date('date_received');
+            $table->date('date_received')->nullable();
             $table->string('receipt_type')->nullable();
             $table->float('percentage_tax')->nullable();
             $table->float('witholding_tax')->nullable();

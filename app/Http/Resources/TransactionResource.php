@@ -26,11 +26,14 @@ class TransactionResource extends JsonResource
         $first_transaction_keys = [];
         $keys = [];
 
+        $transaction =  Transaction::with('tag.voucher.account_title')->where('id',$this->id)->get()->first();
+        $transaction_tag_no= (isset($transaction->tag_no)?$transaction->tag_no:NULL);
+        $transaction_voucher_no = (isset($transaction->voucher_no)?$transaction->voucher_no:NULL);
+        $transaction_voucher_month = (isset($transaction->voucher_month)?$transaction->voucher_month:NULL);
+        
         // TAG PROCESS
-        $transaction =  Transaction::where('id',$this->id)->get()->first();
         $transaction_tag= $transaction->tag->first();
         (isset($transaction['document']['capex_no'])?$transaction['document']['capex_no']:NULL);
-        $transaction_tag_no= (isset($transaction->tag_no)?$transaction->tag_no:NULL);
         $transaction_tag_date= (isset($transaction_tag->date)?$transaction_tag->date:NULL);
         $transaction_tag_status= (isset($transaction_tag->status)?$transaction_tag->status:NULL);
         $transaction_tag_distributed_id= (isset($transaction_tag->distributed_id)?$transaction_tag->distributed_id:NULL);
@@ -39,6 +42,23 @@ class TransactionResource extends JsonResource
         $reason = (isset($transaction_tag->reason_id)?Reason::find($transaction_tag->reason_id)->reason:NULL);
         $reason_remarks = (isset($transaction_tag->remarks)?$transaction_tag->remarks:NULL);
         // END TAG PROCESS
+
+
+        // VOUCHER PROCESS
+        $voucher = $transaction_tag->voucher->first();
+        $voucher_receipt_type= (isset($voucher->receipt_type)?$voucher->receipt_type:NULL);
+        $voucher_percentage_tax= (isset($voucher->percentage_tax)?$voucher->percentage_tax:NULL);
+        $vouocher_witholding_tax= (isset($voucher->witholding_tax)?$voucher->witholding_tax:NULL);
+        $voucher_net_amount= (isset($voucher->net_amount)?$voucher->net_amount:NULL);
+        $voucher_approver_id= (isset($voucher->approver_id)?$voucher->approver_id:NULL);
+        $voucher_approver_name= (isset($voucher->approver_name)?$voucher->approver_name:NULL);
+        $voucher_date= (isset($voucher->date)?$voucher->date:NULL);
+        $voucher_status= (isset($voucher->status)?$voucher->status:NULL);
+        $voucher_reason_id= (isset($voucher->reason_id)?$voucher->reason_id:NULL);
+        $voucher_reason = (isset($voucher->reason_id)?Reason::find($voucher->reason_id)->reason:NULL);
+        $voucher_reason_remarks= (isset($voucher->remarks)?$voucher->remarks:NULL);
+
+        // END VOUCHER PROCESS
 
         $condition =  ($this->state=='void')? '=': '!=';
         $document_amount = Transaction::where('request_id',$this->request_id)->where('state',$condition,'void')->first()->document_amount;
@@ -330,6 +350,7 @@ class TransactionResource extends JsonResource
             break;
         }
 
+        // TAG
         if(isset($transaction_tag_status)){
 
             $reason = null;
@@ -350,40 +371,79 @@ class TransactionResource extends JsonResource
             }
 
             $tag = [
+                    "status"=>$transaction_tag_status,
                     "no"=>$transaction_tag_no,
                     "date"=>$transaction_tag_date,
-                    "status"=>$transaction_tag_status,
                     "distributed_to"=>$distributed_to,
                     "reason"=>$reason
                 ];
-                
-                // EXPPECTED OUTPUT IN JSON
-                      // If properties inside the object are null or empty value the object must have a null value
-                // BEFORE
-                // "tag": {
-                //     "no": 47,
-                //     "date": "2022-08-03",
-                //     "status": "tag-tag",
-                //     "distributed_to": {
-                //         "id": 5,
-                //         "name": "Hernanie Pabustan"
-                //     },
-                //     "reason": {
-                //         "id": 5,
-                //         "name": "Missing Receipt"  
-                //      }
-                // }
 
-                // AFTER
-                // "tag": {
-                //     "no": 47,
-                //     "date": "2022-08-03",
-                //     "status": "tag-tag",
-                //     "distributed_to": null,
-                //     "reason": null
-                // }
         }
         
+        // VOUCHER
+        if(isset($voucher_status)){
+
+            $reason = null;
+            $approver = null;
+            $tax = null;
+            $account_title = null;
+
+            if(isset($transaction_tag_distributed_id)){
+                $tax = [
+                    "receipt_type"=>$voucher_receipt_type,
+                    "percentage_tax"=>$voucher_percentage_tax,
+                    "witholding_tax"=>$vouocher_witholding_tax,
+                    "net_amount"=>$voucher_net_amount
+                ];
+            }
+            if(isset($voucher->account_title)){
+                $voucher_account_title = $voucher->account_title;
+                $voucher_account_title = $voucher_account_title->mapToGroups(function ($item, $key) {
+                    return [$item['associate_id'] => 
+                                [
+                                "id"=>$item['associate_id']
+                                ,"entry"=>$item['entry']
+                                ,"account_title"=>
+                                    [
+                                        "id"=>$item['account_title_id']
+                                        ,"name"=>$item['account_title_name']
+                                    ]
+                                ,"amount"=>$item['amount']
+                                ,"remarks"=>$item['remarks']
+                                ]
+                            ];
+                    });
+
+
+                $account_title= $voucher_account_title->values();
+            }
+            
+            if(isset($transaction_tag_distributed_id)){
+                $approver = [
+                    "id"=>$voucher_approver_id,
+                    "name"=>$voucher_approver_name
+                ];
+            }
+
+            if(isset($voucher_reason_id)){
+                $reason = [
+                    "id"=>$voucher_reason_id,
+                    "reason"=>$voucher_reason,
+                    "remarks"=>$voucher_reason_remarks
+                ];
+            }
+
+            $voucher = [
+                    "status"=>$voucher_status,
+                    "no"=>$transaction_voucher_no,
+                    "month"=>$transaction_voucher_month,
+                    "tax"=>$tax,
+                    "account_title"=>$account_title,
+                    "approver"=>$approver,
+                    "reason"=>$reason
+                ];
+
+        }
 
         return [
             "transaction"=>[
@@ -415,6 +475,7 @@ class TransactionResource extends JsonResource
             "document"=>$document
             ,"po_group"=>$po_details
             ,"tag"=> $tag
+            ,"voucher"=> $voucher
             // ,"voucher"=>[
             //     "ap_associate"=>null
             //     ,"receipt_type"=>null

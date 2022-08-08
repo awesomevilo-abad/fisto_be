@@ -60,14 +60,8 @@ class GenericMethod{
             $reason_id,$status,$receipt_type,$percentage_tax,$witholding_tax,$net_amount,
             $voucher_no,$approver,$account_titles ){
 
-            $approver_id =null;
-            $approver_name =null;
-            if(!empty($approver_id)){
-                $approver_id=$approver_id['id'];
-                $approver_name=$approver_name['name'];
-            }
-            
-
+            $approver_id = (isset($approver['id'])?$approver['id']:NULL);
+            $approver_name = (isset($approver['name'])?$approver['name']:NULL);
 
            $voucher_transaction= $model::Create([
                 "transaction_id"=>$transaction_id,
@@ -849,7 +843,7 @@ class GenericMethod{
             return new LengthAwarePaginator($items->forPage($page, $perPage)->values(), $items->count(), $perPage, $page, $options);
         }
 
-        public static function updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks)
+        public static function updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks,$voucher_no,$voucher_month)
         {
             // return Transaction::where('tag_no',$tag_no)->get();
             // if($status != 'tag-tag'){
@@ -857,6 +851,10 @@ class GenericMethod{
             // }else if (Transaction::where('tag_no',$tag_no)->get()){
 
             // }
+                    
+            $voucher_no = (isset($voucher_no)?$voucher_no:NULL);
+            $voucher_month = (isset($voucher_month)?$voucher_month:NULL);
+
             DB::table('transactions')
                 ->where('transaction_id', $transaction_id)
                 ->update([
@@ -866,6 +864,8 @@ class GenericMethod{
                     ,'reason_id' => $reason_id
                     ,'reason' => $reason
                     ,'reason_remarks' => $reason_remarks
+                    ,'voucher_no' => $voucher_no
+                    ,'voucher_month' => $voucher_month
                 ]);
         }
 

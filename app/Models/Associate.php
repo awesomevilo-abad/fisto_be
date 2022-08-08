@@ -24,4 +24,9 @@ class Associate extends Model
         'reason_id',
         'remarks'
     ];
+
+    public function account_title(){
+        return $this->hasMany(VoucherAccountTitle::class,'associate_id','id')->select('id','associate_id','entry',
+        'account_title_id','account_title_name','amount','remarks');
+    }
 }
