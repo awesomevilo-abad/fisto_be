@@ -92,6 +92,15 @@ class MasterlistController extends Controller
     
     return $this->resultResponse('fetch','AP Associate',$data);
   }
+  
+  public function approverDropdown(Request $request){
+    $data =  array("approvers"=>User::where('role','Approver')->get(['id',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS name")]));
+    if(count($data['approvers'])==0){
+      return $this->resultResponse('not-found','',[]);
+    }
+    
+    return $this->resultResponse('fetch','Approver',$data);
+  }
 
   
   public function chargingDropdown(){

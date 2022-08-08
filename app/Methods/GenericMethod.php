@@ -95,8 +95,9 @@ class GenericMethod{
 
         }
 
+        
         public static function addAccountTitleEntry($associate_id,$treasury_id,$account_titles){
-
+            
             foreach( $account_titles as $specific_account_title){
                 $specific_account_title['account_title']['id'];
                 $entry = $specific_account_title['entry'];
@@ -121,9 +122,12 @@ class GenericMethod{
             
         }
 
+        public static function approveTransaction(){
+            
+        }
 
         
-
+        
         public static function validateWith1PesoDifference($affeced_field,$type,$transaction_amount,$po_total_amount){
             if(
                 !(((abs($transaction_amount - $po_total_amount) ) >= 0.00) 

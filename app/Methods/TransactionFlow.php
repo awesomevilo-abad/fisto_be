@@ -146,19 +146,10 @@ class TransactionFlow{
                 $status= 'approval-approve';
                 $state= 'approve';
             }
-            
-            // //CREATE
-            // Approver::Create([
-            //     "tag_id"=>$tag_no,
-            //     "date_received"=>$date_received,
-            //     "status"=>$status,
-            //     "date_status"=>$date_status,
-            //     "reason_id"=>$reason_id,
-            //     "remarks"=>$reason_remarks
-            // ]);
 
-            // GenericMethod::tagTransaction($model,$transaction_id,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
-            // GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+            GenericMethod::approveTransaction($model,$transaction_id,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
+            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state);
+
         }else if($process == 'transmit'){
             $model = new Transmit;
             if($subprocess == 'receive'){
