@@ -99,7 +99,7 @@ class MasterlistController extends Controller
   }
   
   public function approverDropdown(Request $request){
-    $data =  array("approvers"=>User::where('role','Approver')->get(['id',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS name")]));
+    $data =  array("approvers"=>User::where('role','Approver')->get(['id','position',DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS name")]));
     if(count($data['approvers'])==0){
       return $this->resultResponse('not-found','',[]);
     }
