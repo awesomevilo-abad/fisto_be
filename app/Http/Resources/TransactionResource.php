@@ -435,6 +435,7 @@ class TransactionResource extends JsonResource
 
             $voucher = [
                     "status"=>$voucher_status,
+                    "date"=>$voucher_date,
                     "no"=>$transaction_voucher_no,
                     "month"=>$transaction_voucher_month,
                     "tax"=>$tax,
@@ -476,6 +477,7 @@ class TransactionResource extends JsonResource
             ,"po_group"=>$po_details
             ,"tag"=> $tag
             ,"voucher"=> $voucher
+            ,"file"=> null
             // ,"voucher"=>[
             //     "ap_associate"=>null
             //     ,"receipt_type"=>null
