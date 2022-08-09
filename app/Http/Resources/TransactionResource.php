@@ -452,7 +452,7 @@ class TransactionResource extends JsonResource
 
         }
 
-        return [
+        $transaction_result= [
             "transaction"=>[
                 "id"=>$this->id
                 ,"is_latest_transaction"=>$is_latest_transaction
@@ -484,58 +484,17 @@ class TransactionResource extends JsonResource
             ,"tag"=> $tag
             ,"voucher"=> $voucher
             ,"file"=> null
-            // ,"voucher"=>[
-            //     "ap_associate"=>null
-            //     ,"receipt_type"=>null
-            //     ,"witholding_tax"=>null
-            //     ,"percentage_tax"=>null
-            //     ,"gross_amount"=>null
-            //     ,"net_amount"=>null
-            //     ,"month_in"=>null
-            //     ,"no"=>null
-            //     ,"date"=>null
-            //     ,"account_title"=>[
-            //         "total_amount"=>null
-            //         ,"account_title_details"=>[[
-            //             "id"=>null
-            //             ,"name"=>null
-            //             ,"type"=>null
-            //             ,"amount"=>null
-            //         ]]
-            //     ]
-            // ]
-            // ,"cheque"=>[
-            //     "company"=>[
-            //         "id"=>null,
-            //         "name"=>null
-            //     ]
-            //     ,"supplier"=>[
-            //         "id"=>null,
-            //         "name"=>null
-            //         ,"term"=>null
-            //     ]
-            //     ,"total_amount"=>null
-            //     ,"cheque_details"=>[
-            //         [
-            //         "no"=>null
-            //         ,"date"=>null
-            //         ,"amount"=>null
-            //         ,"bank"=>[
-            //             "id"=>null
-            //             ,"name"=>null
-            //         ]
-            //         ]
-            //     ]
-            //     ,"account_title"=>[
-            //         "total_amount"=>null
-            //         ,"account_title_details"=>[[
-            //             "id"=>null
-            //             ,"name"=>null
-            //             ,"type"=>null
-            //             ,"amount"=>null
-            //         ]]
-            //     ]
-            // ]
         ];
+
+        $result = [];
+        foreach ( $transaction_result as $k=>$v){
+             if($transaction_result[$k]!=null){
+                $result[$k] = $transaction_result[$k];
+             }
+        }
+
+        return $result;
+        //  unset($transaction_result['reason']);
+        //  return $transaction_result;
     }
 }
