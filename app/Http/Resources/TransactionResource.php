@@ -18,7 +18,8 @@ class TransactionResource extends JsonResource
     public function toArray($request)
     {
         $document  = [];
-        $tag  = [];
+        $tag  = null;
+        $voucher  = null;
         $po_details = [];
         $reference = [];
         $po_no = [];
@@ -32,32 +33,37 @@ class TransactionResource extends JsonResource
         $transaction_voucher_month = (isset($transaction->voucher_month)?$transaction->voucher_month:NULL);
         
         // TAG PROCESS
-        $transaction_tag= $transaction->tag->first();
-        (isset($transaction['document']['capex_no'])?$transaction['document']['capex_no']:NULL);
-        $transaction_tag_date= (isset($transaction_tag->date)?$transaction_tag->date:NULL);
-        $transaction_tag_status= (isset($transaction_tag->status)?$transaction_tag->status:NULL);
-        $transaction_tag_distributed_id= (isset($transaction_tag->distributed_id)?$transaction_tag->distributed_id:NULL);
-        $transaction_tag_distributed_name= (isset($transaction_tag->distributed_name)?$transaction_tag->distributed_name:NULL);
-        $reason_id = (isset($transaction_tag->reason_id)?$transaction_tag->reason_id:NULL);
-        $reason = (isset($transaction_tag->reason_id)?Reason::find($transaction_tag->reason_id)->reason:NULL);
-        $reason_remarks = (isset($transaction_tag->remarks)?$transaction_tag->remarks:NULL);
+        if(count($transaction->tag)>0){
+            $transaction_tag= $transaction->tag->first();
+            (isset($transaction['document']['capex_no'])?$transaction['document']['capex_no']:NULL);
+            $transaction_tag_date= (isset($transaction_tag->date)?$transaction_tag->date:NULL);
+            $transaction_tag_status= (isset($transaction_tag->status)?$transaction_tag->status:NULL);
+            $transaction_tag_distributed_id= (isset($transaction_tag->distributed_id)?$transaction_tag->distributed_id:NULL);
+            $transaction_tag_distributed_name= (isset($transaction_tag->distributed_name)?$transaction_tag->distributed_name:NULL);
+            $reason_id = (isset($transaction_tag->reason_id)?$transaction_tag->reason_id:NULL);
+            $reason = (isset($transaction_tag->reason_id)?Reason::find($transaction_tag->reason_id)->reason:NULL);
+            $reason_remarks = (isset($transaction_tag->remarks)?$transaction_tag->remarks:NULL);
+        }
         // END TAG PROCESS
 
 
         // VOUCHER PROCESS
-        $voucher = $transaction_tag->voucher->first();
-        $voucher_receipt_type= (isset($voucher->receipt_type)?$voucher->receipt_type:NULL);
-        $voucher_percentage_tax= (isset($voucher->percentage_tax)?$voucher->percentage_tax:NULL);
-        $vouocher_witholding_tax= (isset($voucher->witholding_tax)?$voucher->witholding_tax:NULL);
-        $voucher_net_amount= (isset($voucher->net_amount)?$voucher->net_amount:NULL);
-        $voucher_approver_id= (isset($voucher->approver_id)?$voucher->approver_id:NULL);
-        $voucher_approver_name= (isset($voucher->approver_name)?$voucher->approver_name:NULL);
-        $voucher_date= (isset($voucher->date)?$voucher->date:NULL);
-        $voucher_status= (isset($voucher->status)?$voucher->status:NULL);
-        $voucher_reason_id= (isset($voucher->reason_id)?$voucher->reason_id:NULL);
-        $voucher_reason = (isset($voucher->reason_id)?Reason::find($voucher->reason_id)->reason:NULL);
-        $voucher_reason_remarks= (isset($voucher->remarks)?$voucher->remarks:NULL);
-
+        if(count($transaction->tag)>0){
+            if(count($transaction_tag->voucher)>0){
+            $voucher = $transaction_tag->voucher->first();
+            $voucher_receipt_type= (isset($voucher->receipt_type)?$voucher->receipt_type:NULL);
+            $voucher_percentage_tax= (isset($voucher->percentage_tax)?$voucher->percentage_tax:NULL);
+            $vouocher_witholding_tax= (isset($voucher->witholding_tax)?$voucher->witholding_tax:NULL);
+            $voucher_net_amount= (isset($voucher->net_amount)?$voucher->net_amount:NULL);
+            $voucher_approver_id= (isset($voucher->approver_id)?$voucher->approver_id:NULL);
+            $voucher_approver_name= (isset($voucher->approver_name)?$voucher->approver_name:NULL);
+            $voucher_date= (isset($voucher->date)?$voucher->date:NULL);
+            $voucher_status= (isset($voucher->status)?$voucher->status:NULL);
+            $voucher_reason_id= (isset($voucher->reason_id)?$voucher->reason_id:NULL);
+            $voucher_reason = (isset($voucher->reason_id)?Reason::find($voucher->reason_id)->reason:NULL);
+            $voucher_reason_remarks= (isset($voucher->remarks)?$voucher->remarks:NULL);
+            }
+        }
         // END VOUCHER PROCESS
 
         $condition =  ($this->state=='void')? '=': '!=';
