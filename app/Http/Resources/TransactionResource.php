@@ -494,7 +494,5 @@ class TransactionResource extends JsonResource
         }
 
         return $result;
-        //  unset($transaction_result['reason']);
-        //  return $transaction_result;
     }
 }

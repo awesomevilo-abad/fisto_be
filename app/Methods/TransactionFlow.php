@@ -37,7 +37,6 @@ class TransactionFlow{
         if(!isset($transaction)){
             return GenericMethod::resultResponse('not-found','transaction',[]);
         }
-        $tag_no = (($transaction->tag_no)!=0?$transaction->tag_no:GenericMethod::generateTagNo());
         $process =  $request['process'];
         $subprocess =  $request['subprocess'];
         $reason_id = (isset($request['reason']['id']) ? $request['reason']['id']:null);
@@ -54,8 +53,12 @@ class TransactionFlow{
         $transaction_id = $transaction->transaction_id;
         $remarks = $transaction->remarks;
         $users_id = $transaction->users_id;
-        $tag_no = $transaction->tag_no;
 
+        $tag_no = $transaction->tag_no;
+        if(($transaction->tag_no)==0 AND ($subprocess == 'receive')){
+            $tag_no = GenericMethod::generateTagNo();
+        }
+ 
         $reason_description= isset($request['reason']['description'])?$request['reason']['description']:null;
         $reason_remarks=  isset($request['reason']['remarks'])?$request['reason']['remarks']:null;
         $receipt_type= isset($request['tax']['receipt_type'])?$request['tax']['receipt_type']:null;
@@ -98,7 +101,10 @@ class TransactionFlow{
                 $status= 'tag-tag';
                 $state= 'tag';
             }
-            GenericMethod::tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
+
+            return $tag_no;
+
+            GenericMethod::tagTransaction($model,$tag_no,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month);
         
         }else if($process == 'voucher'){
