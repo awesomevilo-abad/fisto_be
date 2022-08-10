@@ -102,8 +102,6 @@ class TransactionFlow{
                 $state= 'tag';
             }
 
-            return $tag_no;
-
             GenericMethod::tagTransaction($model,$tag_no,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month);
         
