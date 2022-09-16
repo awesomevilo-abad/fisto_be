@@ -63,6 +63,7 @@ class CreateTransactionsTable extends Migration
             
             $table->bigInteger('tag_no')->nullable();
             $table->string('voucher_no')->nullable();
+            $table->dateTime('voucher_month', $precision = 0);
             $table->bigInteger('utilities_category_id')->nullable();
             $table->string('utilities_category')->nullable();
             $table->bigInteger('utilities_account_no_id')->nullable();

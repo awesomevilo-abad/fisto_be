@@ -117,4 +117,22 @@ class Transaction extends Model
     public function tag(){
         return $this->hasMany(Tagging::class,'transaction_id','transaction_id')->select('transaction_id','date_status as date','status','distributed_id','distributed_name','reason_id','remarks')->latest()->limit(1);
     }
+
+    public function cheque(){
+        return $this->hasMany(Cheque::class,'transaction_id','transaction_id')->latest();
+    }
+
+    public function transaction_voucher(){
+        return $this->hasMany(Associate::class,'transaction_id','transaction_id')
+        ->where('status','voucher-voucher')
+        ->select('transaction_id','tag_id','id',
+        'receipt_type','percentage_tax','witholding_tax','net_amount','approver_id','approver_name','date_status as date','status','reason_id','remarks')->latest();
+    }
+    
+    public function transaction_cheque(){
+        return $this->hasMany(Treasury::class,'transaction_id','transaction_id')->select('transaction_id','tag_id','id',
+       'date_status as date','status','reason_id','remarks')->where('status','cheque-cheque')->latest();
+    }
+
+
 }

@@ -11,6 +11,13 @@ class TransactionFlowController extends Controller
         return TransactionFlow::updateInTransactionFlow($request,$id);
     }
 
+    public function validateVoucherNo(Request $request){
+        return TransactionFlow::validateVoucherNo($request);
+    }
+
+    public function validateChequeNo(Request $request){
+        return TransactionFlow::validateChequeNo($request);
+    }
 
     // public function pullRequest(Request $request){
     //     $process =  $request['process'];

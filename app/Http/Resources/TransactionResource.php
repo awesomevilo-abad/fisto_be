@@ -20,6 +20,9 @@ class TransactionResource extends JsonResource
         $document  = [];
         $tag  = null;
         $voucher  = null;
+        $approve  = null;
+        $transmit  = null;
+        $cheque_description = null;
         $po_details = [];
         $reference = [];
         $po_no = [];
@@ -27,11 +30,17 @@ class TransactionResource extends JsonResource
         $first_transaction_keys = [];
         $keys = [];
 
-        $transaction =  Transaction::with('tag.voucher.account_title')->where('id',$this->id)->get()->first();
+        $transaction =  Transaction::with('tag.voucher.account_title')
+        ->with('tag.approve')
+        ->with('tag.transmit')
+        ->with('tag.cheque.cheques')
+        ->with('tag.cheque.account_title')
+        ->where('id',$this->id)->get()->first();
         $transaction_tag_no= (isset($transaction->tag_no)?$transaction->tag_no:NULL);
         $transaction_voucher_no = (isset($transaction->voucher_no)?$transaction->voucher_no:NULL);
         $transaction_voucher_month = (isset($transaction->voucher_month)?$transaction->voucher_month:NULL);
         
+        // return $transaction;
         // TAG PROCESS
         if(count($transaction->tag)>0){
             $transaction_tag= $transaction->tag->first();
@@ -45,7 +54,6 @@ class TransactionResource extends JsonResource
             $reason_remarks = (isset($transaction_tag->remarks)?$transaction_tag->remarks:NULL);
         }
         // END TAG PROCESS
-
 
         // VOUCHER PROCESS
         if(count($transaction->tag)>0){
@@ -65,6 +73,48 @@ class TransactionResource extends JsonResource
             }
         }
         // END VOUCHER PROCESS
+        
+        // APPROVE PROCESS
+        if(count($transaction->tag)>0){
+            if(count($transaction_tag->approve)>0){
+            $approve = $transaction_tag->approve->first();
+
+            $approve_id= (isset($approve->id)?$approve->id:NULL);
+            $approve_distributed_id= (isset($approve->distributed_id)?$approve->distributed_id:NULL);
+            $approve_distributed_name= (isset($approve->distributed_name)?$approve->distributed_name:NULL);
+            $approve_date= (isset($approve->date)?$approve->date:NULL);
+            $approve_status= (isset($approve->status)?$approve->status:NULL);
+            $approve_reason_id= (isset($approve->reason_id)?$approve->reason_id:NULL);
+            $approve_reason = (isset($approve->reason_id)?Reason::find($approve->reason_id)->reason:NULL);
+            $approve_reason_remarks= (isset($approve->remarks)?$approve->remarks:NULL);
+            }
+        }
+        // END APPROVE PROCESS
+        
+        // TRANSMITAL PROCESS
+        if(count($transaction->tag)>0){
+            if(count($transaction_tag->transmit)>0){
+            $transmit = $transaction_tag->transmit->first();
+
+            $transmit_id= (isset($transmit->id)?$transmit->id:NULL);
+            $transmit_date= (isset($transmit->date)?$transmit->date:NULL);
+            $transmit_status= (isset($transmit->status)?$transmit->status:NULL);
+            }
+        }
+        // END TRANSMITAL PROCESS
+        
+        // CHEQUE PROCESS
+        if(count($transaction->tag)>0){
+            if(count($transaction_tag->cheque)>0){
+            $cheque = $transaction_tag->cheque->first();
+            $cheque_status= (isset($cheque->status)?$cheque->status:NULL);
+            $cheque_date_status= (isset($cheque->date)?$cheque->date:NULL);
+            $cheque_reason_id= (isset($cheque->reason_id)?$cheque->reason_id:NULL);
+            $cheque_reason = (isset($cheque->reason_id)?Reason::find($cheque->reason_id)->reason:NULL);
+            $cheque_reason_remarks= (isset($cheque->remarks)?$cheque->remarks:NULL);
+            }
+        }
+        // END CHEQUE PROCESS
 
         $condition =  ($this->state=='void')? '=': '!=';
         $document_amount = Transaction::where('request_id',$this->request_id)->where('state',$condition,'void')->first()->document_amount;
@@ -394,7 +444,7 @@ class TransactionResource extends JsonResource
             $tax = null;
             $account_title = null;
 
-            if(isset($transaction_tag_distributed_id)){
+            if(isset($voucher_receipt_type)){
                 $tax = [
                     "receipt_type"=>$voucher_receipt_type,
                     "percentage_tax"=>$voucher_percentage_tax,
@@ -445,8 +495,121 @@ class TransactionResource extends JsonResource
                     "no"=>$transaction_voucher_no,
                     "month"=>$transaction_voucher_month,
                     "tax"=>$tax,
-                    "account_title"=>$account_title,
+                    "accounts"=>$account_title,
                     "approver"=>$approver,
+                    "reason"=>$reason
+                ];
+
+        }
+
+       // APPROVE
+        if(isset($approve_status)){
+            $reason = null;
+            $distributed_to = null;
+
+            if(isset($approve_distributed_id)){
+                $distributed_to = [
+                    "id"=>$approve_distributed_id,
+                    "name"=>$approve_distributed_name
+                ];
+            }
+            if(isset($approve_reason_id)){
+                $reason = [
+                    "id"=>$approve_reason_id,
+                    "reason"=>$approve_reason,
+                    "remarks"=>$approve_reason_remarks
+                ];
+            }
+
+            $approve = [
+                    "status"=>$approve_status,
+                    "date"=>$approve_date,
+                    "distributed_to"=>$distributed_to,
+                    "reason"=>$reason
+                ];
+        }
+            
+        // TRANSMIT
+        if(isset($transmit_status)){
+
+            $reason = null;
+
+            $transmit = [
+                    "status"=>$transmit_status,
+                    "date"=>$transmit_date,
+                ];
+
+        }
+        
+        // CHEQUE
+        if(isset($cheque_status)){
+
+            $reason = null;
+            $account_title = null;
+
+            if(isset($cheque->cheques)){
+             $cheque_cheques = $cheque->cheques;
+             $cheque_cheques = $cheque_cheques->filter( function ($value,$key){
+                return $value['transaction_type'] ==  'new';
+             });
+
+            $cheque_details = $cheque_cheques->mapToGroups(function ($item, $key) {
+                
+                return [$item['treasury_id'] => 
+                            [
+                                // "id"=>$item['treasury_id']
+                                "type"=>"Cheque"
+                                ,"bank"=>[
+                                        "id"=>$item['bank_id'],
+                                        "name"=>$item['bank_name'],
+                                    ]
+                                ,"no"=>$item['cheque_no'],
+                                "date"=>$item['cheque_date'],
+                                "amount"=>$item['cheque_amount'],
+                                
+                            ]
+                        ];
+            });
+            $cheque_details= $cheque_details->values();
+            }
+            
+            if(isset($cheque->account_title)){
+                $cheque_account_title = $cheque->account_title;
+                $cheque_account_title = $cheque_account_title->filter( function ($value,$key){
+                   return $value['transaction_type'] ==  'new';
+                });
+                $cheque_account_title = $cheque_account_title->mapToGroups(function ($item, $key) {
+                    return [$item['treasury_id'] => 
+                                [
+                                "id"=>$item['treasury_id']
+                                ,"entry"=>$item['entry']
+                                ,"account_title"=>
+                                    [
+                                        "id"=>$item['account_title_id']
+                                        ,"name"=>$item['account_title_name']
+                                    ]
+                                ,"amount"=>$item['amount']
+                                ,"remarks"=>$item['remarks']
+                                ]
+                            ];
+                    });
+                $account_title= $cheque_account_title->values();
+            }
+            
+
+            if(isset($cheque_reason_id)){
+                $reason = [
+                    "id"=>$cheque_reason_id,
+                    "reason"=>$cheque_reason,
+                    "remarks"=>$cheque_reason_remarks
+                ];
+            }
+
+            $cheque_description = [
+                    "status"=>$cheque_status,
+                    "date"=>$cheque_date_status,
+                    "cheques"=>$cheque_details->first(),
+                    "accounts"=>$account_title->first(),
                     "reason"=>$reason
                 ];
 
@@ -483,6 +646,9 @@ class TransactionResource extends JsonResource
             ,"po_group"=>$po_details
             ,"tag"=> $tag
             ,"voucher"=> $voucher
+            ,"approve"=> $approve
+            ,"transmit"=> $transmit
+            ,"cheque"=> $cheque_description
             ,"file"=> null
         ];
 
@@ -492,7 +658,8 @@ class TransactionResource extends JsonResource
                 $result[$k] = $transaction_result[$k];
              }
         }
-
         return $result;
     }
+    
+    
 }

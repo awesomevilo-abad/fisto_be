@@ -5,21 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Approver extends Model
+class Transmit extends Model
 {
     use HasFactory;
 
+    
+    protected $table = 'transmit';
+    
     protected $fillable = [
-
         'transaction_id',
         'tag_id',
         'date_received',
         'status',
         'date_status',
-        'reason_id',
-        'remarks',
-        'distributed_id',
-        'distributed_name'
-
     ];
 }

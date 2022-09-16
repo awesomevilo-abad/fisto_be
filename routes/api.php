@@ -209,6 +209,8 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
  
     // TRANSACTION FLOW
     Route::post('transactions/flow/update-transaction/{id}',[TransactionFlowController::class,'updateInTransactionFlow']);
+    Route::post('transactions/flow/validate-voucher-no',[TransactionFlowController::class,'validateVoucherNo']);
+    Route::post('transactions/flow/validate-cheque-no',[TransactionFlowController::class,'validateChequeNo']);
     // Route::get('transactions/flow/',[TransactionFlowController::class,'pullRequest']);
     // Route::get('transactions/flow/{id}',[TransactionFlowController::class,'pullSingleRequest']);
     // Route::post('transactions/flow/update-status/{id}',[TransactionFlowController::class,'receivedRequest']);

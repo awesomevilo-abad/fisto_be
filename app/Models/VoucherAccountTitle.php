@@ -18,6 +18,7 @@ class VoucherAccountTitle extends Model
         ,"account_title_name"
         ,"amount"
         ,"remarks"
+        ,"transaction_type"
     ];
 
 }

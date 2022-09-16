@@ -33,6 +33,7 @@ class TransactionController extends Controller
        $dateToday = Carbon::now()->timezone('Asia/Manila');
        
         $department = [];
+        $users_id = Auth::user()->id;
         $role = Auth::user()->role;
         $status =  isset($request['state']) && $request['state'] ? $request['state'] : "request";
         $rows =  isset($request['rows']) && $request['rows'] ? (int)$request['rows'] : 10;
@@ -47,8 +48,9 @@ class TransactionController extends Controller
         $request_window = ['Requestor'];
         $admin_window = ['Administrator'];
         $tag_window = ['AP Tagging'];
-        $voucher_window = ['AP Associate','AP Specialist','Approver'];
-        $ChequeCreate_window = ['Treasury Associate'];
+        $voucher_window = ['AP Associate','AP Specialist'];
+        $approve_window = ['Approver'];
+        $cheque_window = ['Treasury Associate'];
 
         $transactions = Transaction::select([
             'id',
@@ -142,7 +144,7 @@ class TransactionController extends Controller
         ->when(in_array($role,$tag_window),function($query) use ($status){
             $query
             ->when(strtolower($status) == "tag-receive", function ($query) {
-                $query->whereIn('status',['tag-receive','tag-unhold']);
+                $query->whereIn('status',['tag-receive','tag-unhold','tag-unreturn']);
                 }, function ($query) use ($status) {
                     $query->when(strtolower($status) == "pending", function ($query){
                         $query->whereIn('status',['pending']);
@@ -182,12 +184,57 @@ class TransactionController extends Controller
                 'state'
             ]);
         })
-        ->when(in_array($role,$voucher_window),function($query) use ($status){
+        ->when(in_array($role,$voucher_window),function($query) use ($users_id,$status){
             $query->when(strtolower($status) == "voucher-receive", function ($query) {
-                $query->whereIn('status',['voucher-receive','voucher-unhold']);
+                $query->whereIn('status',['voucher-receive','voucher-unhold','voucher-unreturn']);
             }, function ($query) use ($status) {
                 $query->when(strtolower($status) == "pending", function ($query){
                     $query->whereIn('status',['tag-tag']);
+                },function ($query) use($status){
+                    $query->when(strtolower($status) == "pending-transmit", function ($query){
+                        $query->whereIn('status',['approve-approve']);
+                    }, function ($query) use ($status){
+                        $query->where('status',preg_replace('/\s+/', '', $status));
+                    });
+                });
+            })
+            ->select([
+                'id',
+                'users_id',
+                'request_id',
+                'supplier_id',
+                'document_id',
+                'tag_no',
+                
+                'transaction_id',
+                'document_type',
+                'payment_type',
+                'remarks',
+                'date_requested',
+    
+                'company_id',
+                'company',
+                'department',
+                'location',
+    
+                'document_no',
+                'document_amount',
+                'referrence_no',
+                'referrence_amount',
+    
+                'status',
+                'state'
+            ])
+            ->whereHas('tag',function ($query) use ($users_id) {
+                $query->where('distributed_id',$users_id);
+            });
+        })
+        ->when(in_array($role,$approve_window),function($query) use ($users_id,$status){
+            $query->when(strtolower($status) == "approve-receive", function ($query) {
+                $query->whereIn('status',['approve-receive','approve-unhold','approve-unreturn']);
+            }, function ($query) use ($status) {
+                $query->when(strtolower($status) == "pending", function ($query){
+                    $query->whereIn('status',['voucher-voucher']);
                 },function ($query) use($status){
                     $query->where('status',preg_replace('/\s+/', '', $status));
                 });
@@ -218,16 +265,23 @@ class TransactionController extends Controller
     
                 'status',
                 'state'
-            ]);
+            ])
+            ->whereHas('transaction_voucher',function ($query) use ($users_id) {
+                $query->where('approver_id',$users_id);
+            });
         })
-        ->when(in_array($role,$ChequeCreate_window),function($query) use ($status){
-            $query->when(strtolower($status) == "chequeCreate-receive-receive", function ($query) {
-                $query->whereIn('status',['chequeCreate-receive-receive','chequeCreate-receive-unhold']);
-            }, function ($query) use ($status) {
-                $query->when(strtolower($status) == "pending", function ($query){
-                    $query->whereIn('status',['transmit-transmit']);
-                },function ($query) use($status){
-                    $query->where('status',preg_replace('/\s+/', '', $status));
+        ->when(in_array($role,$cheque_window),function($query) use ($status){
+            $query->when(strtolower($status) == "cheque-receive", function ($query) {
+                $query->whereIn('status',['cheque-receive','cheque-unhold','cheque-unreturn']);
+            }, function($query) use ($status){
+                $query->when(strtolower($status) == "cheque-cheque", function($query){
+                    $query->whereIn('status',['cheque-cheque','cheque-reverse']);
+                }, function ($query) use ($status){
+                    $query->when(strtolower($status) == "pending", function ($query){
+                        $query->whereIn('status',['transmit-transmit']);
+                    },function ($query) use($status){
+                        $query->where('status',preg_replace('/\s+/', '', $status));
+                    });
                 });
             })
             ->select([
@@ -262,6 +316,7 @@ class TransactionController extends Controller
         ->paginate($rows);
 
          TransactionIndex::collection($transactions);
+
         if (count($transactions)) return $this->resultResponse('fetch', 'Transaction', $transactions);
         return $this->resultResponse('not-found', 'Transaction', []);
     }
@@ -781,8 +836,7 @@ class TransactionController extends Controller
     
     public function validatePCFName(Request $request)
     {
-        $transaction_id = $request->transaction_id;
-
+       $transaction_id = $request->transaction_id;
        if (Transaction::where('pcf_name',$request['pcf_name'])
        ->where('state','!=','void')
        ->when(isset($transaction_id),function($query) use($transaction_id){

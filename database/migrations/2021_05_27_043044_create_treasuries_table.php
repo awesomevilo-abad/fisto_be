@@ -15,8 +15,9 @@ class CreateTreasuriesTable extends Migration
     {
         Schema::create('treasuries', function (Blueprint $table) {
             $table->id();
+            $table->string('transaction_id');
             $table->unsignedBigInteger('tag_id');
-            $table->date('date_received');
+            $table->date('date_received')->nullable();
             $table->string('status');
             $table->date('date_status');
             $table->bigInteger('reason_id')->nullable();
