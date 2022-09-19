@@ -82,10 +82,14 @@ class TransactionFlow{
         $previous_cheque_transaction_account_title = GenericMethod::format_account_title($cheque_account_title);
         $previous_cheque_transaction_cheque = GenericMethod::format_cheque($cheque_cheques);
 
+        $previous_cheque_transaction_account_title = isset($previous_cheque_transaction_account_title['accounts'])?$previous_cheque_transaction_account_title['accounts']:null;
+        $previous_cheque_transaction_cheque = isset($previous_cheque_transaction_cheque['cheques'])?$previous_cheque_transaction_cheque['cheques']:null;
+
         $reason_description= isset($request['reason']['description'])?$request['reason']['description']:null;
         $reason_remarks=  isset($request['reason']['remarks'])?$request['reason']['remarks']:null;
         $distributed_to=  isset($request['distributed_to'])?$request['distributed_to']:null;
         $accounts=  isset($request['accounts'])?$request['accounts']:null;
+        $cheque_cheques=  isset($request['cheques'])?$request['accounts']:null;
 
         $receipt_type = GenericMethod::with_previous_transaction($request['tax']['receipt_type'],$previous_receipt_type);
         $percentage_tax = GenericMethod::with_previous_transaction($request['tax']['percentage_tax'],$previous_percentage_tax);
@@ -96,8 +100,8 @@ class TransactionFlow{
         $approver = GenericMethod::with_previous_transaction($request['approver'],$previous_approver);
         $voucher_account_titles=  GenericMethod::with_previous_transaction($accounts,$voucher_account_title);
 
-        $cheque_cheques = GenericMethod::with_previous_transaction($request['cheques'],$previous_cheque_transaction_cheque['cheques']);
-        $cheque_account_titles = GenericMethod::with_previous_transaction($request['accounts'],$previous_cheque_transaction_account_title['accounts']);
+        $cheque_cheques = GenericMethod::with_previous_transaction($cheque_cheques,$previous_cheque_transaction_cheque['cheques']);
+        $cheque_account_titles = GenericMethod::with_previous_transaction($accounts,$previous_cheque_transaction_account_title['accounts']);
 
         if(isset($voucher_account_titles)){
             $voucher_account_titles = GenericMethod::object_to_array($voucher_account_titles);
