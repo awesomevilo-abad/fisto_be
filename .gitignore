@@ -10,10 +10,10 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
-.docx
+*.docx
 /documentation
 a.drawio - diagrams.net.html
-.zip
+*.zip
 Transaction Tagging Request JSONS Sample.json
 TransactionFormats.json
 Procfile
