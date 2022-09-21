@@ -148,11 +148,31 @@ class TransactionController extends Controller
                 }, function ($query) use ($status) {
                     $query->when(strtolower($status) == "pending", function ($query){
                         $query->whereIn('status',['pending']);
-                    },function ($query) use($status){
-                        $query->when(strtolower($status) == "pending", function ($query){
-                            $query->whereIn('status',['pending']);
-                        },function ($query) use($status){
-                            $query->where('status',preg_replace('/\s+/', '', $status));
+                    },function ($query) use ($status){
+                        $query->when(strtolower($status) == "pending-cheque",function ($query) use ($status){
+                            $query->whereIn('status',['cheque-cheque']);
+                        }, function ($query) use($status){
+                            $query->when(strtolower($status) == "pending-file",function($query){
+                                $query->whereIn('status',['file-file']);
+                            },function ($query) use($status){
+                                $query->when(strtolower($status) == 'reverse-request',function ($query) use ($status){
+                                    $query->whereIn('status',['reverse-request','reverse-receive-approver']);
+                                },function ($query) use($status){
+                                    $query->when(strtolower($status) == "return-return", function ($query) use ($status){
+                                        $query->whereIn('status',['voucher-return']);
+                                    },function ($query) use ($status){
+                                        $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
+                                            $query->whereIn('status',['voucher-hold']);
+                                         },function ($query) use($status){
+                                            $query->when(strtolower($status) == "return-void", function ($query) use ($status){
+                                                $query->whereIn('status',['voucher-void']);
+                                            },function ($query) use($status){
+                                                $query->where('status',preg_replace('/\s+/', '', $status));
+                                            });
+                                        });
+                                    });
+                                });
+                            });
                         });
                     });
                 })
@@ -194,7 +214,27 @@ class TransactionController extends Controller
                     $query->when(strtolower($status) == "pending-transmit", function ($query){
                         $query->whereIn('status',['approve-approve']);
                     }, function ($query) use ($status){
-                        $query->where('status',preg_replace('/\s+/', '', $status));
+                        $query->when(strtolower($status) == "pending-file", function ($query){
+                            $query->whereIn('status',['release-release']);
+                        },function ($query) use ($status){
+                            $query->when(strtolower($status) == "pending-request",function($query){
+                                $query->whereIn('status',['reverse-request']);
+                            },function ($query) use($status){
+                                $query->when(strtolower($status) == "return-return", function ($query) use ($status){
+                                    $query->whereIn('status',['cheque-return','approve-return']);
+                                },function ($query) use ($status){
+                                    $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
+                                        $query->whereIn('status',['cheque-hold','approve-hold']);
+                                     },function ($query) use($status){
+                                        $query->when(strtolower($status) == "return-void", function ($query) use ($status){
+                                            $query->whereIn('status',['cheque-void','approve-void']);
+                                        },function ($query) use($status){
+                                            $query->where('status',preg_replace('/\s+/', '', $status));
+                                        });
+                                    });
+                                });
+                            });
+                        });
                     });
                 });
             })
@@ -223,11 +263,12 @@ class TransactionController extends Controller
                 'referrence_amount',
     
                 'status',
-                'state'
+                'state',
+
+                'distributed_id',
+                'distributed_name'
             ])
-            ->whereHas('tag',function ($query) use ($users_id) {
-                $query->where('distributed_id',$users_id);
-            });
+            ->where('distributed_id',$users_id);
         })
         ->when(in_array($role,$approve_window),function($query) use ($users_id,$status){
             $query->when(strtolower($status) == "approve-receive", function ($query) {
@@ -262,13 +303,14 @@ class TransactionController extends Controller
                 'document_amount',
                 'referrence_no',
                 'referrence_amount',
+
+                'approver_id',
+                'approver_name',
     
                 'status',
                 'state'
             ])
-            ->whereHas('transaction_voucher',function ($query) use ($users_id) {
-                $query->where('approver_id',$users_id);
-            });
+            ->where('approver_id',$users_id);
         })
         ->when(in_array($role,$cheque_window),function($query) use ($status){
             $query->when(strtolower($status) == "cheque-receive", function ($query) {
@@ -280,7 +322,19 @@ class TransactionController extends Controller
                     $query->when(strtolower($status) == "pending", function ($query){
                         $query->whereIn('status',['transmit-transmit']);
                     },function ($query) use($status){
-                        $query->where('status',preg_replace('/\s+/', '', $status));
+                        $query->when(strtolower($status) == "return-return", function ($query) use ($status){
+                            $query->whereIn('status',['release-return','reverse-return']);
+                        },function ($query) use ($status){
+                            $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
+                                $query->whereIn('status',['release-hold']);
+                             },function ($query) use($status){
+                                $query->when(strtolower($status) == "return-void", function ($query) use ($status){
+                                    $query->whereIn('status',['release-void']);
+                                },function ($query) use($status){
+                                    $query->where('status',preg_replace('/\s+/', '', $status));
+                                });
+                            });
+                        });
                     });
                 });
             })

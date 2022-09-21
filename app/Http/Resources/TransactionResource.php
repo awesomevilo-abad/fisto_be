@@ -47,8 +47,9 @@ class TransactionResource extends JsonResource
             (isset($transaction['document']['capex_no'])?$transaction['document']['capex_no']:NULL);
             $transaction_tag_date= (isset($transaction_tag->date)?$transaction_tag->date:NULL);
             $transaction_tag_status= (isset($transaction_tag->status)?$transaction_tag->status:NULL);
-            $transaction_tag_distributed_id= (isset($transaction_tag->distributed_id)?$transaction_tag->distributed_id:NULL);
-            $transaction_tag_distributed_name= (isset($transaction_tag->distributed_name)?$transaction_tag->distributed_name:NULL);
+            $transaction_tag_distributed_id= (isset($transaction->distributed_id)?$transaction->distributed_id:NULL);
+            $transaction_tag_distributed_name= (isset($transaction->distributed_name)?$transaction->distributed_name:NULL);
+            
             $reason_id = (isset($transaction_tag->reason_id)?$transaction_tag->reason_id:NULL);
             $reason = (isset($transaction_tag->reason_id)?Reason::find($transaction_tag->reason_id)->reason:NULL);
             $reason_remarks = (isset($transaction_tag->remarks)?$transaction_tag->remarks:NULL);
@@ -80,8 +81,8 @@ class TransactionResource extends JsonResource
             $approve = $transaction_tag->approve->first();
 
             $approve_id= (isset($approve->id)?$approve->id:NULL);
-            $approve_distributed_id= (isset($approve->distributed_id)?$approve->distributed_id:NULL);
-            $approve_distributed_name= (isset($approve->distributed_name)?$approve->distributed_name:NULL);
+            $approve_distributed_id= (isset($transaction->distributed_id)?$transaction->distributed_id:NULL);
+            $approve_distributed_name= (isset($transaction->distributed_name)?$transaction->distributed_name:NULL);
             $approve_date= (isset($approve->date)?$approve->date:NULL);
             $approve_status= (isset($approve->status)?$approve->status:NULL);
             $approve_reason_id= (isset($approve->reason_id)?$approve->reason_id:NULL);
@@ -445,6 +446,11 @@ class TransactionResource extends JsonResource
             $account_title = null;
 
             if(isset($voucher_receipt_type)){
+                if(strtolower($voucher_receipt_type) == "unofficial"){
+                    $voucher_percentage_tax = null;
+                    $vouocher_witholding_tax = null;
+                    $voucher_net_amount = null;
+                }
                 $tax = [
                     "receipt_type"=>$voucher_receipt_type,
                     "percentage_tax"=>$voucher_percentage_tax,

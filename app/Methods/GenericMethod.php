@@ -62,27 +62,75 @@ class GenericMethod{
         public static function get_cheque_details($id){
             
             
-             $cheque_details =  Transaction::with('tag.cheque.cheques')
+            $cheque_details =  Transaction::with('tag.cheque.cheques')
+           ->where('id',$id)
+           ->where('status','<>','void')->get();
+         return  $cheque_details = $cheque_details->first()->tag->first()->cheque->first()->cheques;
+           
+
+         if(!($cheque_details)->isEmpty()){
+            $cheque_details = $cheque_details->mapToGroups(function($item,$key){
+               return [[
+                   "bank"=>[
+                       "id"=>$item['bank_id']
+                       ,"name"=>$item['bank_name']
+                   ],
+                   "no"=>$item['cheque_no']
+                   ,"date"=>$item['cheque_date']
+                   ,"amount"=>$item['cheque_amount']
+               ]];
+           });
+           return ($cheque_details->first()->toArray());
+         }
+       }
+       
+       public static function get_account_title_details_latest($id){
+            $account_title_details =  Transaction::with('tag.cheque.account_title')
             ->where('id',$id)
             ->where('status','<>','void')->get();
-            $cheque_details = $cheque_details->first()->tag->first()->cheque->first()->cheques;
+            $account_title_details = $account_title_details->first()->tag->first()->cheque->first()->account_title;
             
 
-          if(!($cheque_details)->isEmpty()){
-             $cheque_details = $cheque_details->mapToGroups(function($item,$key){
-                return [[
-                    "bank"=>[
-                        "id"=>$item['bank_id']
-                        ,"name"=>$item['bank_name']
-                    ],
-                    "no"=>$item['cheque_no']
-                    ,"date"=>$item['cheque_date']
-                    ,"amount"=>$item['cheque_amount']
-                ]];
-            });
-            return ($cheque_details->first()->toArray());
-          }
+            if(!($account_title_details)->isEmpty()){
+                $account_title_details = $account_title_details->mapToGroups(function($item,$key){
+                    return [[
+                        "transaction_type"=>$item['transaction_type']
+                        ,"entry"=>$item['entry']
+                        ,"account_title"=>[
+                            "id"=>$item['account_title_id']
+                            ,"name"=>$item['account_title_name']
+                        ]
+                        ,"amount"=>$item['amount']
+                        ,"remarks"=>$item['remarks']
+                    ]];
+                });
+                return ($account_title_details->first()->toArray());
+            }
         }
+
+        public static function get_cheque_details_latest($id){
+        $cheque_details =  Transaction::with('tag.cheque.cheques')
+        ->where('id',$id)
+        ->where('status','<>','void')
+        ->get();
+         $cheque_details = $cheque_details->first()->tag->first()->cheque->first()->cheques;
+
+        if(!($cheque_details)->isEmpty()){
+            $cheque_details = $cheque_details->mapToGroups(function($item,$key){
+            return [[
+                "transaction_type"=>$item['transaction_type']
+                ,"bank"=>[
+                    "id"=>$item['bank_id']
+                    ,"name"=>$item['bank_name']
+                ],
+                "no"=>$item['cheque_no']
+                ,"date"=>$item['cheque_date']
+                ,"amount"=>$item['cheque_amount']
+            ]];
+        });
+        return ($cheque_details->first()->toArray());
+        }
+    }
 
 
         public static function floatvalue($val){
@@ -124,7 +172,6 @@ class GenericMethod{
             }
         }
 
-
         public static function format_cheque($cheques){
             if(!empty($cheques)){
                 if((!($cheques->isEmpty()))){
@@ -159,6 +206,7 @@ class GenericMethod{
         }
 
         public static function with_previous_transaction($current_transaction,$old_transaction){
+
             if($current_transaction){
                 return $current_transaction;
             }else{
@@ -171,6 +219,7 @@ class GenericMethod{
         }
 
         public static function getStatus($process,$transaction){
+
             if($process == 'tag'){
                 $model = new Tagging;
                 $field = 'tag_no';
@@ -184,9 +233,13 @@ class GenericMethod{
                 $model = new Treasury;
                 $field = 'cheque_no';
             }else if ($process == 'release'){
-                $model = new Release;
-                $field = 'distributed_id';
+                $model = new Tagging;
+                $field = '';
+            }else if ($process == 'file'){
+                $model = new Associate;
+                $field = '';
             }
+          
             $status= $process.'-'.$process;
 
             $is_exists =  Cheque::where('transaction_id',$transaction['transaction_id'])->exists() ;
@@ -232,8 +285,8 @@ class GenericMethod{
             $voucher_no,$approver,$account_titles ){
                 
 
-            $approver_id = (isset($approver['id'])?$approver['id']:NULL);
-            $approver_name = (isset($approver['name'])?$approver['name']:NULL);
+            $approver_id = (isset($approver['id'])?$approver['id']:(isset($approver['approver']['id'])?$approver['approver']['id']:NULL));
+            $approver_name = (isset($approver['name'])?$approver['name']:(isset($approver['approver']['name'])?$approver['approver']['name']:NULL));
 
            $voucher_transaction= $model::Create([
                 "transaction_id"=>$transaction_id,
@@ -1120,7 +1173,7 @@ class GenericMethod{
             return new LengthAwarePaginator($items->forPage($page, $perPage)->values(), $items->count(), $perPage, $page, $options);
         }
 
-        public static function updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks,$voucher_no,$voucher_month)
+        public static function updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name)
         {
             // return Transaction::where('tag_no',$tag_no)->get();
             // if($status != 'tag-tag'){
@@ -1143,6 +1196,10 @@ class GenericMethod{
                     ,'reason_remarks' => $reason_remarks
                     ,'voucher_no' => $voucher_no
                     ,'voucher_month' => $voucher_month
+                    ,'distributed_id' => $distributed_id
+                    ,'distributed_name' => $distributed_name
+                    ,'approver_id' => $approver_id
+                    ,'approver_name' => $approver_name
                 ]);
         }
 
@@ -1671,6 +1728,21 @@ class GenericMethod{
     ##########################################################################################################
     #########################################      VALIDATION           ######################################
     ##########################################################################################################
+
+        public static function voucherNoValidationUponSaving($voucher_no,$id){
+            $transaction = Transaction::where('voucher_no',$voucher_no)
+            ->when($id, function ($query) use ($id){
+                $query->where('id','<>',$id);
+            })
+            ->where('state','!=','void')->exists();
+
+            if($transaction){
+                return GenericMethod::resultResponse('voucher-no-exist','Voucher number already exist.',[]); 
+            }
+            return GenericMethod::resultResponse('success-no-content','',[]); 
+        }
+
+        
 
         public static function voucherNoValidation($voucher_no,$id){
             $transaction = Transaction::where('voucher_no',$voucher_no)
@@ -2306,6 +2378,18 @@ class GenericMethod{
             case('file'):
                 return GenericMethod::result(200,"Transaction has been saved.",[]);
             break;
+            case('request'):
+                return GenericMethod::result(200,"Transaction has been saved.",[]);
+            break;
+            case('accept'):
+                return GenericMethod::result(200,"Transaction has been saved.",[]);
+            break;
+            case('receive-approver'):
+                return GenericMethod::result(200,"Transaction has been saved.",[]);
+            break;
+            case('receive-requestor'):
+                return GenericMethod::result(200,"Transaction has been saved.",[]);
+            break;
             case('fetch'):
                 return GenericMethod::result(200,Str::plural($modelName)." has been fetched.",$data);
             break;
@@ -2404,6 +2488,14 @@ class GenericMethod{
 
             case('invalid'):
               throw new FistoLaravelException("The given data was invalid.", 422, NULL, $data);
+            break;
+
+            case('voucher-no-exist'):
+                throw new FistoLaravelException("Voucher number already exist..", 422, NULL, $data);
+              break;
+
+            case('cheque-no-exist'):
+              throw new FistoLaravelException("Cheque number already exist..", 422, NULL, $data);
             break;
             
             case('success-no-content'):

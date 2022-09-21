@@ -83,6 +83,10 @@ class CreateTransactionsTable extends Migration
             $table->float('referrence_amount')->nullable();
             $table->float('referrence_qty')->nullable();
             $table->bigInteger('referrence_id')->nullable();
+            $table->bigInteger('distributed_id')->nullable();
+            $table->string('distributed_name')->nullable();
+            $table->bigInteger('approver_id')->nullable();
+            $table->string('approver_name')->nullable();
 
             // $table->timestamps();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
