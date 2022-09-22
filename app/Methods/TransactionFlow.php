@@ -28,6 +28,8 @@ use App\Models\Transmit;
 use App\Models\Treasury;
 use App\Models\RequestorLogs;
 use App\Methods\GenericMethod;
+use App\Models\Release;
+use App\Models\File;
 use Carbon\Carbon;
 
 use Illuminate\Support\Facades\Auth;
@@ -73,11 +75,11 @@ class TransactionFlow{
         
         $previous_receipt_type = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['receipt_type'];
         $previous_percentage_tax = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['percentage_tax'];
-        $previous_withholding_tax = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['withholding_tax'];
+        $previous_withholding_tax = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['witholding_tax'];
         $previous_net_amount = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['net_amount'];
         $previous_voucher_no = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['voucher_no'];
         $previous_voucher_month = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['voucher_month'];
-        $previous_approver = array("approver"=>array("id"=>$previous_voucher_transaction['transaction_voucher']->first()['approver_id'],"name"=>$previous_voucher_transaction['transaction_voucher']->first()['approver_name']));
+        $previous_approver = array("id"=>$previous_voucher_transaction['transaction_voucher']->first()['approver_id'],"name"=>$previous_voucher_transaction['transaction_voucher']->first()['approver_name']);
         $previous_distributed = array("id"=>$previous_voucher_transaction['distributed_id'],"name"=>$previous_voucher_transaction['distributed_name']);
 
         $cheque_cheques = ($previous_cheque_transaction['transaction_cheque']->isEmpty())?NULL:$previous_cheque_transaction['transaction_cheque']->first()['cheques'];
@@ -151,6 +153,9 @@ class TransactionFlow{
             }else if(in_array($subprocess,['unhold','unreturn'])){
                 $status = GenericMethod::getStatus($process,$transaction);
             }
+            if(!isset($status)){
+                return GenericMethod::resultResponse('invalid-access','','');
+            }
             $state= $subprocess;
             GenericMethod::tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
@@ -170,6 +175,9 @@ class TransactionFlow{
                 $status= 'voucher-voucher';
             }else if(in_array($subprocess,['unhold','unreturn'])){
                 $status = GenericMethod::getStatus($process,$transaction);
+            }
+            if(!isset($status)){
+                return GenericMethod::resultResponse('invalid-access','','');
             }
             $state= $subprocess;
             $document_amount = $transaction['document_amount'];
@@ -215,6 +223,11 @@ class TransactionFlow{
             }else if(in_array($subprocess,['unhold','unreturn'])){
                 $status = GenericMethod::getStatus($process,$transaction);
             }
+
+            if(!isset($status)){
+                return GenericMethod::resultResponse('invalid-access','','');
+            }
+
             $state= $subprocess;
 
             GenericMethod::approveTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
@@ -226,6 +239,9 @@ class TransactionFlow{
                 $status= 'transmit-receive';
             }else if($subprocess == 'transmit'){
                 $status= 'transmit-transmit';
+            }
+            if(!isset($status)){
+                return GenericMethod::resultResponse('invalid-access','','');
             }
             $state= $subprocess;
 
@@ -307,6 +323,11 @@ class TransactionFlow{
             }else if(in_array($subprocess,['unhold','unreturn'])){
                 $status = GenericMethod::getStatus($process,$transaction);
             }
+            
+            if(!isset($status)){
+                return GenericMethod::resultResponse('invalid-access','','');
+            }
+
             $state= $subprocess;
             
             $document_amount = $transaction['document_amount'];
@@ -355,7 +376,7 @@ class TransactionFlow{
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
 
         }else if($process == 'release'){
-            $model = new Tagging;
+            $model = new Release;
             if($subprocess == 'receive'){
                 $status= 'release-receive';
             }else if($subprocess == 'return'){
@@ -365,11 +386,14 @@ class TransactionFlow{
             }else if(in_array($subprocess,['unreturn'])){
                 $status = GenericMethod::getStatus($process,$transaction);
             }
+            if(!isset($status)){
+                return GenericMethod::resultResponse('invalid-access','','');
+            }
             $state= $subprocess;
-            GenericMethod::tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
+            GenericMethod::releaseTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
         }else if($process == 'file'){
-            $model = new Associate;
+            $model = new File;
             if($subprocess == 'receive'){
                 $status= 'file-receive';
             }else if($subprocess == 'return'){
@@ -379,8 +403,13 @@ class TransactionFlow{
             }else if(in_array($subprocess,['unreturn'])){
                 $status = GenericMethod::getStatus($process,$transaction);
             }
+            
+            if(!isset($status)){
+                return GenericMethod::resultResponse('invalid-access','','');
+            }
+
             $state= $subprocess;
-            GenericMethod::voucherTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$receipt_type,$percentage_tax,$withholding_tax,$net_amount,$voucher_no,[],[] );
+            GenericMethod::fileTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$receipt_type,$percentage_tax,$withholding_tax,$net_amount,$voucher_no,[],[] );
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
 
         }else if($process == 'reverse'){
@@ -393,6 +422,10 @@ class TransactionFlow{
                     $status= 'reverse-receive-approver';
                 }else if($subprocess == 'approve'){
                     $status= 'reverse-approve';
+                }
+
+                if(!isset($status)){
+                    return GenericMethod::resultResponse('invalid-access','','');
                 }
                 
                 $state= $subprocess;
@@ -409,6 +442,10 @@ class TransactionFlow{
                 }else if($subprocess == 'return'){
                     $status= 'reverse-return';
                 }
+                if(!isset($status)){
+                    return GenericMethod::resultResponse('invalid-access','','');
+                }
+
                 $state= $subprocess;
                 GenericMethod::tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
                 GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);

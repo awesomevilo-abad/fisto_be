@@ -65,7 +65,7 @@ class GenericMethod{
             $cheque_details =  Transaction::with('tag.cheque.cheques')
            ->where('id',$id)
            ->where('status','<>','void')->get();
-         return  $cheque_details = $cheque_details->first()->tag->first()->cheque->first()->cheques;
+           $cheque_details = $cheque_details->first()->tag->first()->cheque->first()->cheques;
            
 
          if(!($cheque_details)->isEmpty()){
@@ -380,6 +380,51 @@ class GenericMethod{
 
         }
         
+        public static function releaseTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to=[] ){
+            $distributed_id =null;
+            $distributed_name =null;
+            if(!empty($distributed_to)){
+                $distributed_id=$distributed_to['id'];
+                $distributed_name=$distributed_to['name'];
+            }
+            $model::Create([
+                "transaction_id"=>$transaction_id,
+                "description"=>$remarks,
+                "status"=>$status,
+                "date_status"=>$date_now,
+                "reason_id"=>$reason_id,
+                "remarks"=>$reason_remarks,
+                "distributed_id"=>$distributed_id,
+                "distributed_name"=>$distributed_name
+            ]);
+        }
+        
+        public static function fileTransaction(
+            $model,$transaction_id,$tag_no,$reason_remarks,$date_now,
+            $reason_id,$status,$receipt_type,$percentage_tax,$witholding_tax,$net_amount,
+            $voucher_no,$approver,$account_titles ){
+                
+
+            $approver_id = (isset($approver['id'])?$approver['id']:(isset($approver['approver']['id'])?$approver['approver']['id']:NULL));
+            $approver_name = (isset($approver['name'])?$approver['name']:(isset($approver['approver']['name'])?$approver['approver']['name']:NULL));
+
+           $voucher_transaction= $model::Create([
+                "transaction_id"=>$transaction_id,
+                "tag_id"=>$tag_no,
+                "receipt_type"=>$receipt_type,
+                "percentage_tax"=>$percentage_tax,
+                "witholding_tax"=>$witholding_tax,
+                "net_amount"=>$net_amount,
+                "approver_id"=>$approver_id,
+                "approver_name"=>$approver_name,
+                "status"=>$status,
+                "date_status"=>$date_now,
+                "reason_id"=>$reason_id,
+                "remarks"=>$reason_remarks,
+            ]);
+
+
+        }
         public static function validateCheque($id,$cheques){
             $duplicate_count=0;
             foreach( $cheques as $specific_cheques){
@@ -2484,6 +2529,10 @@ class GenericMethod{
         
             case('password-reset'):
                 return GenericMethod::result(200,"User's default password has been restored.",$data);
+            break;
+
+            case('invalid-access'):
+              throw new FistoLaravelException("API cannot access by this user.", 422, NULL, $data);
             break;
 
             case('invalid'):

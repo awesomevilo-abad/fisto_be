@@ -23,6 +23,8 @@ class TransactionResource extends JsonResource
         $approve  = null;
         $transmit  = null;
         $cheque_description = null;
+        $release_description  = null;
+        $file_description  = null;
         $po_details = [];
         $reference = [];
         $po_no = [];
@@ -30,11 +32,13 @@ class TransactionResource extends JsonResource
         $first_transaction_keys = [];
         $keys = [];
 
-        $transaction =  Transaction::with('tag.voucher.account_title')
+       $transaction =  Transaction::with('tag.voucher.account_title')
         ->with('tag.approve')
         ->with('tag.transmit')
         ->with('tag.cheque.cheques')
         ->with('tag.cheque.account_title')
+        ->with('tag.release')
+        ->with('tag.file')
         ->where('id',$this->id)->get()->first();
         $transaction_tag_no= (isset($transaction->tag_no)?$transaction->tag_no:NULL);
         $transaction_voucher_no = (isset($transaction->voucher_no)?$transaction->voucher_no:NULL);
@@ -116,6 +120,39 @@ class TransactionResource extends JsonResource
             }
         }
         // END CHEQUE PROCESS
+        
+        // RELEASE PROCESS
+        if(count($transaction->tag)>0){
+            if(count($transaction_tag->release)>0){
+            $release = $transaction_tag->release->first();
+
+            $release_id= (isset($release->id)?$release->id:NULL);
+            $release_date= (isset($release->date)?$release->date:NULL);
+            $release_reason_id= (isset($release->reason_id)?$release->reason_id:NULL);
+            $release_reason = (isset($release->reason_id)?Reason::find($release->reason_id)->reason:NULL);
+            $release_reason_remarks= (isset($release->remarks)?$release->remarks:NULL);
+            $release_status= (isset($release->status)?$release->status:NULL);
+            $release_distributed_id= (isset($release->distributed_id)?$release->distributed_id:NULL);
+            $release_distributed_name= (isset($release->distributed_name)?$release->distributed_name:NULL);
+
+            }
+        }
+        // END RELEASE PROCESS
+        
+        // FILE PROCESS
+        if(count($transaction->tag)>0){
+            if(count($transaction_tag->file)>0){
+            $file = $transaction_tag->file->first();
+
+            $file_id= (isset($file->id)?$file->id:NULL);
+            $file_date= (isset($file->date)?$file->date:NULL);
+            $file_status= (isset($file->status)?$file->status:NULL);
+            $file_reason_id= (isset($file->reason_id)?$file->reason_id:NULL);
+            $file_reason = (isset($file->reason_id)?Reason::find($file->reason_id)->reason:NULL);
+            $file_reason_remarks= (isset($file->remarks)?$file->remarks:NULL);
+            }
+        }
+        // END FILE PROCESS
 
         $condition =  ($this->state=='void')? '=': '!=';
         $document_amount = Transaction::where('request_id',$this->request_id)->where('state',$condition,'void')->first()->document_amount;
@@ -621,6 +658,57 @@ class TransactionResource extends JsonResource
 
         }
 
+
+        // RELEASE
+        if(isset($release_status)){
+
+            $reason = null;
+            $distributed_to = null;
+
+            if(isset($release_distributed_id)){
+                $distributed_to = [
+                    "id"=>$release_distributed_id,
+                    "name"=>$release_distributed_name
+                ];
+            }
+
+            if(isset($release_reason_id)){
+                $reason = [
+                    "id"=>$release_reason_id,
+                    "reason"=>$release_reason,
+                    "remarks"=>$release_reason_remarks
+                ];
+            }
+
+            $release_description = [
+                    "status"=>$release_status,
+                    "date"=>$release_date,
+                    "distributed_to"=>$distributed_to,
+                    "reason"=>$reason
+                ];
+
+        }
+
+        // FILE
+        if(isset($file_status)){
+
+            $reason = null;
+
+            if(isset($file_reason_id)){
+                $reason = [
+                    "id"=>$file_reason_id,
+                    "reason"=>$file_reason,
+                    "remarks"=>$file_reason_remarks
+                ];
+            }
+
+            $file_description = [
+                    "status"=>$file_status,
+                    "date"=>$file_date,
+                    "reason"=>$reason
+                ];
+
+        }
         $transaction_result= [
             "transaction"=>[
                 "id"=>$this->id
@@ -655,7 +743,8 @@ class TransactionResource extends JsonResource
             ,"approve"=> $approve
             ,"transmit"=> $transmit
             ,"cheque"=> $cheque_description
-            ,"file"=> null
+            ,"release"=> $release_description
+            ,"file"=> $file_description
         ];
 
         $result = [];

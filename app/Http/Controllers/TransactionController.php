@@ -150,7 +150,7 @@ class TransactionController extends Controller
                         $query->whereIn('status',['pending']);
                     },function ($query) use ($status){
                         $query->when(strtolower($status) == "pending-cheque",function ($query) use ($status){
-                            $query->whereIn('status',['cheque-cheque']);
+                            $query->whereIn('status',['cheque-release']);
                         }, function ($query) use($status){
                             $query->when(strtolower($status) == "pending-file",function($query){
                                 $query->whereIn('status',['file-file']);
