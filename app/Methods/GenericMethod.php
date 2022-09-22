@@ -25,6 +25,7 @@ use App\Models\Approver;
 use App\Models\Treasury;
 use App\Models\Cheque;
 use App\Models\Release;
+use App\Models\Transfer;
 
 use App\Models\UserDocumentCategory;
 use Illuminate\Routing\Route;
@@ -425,6 +426,35 @@ class GenericMethod{
 
 
         }
+
+        public static function transferTransaction($id,$from_user_id,$from_full_name,$to_user_id,$to_full_name){
+
+            $transaction = Transaction::where('id',$id)->select('transaction_id','tag_no')->get();
+            $transaction_id = $transaction->first()->transaction_id;
+            $tag_no = $transaction->first()->tag_no;
+
+           $transfer_transaction_log = Transfer::Create([
+                "transaction_id"=>$transaction_id
+                ,"tag_id"=>$tag_no
+                ,"from_distributed_id"=>$from_user_id
+                ,"from_distributed_name"=>$from_full_name
+                ,"to_distributed_id"=>$to_user_id
+                ,"to_distributed_name"=>$to_full_name
+            ]);
+
+            $update_transaction = DB::table('transactions')
+                ->where('transaction_id', $transaction_id)
+                ->where('tag_no', $tag_no)
+                ->update([
+                    'distributed_id' => $to_user_id
+                    ,'distributed_name' => $to_full_name
+                ]);
+
+            if(isset($update_transaction)){
+                return true;
+            }
+        }
+
         public static function validateCheque($id,$cheques){
             $duplicate_count=0;
             foreach( $cheques as $specific_cheques){
@@ -1260,8 +1290,13 @@ class GenericMethod{
     #########################################      RETRIEVE             ######################################
     ##########################################################################################################
     
-        public static function getFullname($fname,$mname,$lname,$suffix){
+        public static function getFullname($fname,$mname="",$lname,$suffix){
             $fullname = $fname.' '.strtoupper($mname[0]).'. '.$lname.' '.$suffix;
+            return $fullname;
+        }
+        
+        public static function getFullnameNoMiddle($fname,$lname,$suffix){
+            $fullname = $fname.' '.$lname.' '.$suffix;
             return $fullname;
         }
 
@@ -2434,6 +2469,9 @@ class GenericMethod{
             break;
             case('receive-requestor'):
                 return GenericMethod::result(200,"Transaction has been saved.",[]);
+            break;
+            case('transfer'):
+                return GenericMethod::result(200,"Transaction has been transfered.",[]);
             break;
             case('fetch'):
                 return GenericMethod::result(200,Str::plural($modelName)." has been fetched.",$data);

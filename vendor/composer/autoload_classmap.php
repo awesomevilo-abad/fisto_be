@@ -111,6 +111,7 @@ return array(
     'App\\Models\\Tagging' => $baseDir . '/app/Models/Tagging.php',
     'App\\Models\\Transaction' => $baseDir . '/app/Models/Transaction.php',
     'App\\Models\\TransactionClient' => $baseDir . '/app/Models/TransactionClient.php',
+    'App\\Models\\Transfer' => $baseDir . '/app/Models/Transfer.php',
     'App\\Models\\Transmit' => $baseDir . '/app/Models/Transmit.php',
     'App\\Models\\Treasury' => $baseDir . '/app/Models/Treasury.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',

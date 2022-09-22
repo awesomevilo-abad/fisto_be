@@ -622,6 +622,7 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'App\\Models\\Tagging' => __DIR__ . '/../..' . '/app/Models/Tagging.php',
         'App\\Models\\Transaction' => __DIR__ . '/../..' . '/app/Models/Transaction.php',
         'App\\Models\\TransactionClient' => __DIR__ . '/../..' . '/app/Models/TransactionClient.php',
+        'App\\Models\\Transfer' => __DIR__ . '/../..' . '/app/Models/Transfer.php',
         'App\\Models\\Transmit' => __DIR__ . '/../..' . '/app/Models/Transmit.php',
         'App\\Models\\Treasury' => __DIR__ . '/../..' . '/app/Models/Treasury.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',

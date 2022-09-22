@@ -19,6 +19,10 @@ class TransactionFlowController extends Controller
         return TransactionFlow::validateChequeNo($request);
     }
 
+    public function transfer(Request $request, $id){
+
+       return TransactionFlow::transfer($request, $id);
+    }
     // public function pullRequest(Request $request){
     //     $process =  $request['process'];
     //     $subprocess =  $request['subprocess'];
