@@ -25,6 +25,7 @@ class TransactionResource extends JsonResource
         $cheque_description = null;
         $release_description  = null;
         $file_description  = null;
+        $reverse_description  = null;
         $po_details = [];
         $reference = [];
         $po_no = [];
@@ -39,6 +40,7 @@ class TransactionResource extends JsonResource
         ->with('tag.cheque.account_title')
         ->with('tag.release')
         ->with('tag.file')
+        ->with('tag.reverse')
         ->where('id',$this->id)->get()->first();
         $transaction_tag_no= (isset($transaction->tag_no)?$transaction->tag_no:NULL);
         $transaction_voucher_no = (isset($transaction->voucher_no)?$transaction->voucher_no:NULL);
@@ -154,6 +156,25 @@ class TransactionResource extends JsonResource
         }
         // END FILE PROCESS
 
+        // REVERSE PROCESS
+        if(count($transaction->tag)>0){
+            if(count($transaction_tag->reverse)>0){
+            $reverse = $transaction_tag->reverse->first();
+
+            $reverse_id= (isset($reverse->id)?$reverse->id:NULL);
+            $reverse_date= (isset($reverse->date)?$reverse->date:NULL);
+            $reverse_status= (isset($reverse->status)?$reverse->status:NULL);
+            $reverse_reason_id= (isset($reverse->reason_id)?$reverse->reason_id:NULL);
+            $reverse_reason = (isset($reverse->reason_id)?Reason::find($reverse->reason_id)->reason:NULL);
+            $reverse_reason_remarks= (isset($reverse->remarks)?$reverse->remarks:NULL);
+            $reverse_user_role= (isset($reverse->user_role)?$reverse->user_role:NULL);
+            $reverse_user_id= (isset($reverse->user_id)?$reverse->user_id:NULL);
+            $reverse_user_name= (isset($reverse->user_name)?$reverse->user_name:NULL);
+          
+        
+            }
+        }
+        // END REVERSE PROCESS
         $condition =  ($this->state=='void')? '=': '!=';
         $document_amount = Transaction::where('request_id',$this->request_id)->where('state',$condition,'void')->first()->document_amount;
         $payment_type = strtoupper($this->payment_type);
@@ -720,6 +741,38 @@ class TransactionResource extends JsonResource
                 ];
 
         }
+        
+        // REVERSE
+        if(isset($reverse_status)){
+
+            $reason = null;
+            $modified_by = null;
+
+            if(isset($reverse_reason_id)){
+                $reason = [
+                    "id"=>$reverse_reason_id,
+                    "reason"=>$reverse_reason,
+                    "remarks"=>$reverse_reason_remarks
+                ];
+            }
+
+            if(isset($reverse_user_id)){
+                $modified_by = [
+                    "role"=>$reverse_user_role,
+                    "id"=>$reverse_user_id,
+                    "name"=>$reverse_user_name
+                ];
+            }
+
+            $reverse_description = [
+                    "status"=>$reverse_status,
+                    "date"=>$reverse_date,
+                    "modified_by"=>$modified_by,
+                    "reason"=>$reason
+                ];
+
+        }
+        
         $transaction_result= [
             "transaction"=>[
                 "id"=>$this->id
@@ -756,6 +809,7 @@ class TransactionResource extends JsonResource
             ,"cheque"=> $cheque_description
             ,"release"=> $release_description
             ,"file"=> $file_description
+            ,"reverse"=> $reverse_description
         ];
 
         $result = [];

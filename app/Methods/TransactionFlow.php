@@ -30,6 +30,7 @@ use App\Models\RequestorLogs;
 use App\Methods\GenericMethod;
 use App\Models\Release;
 use App\Models\File;
+use App\Models\Reverse;
 use Carbon\Carbon;
 
 use Illuminate\Support\Facades\Auth;
@@ -413,11 +414,10 @@ class TransactionFlow{
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
 
         }else if($process == 'reverse'){
+            $model = new Reverse;
             $role = Auth::user()->role;
 
             if($role == "AP Associate" || $role == "AP Specialist"){
-                // return "AP ASS";
-                $model = new Associate;
                 if($subprocess == 'receive-approver'){
                     $status= 'reverse-receive-approver';
                 }else if($subprocess == 'approve'){
@@ -428,13 +428,7 @@ class TransactionFlow{
                     return GenericMethod::resultResponse('invalid-access','','');
                 }
                 
-                $state= $subprocess;
-                GenericMethod::voucherTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$receipt_type,$percentage_tax,$withholding_tax,$net_amount,$voucher_no,[],[] );
-                GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
-                return GenericMethod::resultResponse($state,'','');
             }else{
-                // return "Tag";
-                $model = new Tagging;
                 if($subprocess == 'request'){
                     $status= 'reverse-request';
                 }else if($subprocess == 'receive-requestor'){
@@ -442,15 +436,16 @@ class TransactionFlow{
                 }else if($subprocess == 'return'){
                     $status= 'reverse-return';
                 }
-                if(!isset($status)){
-                    return GenericMethod::resultResponse('invalid-access','','');
-                }
-
-                $state= $subprocess;
-                GenericMethod::tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
-                GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
-                return GenericMethod::resultResponse($state,'','');
-            }}
+            }
+        
+            if(!isset($status)){
+                return GenericMethod::resultResponse('invalid-access','','');
+            }
+            $state= $subprocess;
+            GenericMethod::reverseTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$role);
+            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
+            return GenericMethod::resultResponse($state,'','');
+        }
 
         return GenericMethod::resultResponse($state,'','');
     }

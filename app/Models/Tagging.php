@@ -50,4 +50,9 @@ class Tagging extends Model
         return $this->hasMany(File::class,'transaction_id','transaction_id')->select('transaction_id','tag_id','id',
         'receipt_type','percentage_tax','witholding_tax','net_amount','approver_id','approver_name','date_status as date','status','reason_id','remarks')->latest()->limit(1);
     }
+
+    public function reverse(){
+        return $this->hasMany(Reverse::class,'transaction_id','transaction_id')->select('transaction_id','tag_id','id',
+        'user_role','user_id','user_name','date_status as date','status','reason_id','remarks')->latest()->limit(1);
+    }
 }

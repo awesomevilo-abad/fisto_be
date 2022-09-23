@@ -30,6 +30,8 @@ use App\Models\Transfer;
 use App\Models\UserDocumentCategory;
 use Illuminate\Routing\Route;
 
+use Illuminate\Support\Facades\Auth;
+
 class GenericMethod{
 
 
@@ -427,6 +429,29 @@ class GenericMethod{
 
         }
 
+        public static function reverseTransaction(
+            $model,$transaction_id,$tag_no,$reason_remarks,$date_now,
+            $reason_id,$status,$user_role ){
+      
+            $user_info = Auth::user();
+            $user_id = $user_info->id;
+            $full_name = GenericMethod::getFullnameNoMiddle($user_info->first_name,$user_info->last_name,$user_info->suffix);
+            
+
+           $reverse_transaction= $model::Create([
+                "transaction_id"=>$transaction_id,
+                "tag_id"=>$tag_no,
+                "user_role"=>$user_role,
+                "user_id"=>$user_id,
+                "user_name"=>$full_name,
+                "status"=>$status,
+                "date_status"=>$date_now,
+                "reason_id"=>$reason_id,
+                "remarks"=>$reason_remarks,
+            ]);
+
+
+        }
         public static function transferTransaction($id,$from_user_id,$from_full_name,$to_user_id,$to_full_name){
 
             $transaction = Transaction::where('id',$id)->select('transaction_id','tag_no')->get();
