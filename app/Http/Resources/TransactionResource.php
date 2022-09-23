@@ -638,6 +638,18 @@ class TransactionResource extends JsonResource
                     });
                 $account_title= $cheque_account_title->values();
             }
+
+            if(!empty($cheque_details)){
+                $cheque_details = $cheque_details->first();
+            }else{
+                $cheque_details = [];
+            }
+
+            if(!empty($account_title)){
+                $account_title = $account_title->first();
+            }else{
+                $account_title = [];
+            }      
             
 
             if(isset($cheque_reason_id)){
