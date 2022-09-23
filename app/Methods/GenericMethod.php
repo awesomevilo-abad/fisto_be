@@ -25,6 +25,7 @@ use App\Models\Approver;
 use App\Models\Treasury;
 use App\Models\Cheque;
 use App\Models\Release;
+use App\Models\Transfer;
 
 use App\Models\UserDocumentCategory;
 use Illuminate\Routing\Route;
@@ -65,7 +66,7 @@ class GenericMethod{
             $cheque_details =  Transaction::with('tag.cheque.cheques')
            ->where('id',$id)
            ->where('status','<>','void')->get();
-         return  $cheque_details = $cheque_details->first()->tag->first()->cheque->first()->cheques;
+           $cheque_details = $cheque_details->first()->tag->first()->cheque->first()->cheques;
            
 
          if(!($cheque_details)->isEmpty()){
@@ -380,6 +381,80 @@ class GenericMethod{
 
         }
         
+        public static function releaseTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to=[] ){
+            $distributed_id =null;
+            $distributed_name =null;
+            if(!empty($distributed_to)){
+                $distributed_id=$distributed_to['id'];
+                $distributed_name=$distributed_to['name'];
+            }
+            $model::Create([
+                "transaction_id"=>$transaction_id,
+                "description"=>$remarks,
+                "status"=>$status,
+                "date_status"=>$date_now,
+                "reason_id"=>$reason_id,
+                "remarks"=>$reason_remarks,
+                "distributed_id"=>$distributed_id,
+                "distributed_name"=>$distributed_name
+            ]);
+        }
+        
+        public static function fileTransaction(
+            $model,$transaction_id,$tag_no,$reason_remarks,$date_now,
+            $reason_id,$status,$receipt_type,$percentage_tax,$witholding_tax,$net_amount,
+            $voucher_no,$approver,$account_titles ){
+                
+
+            $approver_id = (isset($approver['id'])?$approver['id']:(isset($approver['approver']['id'])?$approver['approver']['id']:NULL));
+            $approver_name = (isset($approver['name'])?$approver['name']:(isset($approver['approver']['name'])?$approver['approver']['name']:NULL));
+
+           $voucher_transaction= $model::Create([
+                "transaction_id"=>$transaction_id,
+                "tag_id"=>$tag_no,
+                "receipt_type"=>$receipt_type,
+                "percentage_tax"=>$percentage_tax,
+                "witholding_tax"=>$witholding_tax,
+                "net_amount"=>$net_amount,
+                "approver_id"=>$approver_id,
+                "approver_name"=>$approver_name,
+                "status"=>$status,
+                "date_status"=>$date_now,
+                "reason_id"=>$reason_id,
+                "remarks"=>$reason_remarks,
+            ]);
+
+
+        }
+
+        public static function transferTransaction($id,$from_user_id,$from_full_name,$to_user_id,$to_full_name){
+
+            $transaction = Transaction::where('id',$id)->select('transaction_id','tag_no')->get();
+            $transaction_id = $transaction->first()->transaction_id;
+            $tag_no = $transaction->first()->tag_no;
+
+           $transfer_transaction_log = Transfer::Create([
+                "transaction_id"=>$transaction_id
+                ,"tag_id"=>$tag_no
+                ,"from_distributed_id"=>$from_user_id
+                ,"from_distributed_name"=>$from_full_name
+                ,"to_distributed_id"=>$to_user_id
+                ,"to_distributed_name"=>$to_full_name
+            ]);
+
+            $update_transaction = DB::table('transactions')
+                ->where('transaction_id', $transaction_id)
+                ->where('tag_no', $tag_no)
+                ->update([
+                    'distributed_id' => $to_user_id
+                    ,'distributed_name' => $to_full_name
+                ]);
+
+            if(isset($update_transaction)){
+                return true;
+            }
+        }
+
         public static function validateCheque($id,$cheques){
             $duplicate_count=0;
             foreach( $cheques as $specific_cheques){
@@ -1215,8 +1290,13 @@ class GenericMethod{
     #########################################      RETRIEVE             ######################################
     ##########################################################################################################
     
-        public static function getFullname($fname,$mname,$lname,$suffix){
+        public static function getFullname($fname,$mname="",$lname,$suffix){
             $fullname = $fname.' '.strtoupper($mname[0]).'. '.$lname.' '.$suffix;
+            return $fullname;
+        }
+        
+        public static function getFullnameNoMiddle($fname,$lname,$suffix){
+            $fullname = $fname.' '.$lname.' '.$suffix;
             return $fullname;
         }
 
@@ -2390,6 +2470,9 @@ class GenericMethod{
             case('receive-requestor'):
                 return GenericMethod::result(200,"Transaction has been saved.",[]);
             break;
+            case('transfer'):
+                return GenericMethod::result(200,"Transaction has been transfered.",[]);
+            break;
             case('fetch'):
                 return GenericMethod::result(200,Str::plural($modelName)." has been fetched.",$data);
             break;
@@ -2484,6 +2567,10 @@ class GenericMethod{
         
             case('password-reset'):
                 return GenericMethod::result(200,"User's default password has been restored.",$data);
+            break;
+
+            case('invalid-access'):
+              throw new FistoLaravelException("API cannot access by this user.", 422, NULL, $data);
             break;
 
             case('invalid'):
