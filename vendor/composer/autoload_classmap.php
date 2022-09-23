@@ -104,6 +104,7 @@ return array(
     'App\\Models\\Release' => $baseDir . '/app/Models/Release.php',
     'App\\Models\\RequestorLogs' => $baseDir . '/app/Models/RequestorLogs.php',
     'App\\Models\\ReturnVoucher' => $baseDir . '/app/Models/ReturnVoucher.php',
+    'App\\Models\\Reverse' => $baseDir . '/app/Models/Reverse.php',
     'App\\Models\\Specialist' => $baseDir . '/app/Models/Specialist.php',
     'App\\Models\\Supplier' => $baseDir . '/app/Models/Supplier.php',
     'App\\Models\\SupplierReferrence' => $baseDir . '/app/Models/SupplierReferrence.php',

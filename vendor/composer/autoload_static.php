@@ -615,6 +615,7 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'App\\Models\\Release' => __DIR__ . '/../..' . '/app/Models/Release.php',
         'App\\Models\\RequestorLogs' => __DIR__ . '/../..' . '/app/Models/RequestorLogs.php',
         'App\\Models\\ReturnVoucher' => __DIR__ . '/../..' . '/app/Models/ReturnVoucher.php',
+        'App\\Models\\Reverse' => __DIR__ . '/../..' . '/app/Models/Reverse.php',
         'App\\Models\\Specialist' => __DIR__ . '/../..' . '/app/Models/Specialist.php',
         'App\\Models\\Supplier' => __DIR__ . '/../..' . '/app/Models/Supplier.php',
         'App\\Models\\SupplierReferrence' => __DIR__ . '/../..' . '/app/Models/SupplierReferrence.php',
