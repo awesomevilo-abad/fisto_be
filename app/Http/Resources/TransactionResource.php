@@ -639,19 +639,18 @@ class TransactionResource extends JsonResource
                 $account_title= $cheque_account_title->values();
             }
 
-            if(!empty($cheque_details)){
+            if(!($cheque_details->isEmpty())){
                 $cheque_details = $cheque_details->first();
             }else{
                 $cheque_details = [];
             }
 
-            if(!empty($account_title)){
+            if(!($account_title->isEmpty())){
                 $account_title = $account_title->first();
             }else{
                 $account_title = [];
             }      
             
-
             if(isset($cheque_reason_id)){
                 $reason = [
                     "id"=>$cheque_reason_id,
