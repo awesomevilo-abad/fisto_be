@@ -663,8 +663,8 @@ class TransactionResource extends JsonResource
             $cheque_description = [
                     "status"=>$cheque_status,
                     "date"=>$cheque_date_status,
-                    "cheques"=>$cheque_details->first(),
-                    "accounts"=>$account_title->first(),
+                    "cheques"=>$cheque_details,
+                    "accounts"=>$account_title,
                     "reason"=>$reason
                 ];
 
