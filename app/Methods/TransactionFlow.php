@@ -348,16 +348,16 @@ class TransactionFlow{
                 
                 $debit_entries_amount = array_filter($account_titles, function ($account_title){
                     if(isset($account_title['transaction_type'])){
-                        return $account_title['entry']!="credit" && $account_title['transaction_type']=="new";
+                        return strtolower($account_title['entry']!="credit") && $account_title['transaction_type']=="new";
                     }
-                    return $account_title['entry']!="credit" ;
+                    return strtolower($account_title['entry']!="credit") ;
                 });
                 
                 $credit_entries_amount = array_filter($account_titles, function ($account_title){
                     if(isset($account_title['transaction_type'])){
-                        return $account_title['entry']!="debit" && $account_title['transaction_type']=="new";
+                        return strtolower($account_title['entry']!="debit") && $account_title['transaction_type']=="new";
                     }
-                    return $account_title['entry']!="debit" ;
+                    return strtolower($account_title['entry']!="debit") ;
                 });
                 
                 $debit_amount= array_sum(array_column($debit_entries_amount,'amount'));
