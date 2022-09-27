@@ -110,7 +110,19 @@ class TransactionController extends Controller
             $query->when(strtoupper($status) == "PENDING", function ($query){
                 $query->whereNotIn('status',['requestor-void','tag-hold','tag-void','tag-return']);
             },function ($query) use($status){
-                $query->where('status',preg_replace('/\s+/', '', $status));
+                $query->when(strtolower($status) == "return-return", function ($query) use ($status){
+                    $query->whereIn('status',['tag-return']);
+                },function ($query) use ($status){
+                    $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
+                        $query->whereIn('status',['tag-hold']);
+                     },function ($query) use($status){
+                        $query->when(strtolower($status) == "return-void", function ($query) use ($status){
+                            $query->whereIn('status',['tag-void']);
+                        },function ($query) use($status){
+                            $query->where('status',preg_replace('/\s+/', '', $status));
+                        });
+                    });
+                });
             })
             ->whereIn('department_details',$department)
             ->select([
