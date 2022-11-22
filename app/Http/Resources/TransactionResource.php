@@ -27,6 +27,7 @@ class TransactionResource extends JsonResource
         $file_description  = null;
         $reverse_description  = null;
         $po_details = [];
+        $prm_group = [];
         $reference = [];
         $po_no = [];
         $previous_balance=0;
@@ -283,6 +284,65 @@ class TransactionResource extends JsonResource
                         "name"=>$this->supplier
                     ]
                 ];
+            break;
+            case 3: //PRM Multiple
+                $document = [
+                    "id"=>$this->document_id
+                    ,"name"=>$this->document_type
+                    ,"no"=>$this->document_no
+                    ,"date"=>$this->document_date
+                    ,"payment_type"=>$this->payment_type
+                    ,"amount"=>$this->document_amount
+                    ,"remarks"=>$this->remarks
+                    ,"category"=>[
+                        "id"=>$this->category_id,
+                        "name"=>$this->category
+                    ],
+                    "company"=>[
+                        "id"=>$this->company_id,
+                        "name"=>$this->company
+                    ],
+                    "department"=>[
+                        "id"=>$this->department_id,
+                        "name"=>$this->department
+                    ],
+                    "location"=>[
+                        "id"=>$this->location_id,
+                        "name"=>$this->location
+                    ],
+                    "supplier"=>[
+                        "id"=>$this->supplier_id,
+                        "name"=>$this->supplier
+                    ]
+                ];
+                switch($this->category){
+                    
+                    case "rental":
+                        $document['period_covered'] = $this->period_covered;
+                        $document['prm_multiple_from'] = $this->prm_multiple_from;
+                        $document['prm_multiple_to'] = $this->prm_multiple_to;
+                        $document['gross_amount'] = $this->gross_amount;
+                        $document['witholding_tax'] = $this->witholding_tax;
+                        $document['net_amount'] = $this->net_amount;
+                        $document['cheque_date'] = $this->cheque_date;
+                        break;
+                    case "leasing":
+                        $document['amortization'] = $this->amortization;
+                        $document['principal'] = $this->principal;
+                        $document['interest'] = $this->interest;
+                        $document['cwt'] = $this->cwt;
+                        $document['net_amount'] = $this->net_amount;
+                        $document['cheque_date'] = $this->cheque_date;
+                    break;
+                    case "loans":
+                        $document['principal'] = $this->principal;
+                        $document['interest'] = $this->interest;
+                        $document['cwt'] = $this->cwt;
+                        $document['net_amount'] = $this->net_amount;
+                        $document['cheque_date'] = $this->cheque_date;
+                    break;
+                }
+
             break;
             case 5: //Contractor's Billing
                     $document = [
@@ -799,7 +859,22 @@ class TransactionResource extends JsonResource
 
 
         }
-        
+
+        // PRM GROUP
+        if($this->document_type == "PRM Multiple"){
+            switch($this->category){
+                case "rental":
+                    $prm_fields = Transaction::where('transaction_id',$this->transaction_id)->select(["status","period_covered","gross_amount","witholding_tax","net_amount","cheque_date"])->get();
+                break;
+                case "leasing":
+                    $prm_fields = Transaction::where('transaction_id',$this->transaction_id)->select(["status","amortization","principal","interest","cwt","net_amount","cheque_date"])->get();
+                break;
+                case "loans":
+                    $prm_fields = Transaction::where('transaction_id',$this->transaction_id)->select(["status","principal","interest","cwt","net_amount","cheque_date"])->get();
+                break;
+            }
+           $prm_group = $prm_fields;
+        }
         $transaction_result= [
             "transaction"=>[
                 "id"=>$this->id
@@ -828,17 +903,19 @@ class TransactionResource extends JsonResource
                 ,"department"=>$this->department_details
             ],
             "document"=>$document
-            ,"po_group"=>$po_details
-            ,"tag"=> $tag
-            ,"voucher"=> $voucher
-            ,"approve"=> $approve
-            ,"transmit"=> $transmit
-            ,"cheque"=> $cheque_description
-            ,"release"=> $release_description
-            ,"file"=> $file_description
-            ,"reverse"=> $reverse_description
         ];
 
+        $transaction_result['po_group']=$po_details;
+        $transaction_result['prm_group']=$prm_group;
+        $transaction_result['tag']=$tag;
+        $transaction_result['voucher']=$voucher;
+        $transaction_result['approve']=$approve;
+        $transaction_result['transmit']=$transmit;
+        $transaction_result['cheque']=$cheque_description;
+        $transaction_result['release']=$release_description;
+        $transaction_result['file']=$file_description;
+        $transaction_result['reverse']=$reverse_description;
+        // return $transaction_result;
         $result = [];
         foreach ( $transaction_result as $k=>$v){
              if($transaction_result[$k]!=null){

@@ -1028,18 +1028,15 @@ class GenericMethod{
                         $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_gross,$message_if_error);
 
                         // PROCEED RENTAL
-                        return "PROCEED RENTAL";
                         foreach($prm_group as $key=>$prm_batch){
                             $period_covered = (isset($prm_batch['period_covered'])?$prm_batch['period_covered']:NULL);
-        
                             $period_covered_array = explode("-",$period_covered);
                             $prm_multiple_from =  date("Y-m-d",strtotime(trim($period_covered_array[0])));
                             $prm_multiple_to =  date("Y-m-d",strtotime(trim($period_covered_array[1])));
-        
                             $cheque_date = (isset($prm_batch['cheque_date'])?$prm_batch['cheque_date']:NULL);
                             $gross_amount = (isset($prm_batch['gross_amount'])?$prm_batch['gross_amount']:NULL);
-                            $witholding_tax = (isset($prm_batch['witholding_tax'])?$prm_batch['witholding_tax']:NULL);
-                            $net_amount = (isset($prm_batch['net_amount'])?$prm_batch['net_amount']:NULL);
+                            $witholding_tax = (isset($prm_batch['wht'])?$prm_batch['wht']:NULL);
+                            $net_amount = (isset($prm_batch['net_of_amount'])?$prm_batch['net_of_amount']:NULL);
                             $temporary_request_id = $request_id+$key;
         
                             $new_transaction = Transaction::create([
@@ -1162,7 +1159,7 @@ class GenericMethod{
                                 , "interest" => (($interest)?$interest:NULL)
                                 , "cwt" => (($cwt)?$cwt:NULL)
                                 , "principal" => (($principal)?$principal:NULL)
-                                , "net_of_amount" => (($net_of_amount)?$net_of_amount:NULL)
+                                , "net_amount" => (($net_of_amount)?$net_of_amount:NULL)
                                 , "cheque_date" => (($cheque_date)?$cheque_date:NULL)
                                 , "release_date" => $fields['document']['release_date']
                                 , "batch_no" => $fields['document']['batch_no']
@@ -2262,16 +2259,13 @@ class GenericMethod{
         public function validate_duplicate_prm_multiple_transaction($prm_group,$fields){
 
             $error_summary = [];
-
+            $company_id = $fields['document']['company']['id'];
+            $supplier_id = $fields['document']['supplier']['id'];
             foreach($prm_group as $k=>$prm_group_detail){
-                $company_id = $fields['document']['company']['id'];
-                $supplier_id = $fields['document']['supplier']['id'];
-                $category = $fields['document']['category']['name'];
-                $cheque_date = $prm_group_detail['cheque_date'];
-                $cheque_date = $prm_group_detail['cheque_date'];
+                $period_covered = $prm_group_detail['period_covered'];
                 $cheque_date = $prm_group_detail['cheque_date'];
 
-               $duplicate_transaction = GenericMethod::is_duplicate_prm_multiple_leasing($company_id,$supplier_id,$category,$release_date,$batch_no,$cheque_date);
+               $duplicate_transaction = GenericMethod::is_duplicate_prm_multiple($company_id,$supplier_id,$period_covered,$cheque_date);
                
                if($duplicate_transaction){
                     $error_details =[

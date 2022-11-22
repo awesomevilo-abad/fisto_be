@@ -9,6 +9,7 @@ use App\Methods\PADValidationMethod;
 use App\Methods\GenericMethod;
 use App\Models\Transaction;
 use App\Models\POBatch;
+use App\Models\Tagging;
 use App\Models\RequestorLogs;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\TransactionResource;
@@ -390,7 +391,7 @@ class TransactionController extends Controller
         ->latest('updated_at')
         ->paginate($rows);
 
-        TransactionIndex::collection($transactions);
+       return TransactionIndex::collection($transactions);
 
         if (count($transactions)) return $this->resultResponse('fetch', 'Transaction', $transactions);
         return $this->resultResponse('not-found', 'Transaction', []);

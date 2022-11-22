@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Models\POBatch;
+use App\Models\Tagging;
 
 class TransactionIndex extends JsonResource
 {
@@ -18,6 +19,10 @@ class TransactionIndex extends JsonResource
 
        $this->state = $this->stateChange($this->state);
         
+       $is_editable_prm = (Tagging::where('transaction_id',$this->transaction_id)
+       ->whereNotIn('status',['tag-return','tag-void'])
+       ->exists())?1:0;
+
         $is_latest = 0;
         if(!empty($this->po_details)){
           if($this->po_details->last()!= null){
@@ -37,6 +42,7 @@ class TransactionIndex extends JsonResource
                 $transaction_obj = $transactions_ids->pluck(['transaction_ids']);
                 $transaction_obj = $transaction_obj->filter();
 
+
                 if(!empty($transaction_obj->last())) { 
 
                     if($transaction_obj->last()){
@@ -48,6 +54,7 @@ class TransactionIndex extends JsonResource
                             "id"=> $this->id,
                             "tag_no"=> $this->tag_no,
                             "is_latest_transaction"=> $is_latest,
+                            "is_editable_prm"=> $is_editable_prm,
                             "users_id"=>  $this->users_id,
                             "request_id"=> $this->request_id,
                             "supplier_id"=> $this->supplier_id,
@@ -79,6 +86,7 @@ class TransactionIndex extends JsonResource
             "id"=> $this->id,
             "tag_no"=> $this->tag_no,
             "is_latest_transaction"=> $is_latest,
+            "is_editable_prm"=> $is_editable_prm,
             "users_id"=>  $this->users_id,
             "request_id"=> $this->request_id,
             "supplier_id"=> $this->supplier_id,
