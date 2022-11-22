@@ -88,16 +88,17 @@ class BankController extends Controller
       if (!$specific_bank) {
         return $this->resultResponse('not-found','Bank',[]);
       } else {
-        $bank_validateCodeDuplicate = Bank::withTrashed()->where('code', $fields['code'])->first();
+        $bank_validateCodeDuplicate = Bank::withTrashed()->where('code', $fields['code'])->where('id','<>',$id)->first();
+
         if (!empty($bank_validateCodeDuplicate)) {
           return $this->resultResponse('registered','Code',["error_field" => "code"]);
         }
-        $bank_validateBranchDuplicate = Bank::withTrashed()->where('branch', $fields['branch'])->first();
+        $bank_validateBranchDuplicate = Bank::withTrashed()->where('branch', $fields['branch'])->where('id','<>',$id)->first();
     
         if (!empty($bank_validateBranchDuplicate)) {
           return $this->resultResponse('registered','Branch',["error_field" => "branch"]);
         }
-        $bank_validateAccountNoDuplicate = Bank::withTrashed()->where('account_no', $fields['account_no'])->first();
+        $bank_validateAccountNoDuplicate = Bank::withTrashed()->where('account_no', $fields['account_no'])->where('id','<>',$id)->first();
         if (!empty($bank_validateAccountNoDuplicate)) {
           return $this->resultResponse('registered','Account number',["error_field" => "account_no"]);
         }
@@ -312,5 +313,17 @@ class BankController extends Controller
     }
     else
       return $this->resultResponse('import-error','Bank',$errorBag);
+  }
+
+  public function bankAccountTitleDropdown(Request $request){
+    $id = $request['id'];
+    
+    $bank_details = Bank::where('account_title_1',$id)->select('id','name','branch')->get();
+    if(!($bank_details)->isEmpty()){
+      return ["banks"=>$bank_details];
+    }
+    return $this->resultResponse('not-found','Bank',[]);
+
+
   }
 }

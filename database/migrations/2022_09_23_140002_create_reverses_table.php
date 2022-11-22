@@ -24,6 +24,8 @@ class CreateReversesTable extends Migration
             $table->date('date_status');
             $table->bigInteger('reason_id')->nullable();
             $table->string('remarks')->nullable();
+            $table->bigInteger('distributed_id')->nullable();
+            $table->string('distributed_name')->nullable();
             $table->timestamps();
         });
     }

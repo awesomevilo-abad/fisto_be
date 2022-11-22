@@ -18,6 +18,8 @@ class Reverse extends Model
         'status',
         'date_status',
         'reason_id',
-        'remarks'
+        'remarks',
+        'distributed_id',
+        'distributed_name'
     ];
 }

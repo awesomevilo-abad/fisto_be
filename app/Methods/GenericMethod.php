@@ -26,6 +26,8 @@ use App\Models\Treasury;
 use App\Models\Cheque;
 use App\Models\Release;
 use App\Models\Transfer;
+use App\Models\Reason;
+use App\Models\Reverse;
 
 use App\Models\UserDocumentCategory;
 use Illuminate\Routing\Route;
@@ -85,9 +87,9 @@ class GenericMethod{
            });
            return ($cheque_details->first()->toArray());
          }
-       }
+        }
        
-       public static function get_account_title_details_latest($id){
+        public static function get_account_title_details_latest($id){
             $account_title_details =  Transaction::with('tag.cheque.account_title')
             ->where('id',$id)
             ->where('status','<>','void')->get();
@@ -112,29 +114,28 @@ class GenericMethod{
         }
 
         public static function get_cheque_details_latest($id){
-        $cheque_details =  Transaction::with('tag.cheque.cheques')
-        ->where('id',$id)
-        ->where('status','<>','void')
-        ->get();
-         $cheque_details = $cheque_details->first()->tag->first()->cheque->first()->cheques;
+            $cheque_details =  Transaction::with('tag.cheque.cheques')
+            ->where('id',$id)
+            ->where('status','<>','void')
+            ->get();
+            $cheque_details = $cheque_details->first()->tag->first()->cheque->first()->cheques;
 
-        if(!($cheque_details)->isEmpty()){
-            $cheque_details = $cheque_details->mapToGroups(function($item,$key){
-            return [[
-                "transaction_type"=>$item['transaction_type']
-                ,"bank"=>[
-                    "id"=>$item['bank_id']
-                    ,"name"=>$item['bank_name']
-                ],
-                "no"=>$item['cheque_no']
-                ,"date"=>$item['cheque_date']
-                ,"amount"=>$item['cheque_amount']
-            ]];
-        });
-        return ($cheque_details->first()->toArray());
+            if(!($cheque_details)->isEmpty()){
+                $cheque_details = $cheque_details->mapToGroups(function($item,$key){
+                return [[
+                    "transaction_type"=>$item['transaction_type']
+                    ,"bank"=>[
+                        "id"=>$item['bank_id']
+                        ,"name"=>$item['bank_name']
+                    ],
+                    "no"=>$item['cheque_no']
+                    ,"date"=>$item['cheque_date']
+                    ,"amount"=>$item['cheque_amount']
+                ]];
+            });
+            return ($cheque_details->first()->toArray());
+            }
         }
-    }
-
 
         public static function floatvalue($val){
             $val = str_replace(",",".",$val);
@@ -431,7 +432,27 @@ class GenericMethod{
 
         public static function reverseTransaction(
             $model,$transaction_id,$tag_no,$reason_remarks,$date_now,
-            $reason_id,$status,$user_role ){
+            $reason_id,$status,$user_role,$distributed_to ){
+            
+            $distributed_id = NULL;
+            $distributed_name = NULL;
+
+            $reverse_reason = Reverse::where('tag_id',$tag_no)
+            ->whereNotNull('reason_id')
+            ->latest('id')
+            ->limit(1)
+            ->get();
+
+            $reverse_reason =  $reverse_reason->first();
+            if($reverse_reason){
+                $reason_id = $reverse_reason->reason_id;
+                $reason_remarks = $reverse_reason->remarks;
+            }
+
+            if(!empty($distributed_to)){
+                $distributed_id=$distributed_to['id'];
+                $distributed_name=$distributed_to['name'];
+            }
       
             $user_info = Auth::user();
             $user_id = $user_info->id;
@@ -448,10 +469,13 @@ class GenericMethod{
                 "date_status"=>$date_now,
                 "reason_id"=>$reason_id,
                 "remarks"=>$reason_remarks,
+                "distributed_id"=>$distributed_id,
+                "distributed_name"=>$distributed_name
             ]);
 
 
         }
+
         public static function transferTransaction($id,$from_user_id,$from_full_name,$to_user_id,$to_full_name){
 
             $transaction = Transaction::where('id',$id)->select('transaction_id','tag_no')->get();
@@ -557,7 +581,7 @@ class GenericMethod{
             if(
                 !(((abs($transaction_amount - $po_total_amount) ) >= 0.00) 
                 && 
-                ((abs($transaction_amount - $po_total_amount) ) <= 1.00)) 
+                ((abs($transaction_amount - $po_total_amount) ) < 1.00)) 
             ){
                 return $errorMessage = GenericMethod::resultLaravelFormat($affeced_field,[$type." amount (".$transaction_amount.") and total PO amount (".$po_total_amount.")  are not equal."]);
             }
@@ -757,6 +781,8 @@ class GenericMethod{
                 "new"=>$current_transaction->getDirty(),    
                 "po_details"=>$po_changes
             ];
+// ---------------------------------------------------------------------------------------------------------------------------------------
+  
         }
 
         public static function arrayPluck($array,$key){
@@ -928,7 +954,6 @@ class GenericMethod{
                     
                 ]);
             }else if($fields['document']['id'] == 5){
-                
                 $new_transaction = Transaction::create([
                     'transaction_id' => $transaction_id
                     , "users_id" => $fields['requestor']['id']
@@ -966,6 +991,267 @@ class GenericMethod{
                     , "date_requested" => $date_requested
                     , "status" => "Pending"
                 ]);
+            }else if($fields['document']['id'] == 3){
+
+                $category = $fields['document']['category']['name'];
+                $prm_group = $fields['prm_group'];
+
+                switch($category){
+                    case 'rental':
+                        $errors = [];
+                        $error_date_format = [];
+                        $error_period_covered = [];
+                        $error_multiple_cheque = [];
+                        $error_amount_per_line = [];
+                        $total_gross = array_sum(array_column($prm_group,"gross_amount"));
+                        $total_cwt = array_sum(array_column($prm_group,"wht"));
+                        $total_net = array_sum(array_column($prm_group,"net_of_amount"));
+                        $total_witholding_and_net = ($total_cwt + $total_net);
+                        $cheque_dates_array = array_column($prm_group, 'cheque_date');
+                        $period_covered_array = array_column($prm_group, 'period_covered');
+                        $error_date_format = GenericMethod::validate_prm_date_range_format($prm_group, $errors);
+                        $error_period_covered = GenericMethod::validate_period_covered($period_covered_array, $errors);
+                        $error_multiple_cheque = GenericMethod::validate_multiple_cheque_dates($cheque_dates_array,$errors);
+                        $error_amount_per_line = GenericMethod::validate_amount_per_line($prm_group, $errors);
+                        $error_duplicate_transaction = GenericMethod::validate_duplicate_prm_multiple_transaction($prm_group,$fields);
+                        $errors =  array_merge($error_date_format, $error_period_covered, $error_multiple_cheque, $error_amount_per_line, $error_duplicate_transaction);
+                        
+                        if($errors){
+                            $errors = collect($errors)->sortBy(['line','description'])->values();
+                            $error_list = ($errors->unique(function ($item) {
+                                return $item['line'].$item['description'];
+                            })->values());
+                            // $error_list =  collect($errors)->unique('description')->all();
+                            return GenericMethod::resultResponse("upload-error","",$error_list );
+                        }
+                        $message_if_error = "Document Amount and Total Gross amount not equal.";
+                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_gross,$message_if_error);
+
+                        // PROCEED RENTAL
+                        return "PROCEED RENTAL";
+                        foreach($prm_group as $key=>$prm_batch){
+                            $period_covered = (isset($prm_batch['period_covered'])?$prm_batch['period_covered']:NULL);
+        
+                            $period_covered_array = explode("-",$period_covered);
+                            $prm_multiple_from =  date("Y-m-d",strtotime(trim($period_covered_array[0])));
+                            $prm_multiple_to =  date("Y-m-d",strtotime(trim($period_covered_array[1])));
+        
+                            $cheque_date = (isset($prm_batch['cheque_date'])?$prm_batch['cheque_date']:NULL);
+                            $gross_amount = (isset($prm_batch['gross_amount'])?$prm_batch['gross_amount']:NULL);
+                            $witholding_tax = (isset($prm_batch['witholding_tax'])?$prm_batch['witholding_tax']:NULL);
+                            $net_amount = (isset($prm_batch['net_amount'])?$prm_batch['net_amount']:NULL);
+                            $temporary_request_id = $request_id+$key;
+        
+                            $new_transaction = Transaction::create([
+                                'transaction_id' => $transaction_id
+                                , "users_id" => $fields['requestor']['id']
+                                , "id_prefix" => $fields['requestor']['id_prefix']
+                                , "id_no" => $fields['requestor']['id_no']
+                                , "first_name" => $fields['requestor']['first_name']
+                                , "middle_name" => $fields['requestor']['middle_name']
+                                , "last_name" => $fields['requestor']['last_name']
+                                , "suffix" => $fields['requestor']['suffix']
+                                , "department_details" => $fields['requestor']['department']
+                                , "document_id" => $fields['document']['id']
+                                , "category_id" => $fields['document']['category']['id']
+                                , "category" => $fields['document']['category']['name']
+                                , "company_id" => $fields['document']['company']['id']
+                                , "company" => $fields['document']['company']['name']
+                                , "department_id" => $fields['document']['department']['id']
+                                , "department" => $fields['document']['department']['name']
+                                , "location_id" => $fields['document']['location']['id']
+                                , "location" => $fields['document']['location']['name']
+                                , "supplier_id" => $fields['document']['supplier']['id']
+                                , "supplier" => $fields['document']['supplier']['name']
+                                , "payment_type" => $fields['document']['payment_type']
+                                , "document_no" => $fields['document']['no']
+                                , "document_date" => $fields['document']['date']
+                                , "document_amount" => $fields['document']['amount']
+                                , "remarks" => $fields['document']['remarks']
+                                , "document_type" => $fields['document']['name']
+                                , "po_total_amount" => $po_total_amount
+                                , "request_id" => (($temporary_request_id)?$temporary_request_id:NULL)
+                                , "tagging_tag_id" => 0
+                                , "date_requested" => $date_requested
+                                , "status" => "Pending"
+                                , "period_covered" => (($period_covered)?$period_covered:NULL)
+                                , "prm_multiple_from" => (($prm_multiple_from)?$prm_multiple_from:NULL)
+                                , "prm_multiple_to" => (($prm_multiple_to)?$prm_multiple_to:NULL)
+                                , "cheque_date" => (($cheque_date)?$cheque_date:NULL)
+                                , "gross_amount" => (($gross_amount)?$gross_amount:NULL)
+                                , "witholding_tax" => (($witholding_tax)?$witholding_tax:NULL)
+                                , "net_amount" => (($net_amount)?$net_amount:NULL)
+                                , "total_gross" => (($total_gross)?$total_gross:NULL)
+                                , "total_cwt" => (($total_cwt)?$total_cwt:NULL)
+                                , "total_net" => (($total_net)?$total_net:NULL)
+                            ]);
+        
+                        }
+                    break;
+                    
+                    case 'leasing':
+
+                        $errors = [];
+                        $error_multiple_cheque = [];
+                        $error_amount_per_line = [];
+                        $error_duplicate_transaction = [];
+                        $total_principal = array_sum(array_column($prm_group,"principal"));
+                        $cheque_dates_array = array_column($prm_group, 'cheque_date');
+                        $error_multiple_cheque = GenericMethod::validate_multiple_cheque_dates($cheque_dates_array,$errors);
+                        $error_amount_per_line = GenericMethod::validate_amount_per_line_leasing($prm_group, $errors);
+                        $error_duplicate_transaction = GenericMethod::validate_duplicate_prm_multiple_transaction_leasing_and_loans($prm_group,$fields);
+                        $errors =  array_merge($error_multiple_cheque, $error_amount_per_line, $error_duplicate_transaction);
+                        
+                        if($errors){
+                            $errors = collect($errors)->sortBy(['line','description'])->values();
+                            $error_list = ($errors->unique(function ($item) {
+                                return $item['line'].$item['description'];
+                            })->values());
+                            // $error_list =  collect($errors)->unique('description')->all();
+                            return GenericMethod::resultResponse("upload-error","",$error_list );
+                        }
+                        $message_if_error = "Document amount and total principal amount not equal.";
+                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_principal,$message_if_error);
+
+                        if($validate_document_amount){
+                            return $validate_document_amount;
+                        }
+                        // PROCEED LEASING
+                        foreach($prm_group as $key=>$prm_batch){
+                            $amortization = (isset($prm_batch['amortization'])?$prm_batch['amortization']:NULL);
+                            $interest = (isset($prm_batch['interest'])?$prm_batch['interest']:NULL);
+                            $cwt = (isset($prm_batch['cwt'])?$prm_batch['cwt']:NULL);
+                            $principal = (isset($prm_batch['principal'])?$prm_batch['principal']:NULL);
+                            $net_of_amount = (isset($prm_batch['net_of_amount'])?$prm_batch['net_of_amount']:NULL);
+                            $cheque_date = (isset($prm_batch['cheque_date'])?$prm_batch['cheque_date']:NULL);
+                            $temporary_request_id = $request_id+$key;
+        
+                            $new_transaction = Transaction::create([
+                                'transaction_id' => $transaction_id
+                                , "users_id" => $fields['requestor']['id']
+                                , "id_prefix" => $fields['requestor']['id_prefix']
+                                , "id_no" => $fields['requestor']['id_no']
+                                , "first_name" => $fields['requestor']['first_name']
+                                , "middle_name" => $fields['requestor']['middle_name']
+                                , "last_name" => $fields['requestor']['last_name']
+                                , "suffix" => $fields['requestor']['suffix']
+                                , "department_details" => $fields['requestor']['department']
+                                , "document_id" => $fields['document']['id']
+                                , "category_id" => $fields['document']['category']['id']
+                                , "category" => $fields['document']['category']['name']
+                                , "company_id" => $fields['document']['company']['id']
+                                , "company" => $fields['document']['company']['name']
+                                , "department_id" => $fields['document']['department']['id']
+                                , "department" => $fields['document']['department']['name']
+                                , "location_id" => $fields['document']['location']['id']
+                                , "location" => $fields['document']['location']['name']
+                                , "supplier_id" => $fields['document']['supplier']['id']
+                                , "supplier" => $fields['document']['supplier']['name']
+                                , "payment_type" => $fields['document']['payment_type']
+                                , "document_no" => $fields['document']['no']
+                                , "document_date" => $fields['document']['date']
+                                , "document_amount" => $fields['document']['amount']
+                                , "remarks" => $fields['document']['remarks']
+                                , "document_type" => $fields['document']['name']
+                                , "po_total_amount" => $po_total_amount
+                                , "request_id" => (($temporary_request_id)?$temporary_request_id:NULL)
+                                , "tagging_tag_id" => 0
+                                , "date_requested" => $date_requested
+                                , "status" => "Pending"
+                                , "amortization" => (($amortization)?$amortization:NULL)
+                                , "interest" => (($interest)?$interest:NULL)
+                                , "cwt" => (($cwt)?$cwt:NULL)
+                                , "principal" => (($principal)?$principal:NULL)
+                                , "net_of_amount" => (($net_of_amount)?$net_of_amount:NULL)
+                                , "cheque_date" => (($cheque_date)?$cheque_date:NULL)
+                                , "release_date" => $fields['document']['release_date']
+                                , "batch_no" => $fields['document']['batch_no']
+                            ]);
+        
+                        }
+                    break;
+                    
+                    case 'loans':
+
+                        $errors = [];
+                        $error_multiple_cheque = [];
+                        $error_amount_per_line = [];
+                        $error_duplicate_transaction = [];
+                        $total_principal = array_sum(array_column($prm_group,"principal"));
+                        $cheque_dates_array = array_column($prm_group, 'cheque_date');
+                        $error_multiple_cheque = GenericMethod::validate_multiple_cheque_dates($cheque_dates_array,$errors);
+                    //   return  $error_amount_per_line = GenericMethod::validate_amount_per_line_loans($prm_group, $errors);
+                        $error_duplicate_transaction = GenericMethod::validate_duplicate_prm_multiple_transaction_leasing_and_loans($prm_group,$fields);
+                        $errors =  array_merge($error_multiple_cheque, $error_amount_per_line, $error_duplicate_transaction);
+                        
+                        if($errors){
+                            $errors = collect($errors)->sortBy(['line','description'])->values();
+                            $error_list = ($errors->unique(function ($item) {
+                                return $item['line'].$item['description'];
+                            })->values());
+                            // $error_list =  collect($errors)->unique('description')->all();
+                            return GenericMethod::resultResponse("upload-error","",$error_list );
+                        }
+                        $message_if_error = "Document amount and total principal amount not equal.";
+                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_principal,$message_if_error);
+
+                        if($validate_document_amount){
+                            return $validate_document_amount;
+                        }
+                        // PROCEED LOANS
+                        foreach($prm_group as $key=>$prm_batch){
+                            $principal = (isset($prm_batch['principal'])?$prm_batch['principal']:NULL);
+                            $interest = (isset($prm_batch['interest'])?$prm_batch['interest']:NULL);
+                            $cwt = (isset($prm_batch['cwt'])?$prm_batch['cwt']:NULL);
+                            $net_of_amount = (isset($prm_batch['net_of_amount'])?$prm_batch['net_of_amount']:NULL);
+                            $cheque_date = (isset($prm_batch['cheque_date'])?$prm_batch['cheque_date']:NULL);
+                            $temporary_request_id = $request_id+$key;
+        
+                            $new_transaction = Transaction::create([
+                                'transaction_id' => $transaction_id
+                                , "users_id" => $fields['requestor']['id']
+                                , "id_prefix" => $fields['requestor']['id_prefix']
+                                , "id_no" => $fields['requestor']['id_no']
+                                , "first_name" => $fields['requestor']['first_name']
+                                , "middle_name" => $fields['requestor']['middle_name']
+                                , "last_name" => $fields['requestor']['last_name']
+                                , "suffix" => $fields['requestor']['suffix']
+                                , "department_details" => $fields['requestor']['department']
+                                , "document_id" => $fields['document']['id']
+                                , "category_id" => $fields['document']['category']['id']
+                                , "category" => $fields['document']['category']['name']
+                                , "company_id" => $fields['document']['company']['id']
+                                , "company" => $fields['document']['company']['name']
+                                , "department_id" => $fields['document']['department']['id']
+                                , "department" => $fields['document']['department']['name']
+                                , "location_id" => $fields['document']['location']['id']
+                                , "location" => $fields['document']['location']['name']
+                                , "supplier_id" => $fields['document']['supplier']['id']
+                                , "supplier" => $fields['document']['supplier']['name']
+                                , "payment_type" => $fields['document']['payment_type']
+                                , "document_no" => $fields['document']['no']
+                                , "document_date" => $fields['document']['date']
+                                , "document_amount" => $fields['document']['amount']
+                                , "remarks" => $fields['document']['remarks']
+                                , "document_type" => $fields['document']['name']
+                                , "po_total_amount" => $po_total_amount
+                                , "request_id" => (($temporary_request_id)?$temporary_request_id:NULL)
+                                , "tagging_tag_id" => 0
+                                , "date_requested" => $date_requested
+                                , "status" => "Pending"
+                                , "principal" => (($principal)?$principal:NULL)
+                                , "interest" => (($interest)?$interest:NULL)
+                                , "cwt" => (($cwt)?$cwt:NULL)
+                                , "net_of_amount" => (($net_of_amount)?$net_of_amount:NULL)
+                                , "cheque_date" => (($cheque_date)?$cheque_date:NULL)
+                                , "release_date" => $fields['document']['release_date']
+                                , "batch_no" => $fields['document']['batch_no']
+                            ]);
+        
+                        }
+                    break;
+                }
+
             }
             else{
                 $new_transaction = Transaction::create([
@@ -978,7 +1264,6 @@ class GenericMethod{
                     , "last_name" => $fields['requestor']['last_name']
                     , "suffix" => $fields['requestor']['suffix']
                     , "department_details" => $fields['requestor']['department']
-        
                     , "document_id" => $fields['document']['id']
                     , "category_id" => $fields['document']['category']['id']
                     , "category" => $fields['document']['category']['name']
@@ -996,9 +1281,7 @@ class GenericMethod{
                     , "document_amount" => $fields['document']['amount']
                     , "remarks" => $fields['document']['remarks']
                     , "document_type" => $fields['document']['name']
-        
                     , "po_total_amount" => $po_total_amount
-        
                     , "request_id" => $request_id
                     , "tagging_tag_id" => 0
                     , "date_requested" => $date_requested
@@ -1009,11 +1292,6 @@ class GenericMethod{
             GenericMethod::insertRequestorLogs($new_transaction->id,$transaction_id,$date_requested,$fields['document']['remarks'],$fields['requestor']['id'],$status,NULL,NULL,NULL);
 
             return $new_transaction;
-            // if($new_transaction->count()>1){
-            //     return GenericMethod::resultLaravelFormat('po_group.no',"The PO number has already been taken.: ".$validateTransactionCount->pluck('po_no')->implode(','));
-            // }
-
-
         }
 
         public static function updateTransaction($transaction_id,$po_total_amount=0,
@@ -1285,22 +1563,48 @@ class GenericMethod{
             $voucher_no = (isset($voucher_no)?$voucher_no:NULL);
             $voucher_month = (isset($voucher_month)?$voucher_month:NULL);
 
+            if(in_array($status,['reverse-receive-approver','reverse-receive-requestor','reverse-approve','reverse-return'])){
+               $reason_details = Reverse::where('transaction_id',$transaction_id)->latest()->get()->first();
+               $reason_id =  $reason_details->reason_id;
+               $reason =  Reason::where('id',$reason_id)->select('reason')->first()->reason;
+               $reason_remarks =  $reason_details->remarks;
+               
+            }
             DB::table('transactions')
                 ->where('transaction_id', $transaction_id)
-                ->update([
-                    'status' => $status
-                    ,'state' => $state
-                    ,'tag_no' => $tag_no
-                    ,'reason_id' => $reason_id
-                    ,'reason' => $reason
-                    ,'reason_remarks' => $reason_remarks
-                    ,'voucher_no' => $voucher_no
-                    ,'voucher_month' => $voucher_month
-                    ,'distributed_id' => $distributed_id
-                    ,'distributed_name' => $distributed_name
-                    ,'approver_id' => $approver_id
-                    ,'approver_name' => $approver_name
-                ]);
+                ->when($status == "reverse-request", function($query)  use($status,$state,$tag_no,$reason_id,$reason,$reason_remarks
+                ,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name){
+                    $query->update([
+                        'status' => $status
+                        ,'state' => $state
+                        ,'tag_no' => $tag_no
+                        ,'reason_id' => $reason_id
+                        ,'reason' => $reason
+                        ,'reason_remarks' => $reason_remarks
+                        ,'voucher_no' => $voucher_no
+                        ,'voucher_month' => $voucher_month
+                        ,'reverse_distributed_id' => $distributed_id
+                        ,'reverse_distributed_name' => $distributed_name
+                        ,'approver_id' => $approver_id
+                        ,'approver_name' => $approver_name
+                    ]);
+                }, function($query) use($status,$state,$tag_no,$reason_id,$reason,$reason_remarks
+                ,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name){
+                    $query->update([
+                        'status' => $status
+                        ,'state' => $state
+                        ,'tag_no' => $tag_no
+                        ,'reason_id' => $reason_id
+                        ,'reason' => $reason
+                        ,'reason_remarks' => $reason_remarks
+                        ,'voucher_no' => $voucher_no
+                        ,'voucher_month' => $voucher_month
+                        ,'distributed_id' => $distributed_id
+                        ,'distributed_name' => $distributed_name
+                        ,'approver_id' => $approver_id
+                        ,'approver_name' => $approver_name
+                    ]);
+                });
         }
 
         public static function addAND($array)
@@ -1834,6 +2138,268 @@ class GenericMethod{
     #########################################      VALIDATION           ######################################
     ##########################################################################################################
 
+        public function validate_document_amount($document_amount,$compared_amount, $message){
+            if(round($compared_amount,2) != round($document_amount,2)){
+                throw new FistoLaravelException("The given data was invalid.", 422, NULL, collect(["document.amount"=>[$message]]));
+            }
+        }
+
+        public function checkIfValidDateFormat($date, $original_date){
+
+            if($date == "1970-01-01"){
+                return "$original_date";   
+            }
+        }
+
+        public function validate_prm_date_covered($prm_date_range,$line_no,$errors){
+            $period_covered_array= explode("-",$prm_date_range);
+            $prm_from = $period_covered_array[0];
+            $prm_to = $period_covered_array[1];
+        }
+
+        public function validate_if_date_within_date_range($date,$from_dates,$to_dates,$line_no,$errors=[],$date_type){
+            $error_type="invalid";
+            foreach($from_dates as $k => $v){
+                if($line_no == $k){
+                    // return $line_no." == ".$k;
+                    unset($from_dates[$k]);
+                    unset($to_dates[$k]);
+
+                    $from_date_removal_of_date_input = array_values($from_dates);
+                    $to_date_removal_of_date_input = array_values($to_dates);
+
+                    foreach($from_date_removal_of_date_input as $j => $h){
+                        if(isset($from_date_removal_of_date_input[$j]) AND isset($to_date_removal_of_date_input[$j])){
+                            if(($date >= $from_date_removal_of_date_input[$j]) AND ($date <= $to_date_removal_of_date_input[$j])){
+                                $error_details =[
+                                    "error_type"=>$error_type,
+                                    "line"=>$line_no+1,
+                                    "description"=>$date_type." Date conflicted with other dates."
+                                ];
+                                array_push($errors, $error_details);
+                                // echo 'Line: '.($line_no+1) .' (From Date),  '.$date.' conflicted to Line: '.($j+2).', '.$from_dates[$j+1].' - '.$to_dates[$j+1];
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return $errors;
+        }
+
+        public function validate_amount_per_line($prm_group,$errors){
+            $error_summary = [];
+            foreach($prm_group as $k=>$prm_batch){
+                $error_type = "invalid";
+                if(($prm_batch['gross_amount'] != ($prm_batch['wht']+$prm_batch['net_of_amount']))){
+                    $error_details =[
+                        "error_type"=>$error_type,
+                        "line"=>$k+1,
+                        "description"=>"Gross and computed witholding and & net of amount not equal."
+                    ];
+                    array_push($error_summary, $error_details);
+                }
+
+            }
+            return $error_summary;
+        }
+
+        public function validate_amount_per_line_leasing($prm_group,$errors){
+            $error_summary = [];
+            foreach($prm_group as $k=>$prm_batch){
+                $error_type = "invalid";
+                if(($prm_batch['amortization'] != ($prm_batch['interest']+$prm_batch['principal']))){
+                    $error_details =[
+                        "error_type"=>$error_type,
+                        "line"=>$k+1,
+                        "description"=>"Amortization and interest and principal amount not equal."
+                    ];
+                    array_push($error_summary, $error_details);
+                }
+
+            }
+            return $error_summary;
+        }
+
+        public function validate_amount_per_line_loans($prm_group,$errors){
+            $error_summary = [];
+            foreach($prm_group as $k=>$prm_batch){
+                $error_type = "invalid";
+                if((round($prm_batch['net_of_amount'],2) != ((round($prm_batch['interest'],2)+round($prm_batch['principal'],2))-round($prm_batch['cwt'],2)))){
+                // if((floor($prm_batch['net_of_amount']) != ((floor($prm_batch['interest'])+floor($prm_batch['principal']))-floor($prm_batch['cwt'])))){
+                    $error_details =[
+                        "error_type"=>$error_type,
+                        "line"=>$k+1,
+                        "description"=>"Net of amount ".round($prm_batch['net_of_amount'])." and interest, principal and cwt amount ".((round($prm_batch['interest'])+round($prm_batch['principal']))-round($prm_batch['cwt']))." not equal."
+                    ];
+                    array_push($error_summary, $error_details);
+                }
+
+            }
+            return $error_summary;
+        }
+
+        public function is_duplicate_prm_multiple($company_id,$supplier_id,$period_covered,$cheque_date){
+
+            return $transaction = Transaction::where('company_id',$company_id)
+            ->where('supplier_id',$supplier_id)
+            ->where('period_covered',$period_covered)
+            ->where('cheque_date',$cheque_date)
+            ->exists();
+        }
+
+        public function is_duplicate_prm_multiple_leasing_and_loans($company_id,$supplier_id,$category,$release_date,$batch_no,$cheque_date){
+
+            return $transaction = Transaction::where('company_id',$company_id)
+            ->where('supplier_id',$supplier_id)
+            ->where('category',$category)
+            ->where('release_date',$release_date)
+            ->where('batch_no',$batch_no)
+            ->where('cheque_date',$cheque_date)
+            ->exists();
+        }
+
+        public function validate_duplicate_prm_multiple_transaction($prm_group,$fields){
+
+            $error_summary = [];
+
+            foreach($prm_group as $k=>$prm_group_detail){
+                $company_id = $fields['document']['company']['id'];
+                $supplier_id = $fields['document']['supplier']['id'];
+                $category = $fields['document']['category']['name'];
+                $cheque_date = $prm_group_detail['cheque_date'];
+                $cheque_date = $prm_group_detail['cheque_date'];
+                $cheque_date = $prm_group_detail['cheque_date'];
+
+               $duplicate_transaction = GenericMethod::is_duplicate_prm_multiple_leasing($company_id,$supplier_id,$category,$release_date,$batch_no,$cheque_date);
+               
+               if($duplicate_transaction){
+                    $error_details =[
+                        "error_type"=>"existing",
+                        "line"=>$k+1,
+                        "description"=>"Transaction details already exist."
+                    ];
+                    array_push($error_summary, $error_details);
+               } 
+
+            }
+            return $error_summary;
+        }
+        
+        public function validate_duplicate_prm_multiple_transaction_leasing_and_loans($prm_group,$fields){
+
+            $error_summary = [];
+            $category =  $fields['document']['category']['name'];
+            $release_date =  $fields['document']['release_date'];
+            $batch_no =  $fields['document']['batch_no'];
+
+            foreach($prm_group as $k=>$prm_group_detail){
+                $company_id = $fields['document']['company']['id'];
+                $supplier_id = $fields['document']['supplier']['id'];
+                $cheque_date = $prm_group_detail['cheque_date'];
+
+               $duplicate_transaction = GenericMethod::is_duplicate_prm_multiple_leasing_and_loans($company_id,$supplier_id,$category,$release_date,$batch_no,$cheque_date);
+               
+               if($duplicate_transaction){
+                    $error_details =[
+                        "error_type"=>"existing",
+                        "line"=>$k+1,
+                        "description"=>"Transaction details already exist."
+                    ];
+                    array_push($error_summary, $error_details);
+               } 
+
+            }
+            return $error_summary;
+        }
+
+        public function validate_multiple_cheque_dates($cheque_dates,$errors){
+            $error_type="duplicate";
+
+            foreach($cheque_dates as $k=>$v){
+                $date = $v;
+                foreach($cheque_dates as $j => $u){
+                    if($k == $j){
+                        unset($cheque_dates[$j]);
+    
+                        $cheque_dates_removal_of_date_input = $cheque_dates;
+    
+                        foreach($cheque_dates_removal_of_date_input as $l => $w)
+                        {
+                            if(($date == $cheque_dates_removal_of_date_input[$l])){
+                                $error_details =[
+                                    "error_type"=>$error_type,
+                                    "line"=>($k+1) .' & '.($l+1),
+                                    "description"=>"Cheque date has a duplicate in your excel file"
+                                ];
+                                array_push($errors, $error_details);
+                            }
+                        }
+                    }
+                }
+            }
+            return $errors;
+        }
+        
+        public function validate_period_covered($period_covered_array,$errors){
+
+           $period_covered_array = array_map(function($values){
+                $batch = explode("-",$values);
+                $from = date("Y-m-d",strtotime(trim(isset($batch[0])?$batch[0]:"0")));
+                $to = date("Y-m-d",strtotime(trim(isset($batch[1])?$batch[1]:"0")));
+                return ["from"=>$from,
+                "to"=>$to];
+            },$period_covered_array);
+
+            $from_array = array_column($period_covered_array,"from");
+            $to_array = array_column($period_covered_array,"to");
+
+            foreach ($period_covered_array as $k=>$value){
+                $errors = GenericMethod::validate_if_date_within_date_range($from_array[$k],$from_array,$to_array,$k,$errors,"From");
+                $errors  = GenericMethod::validate_if_date_within_date_range($to_array[$k],$from_array,$to_array,$k,$errors,"To");
+            }
+            return ($errors);
+        }
+
+        public function validate_prm_date_range_format($prm_group, $errors){
+
+            $error_summary = [];
+            $error_invalid_prm_from = [];
+            $error_invalid_prm_to = [];
+            
+            foreach($prm_group as $k=>$value){
+                
+                $period_covered_array= explode("-",$value['period_covered']);
+                
+                $prm_from = isset($period_covered_array[0])?(($period_covered_array[0]=="")?"1970-01-01":$period_covered_array[0]):"1970-01-01";
+                $prm_to = isset($period_covered_array[1])?(($period_covered_array[1]=="")?"1970-01-01":$period_covered_array[1]):"1970-01-01";
+    
+                $invalid_prm_from =  GenericMethod::checkIfValidDateFormat(date("Y-m-d",strtotime($prm_from)),$prm_from);
+                $invalid_prm_to = GenericMethod::checkIfValidDateFormat(date("Y-m-d",strtotime($prm_to)),$prm_to);
+                $error_type = "invalid";
+
+                if($invalid_prm_from){
+                    $error_details =[
+                        "error_type"=>$error_type,
+                        "line"=>$k+1,
+                        "description"=>"Invalid from date format"
+                    ];
+                    array_push($error_invalid_prm_from, $error_details);
+                }
+                
+                if($invalid_prm_to){
+                    $error_details =[
+                        "error_type"=>$error_type,
+                        "line"=>$k+1,
+                        "description"=>"Invalid to date format"
+                    ];
+                    array_push($error_invalid_prm_to, $error_details);
+                }
+            }
+            $error_summary = array_merge($error_invalid_prm_from,$error_invalid_prm_to);
+            return $error_summary;
+        }
+
         public static function voucherNoValidationUponSaving($voucher_no,$id){
             $transaction = Transaction::where('voucher_no',$voucher_no)
             ->when($id, function ($query) use ($id){
@@ -2007,13 +2573,17 @@ class GenericMethod{
                         'document.payroll.category',
                         'document.from',
                         'document.to',
+                        'document.company.id',
+                        'document.supplier.id',
                     ],
                     [
                         ["Payroll type has already been taken."],
                         ["Payroll client has already been taken."],
                         ["Payroll category has already been taken."],
-                        ["from has already been taken."],
-                        ["to date has already been taken."]
+                        ["From has already been taken."],
+                        ["To date has already been taken."],
+                        ["Company has already been taken."],
+                        ["Supplier has already been taken."]
                     ]
                 );
             }
@@ -2031,7 +2601,6 @@ class GenericMethod{
                 return GenericMethod::resultLaravelFormat('document.reference.no',["Reference number already exist."]);
             }
         }
-
         
         public static function getAndValidatePOBalance($company_id,$po_no,float $reference_amount,$po_group,$id=0){
              $balance_po_ref_amount = Transaction::leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
@@ -2434,12 +3003,20 @@ class GenericMethod{
             ];
             return response($arrayResponse,$code);
         }
+        public static function error($code,$message,$data){
+            $arrayResponse = [
+                "code" => $code,
+                "message" =>$message,
+                "errors" => $data,
+            ];
+            return response($arrayResponse,$code);
+        }
 
         public static function resultResponse($action,$modelName,$data=[]){
             $modelName = ucfirst(strtolower($modelName));
             switch($action){
             case('not-equal'):
-                return GenericMethod::result(422,$modelName." amount not equal.",[]);
+                return GenericMethod::error(422,$modelName." amount not equal.",[]);
             break;
             case('receive'):
                 return GenericMethod::result(200,"Transaction has been received.",[]);
@@ -2544,6 +3121,10 @@ class GenericMethod{
             
             case('import-error'):
                 throw new FistoException("No ".Str::plural(strtolower($modelName))." were imported. Kindly check the errors.", 409, NULL, $data);
+            break;
+            
+            case('upload-error'):
+                return GenericMethod::result(422,"The given data was invalid..",$data);
             break;
             
             case('import-format'):

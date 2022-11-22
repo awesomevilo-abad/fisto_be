@@ -15,6 +15,9 @@ class TransactionIndex extends JsonResource
      */
     public function toArray($request)
     {
+
+       $this->state = $this->stateChange($this->state);
+        
         $is_latest = 0;
         if(!empty($this->po_details)){
           if($this->po_details->last()!= null){
@@ -64,6 +67,7 @@ class TransactionIndex extends JsonResource
                             "referrence_no"=> $this->referrence_no,
                             "referrence_amount"=> $this->referrence_amount,
                             "status"=> $this->state,
+                            "state"=> $this->status,
                             "users"=> $this->users,
                             "po_details"=> $this->po_details
                         ];
@@ -94,11 +98,48 @@ class TransactionIndex extends JsonResource
             "referrence_no"=> $this->referrence_no,
             "referrence_amount"=> $this->referrence_amount,
             "status"=> $this->state,
+            "state"=> $this->status,
             "users"=> $this->users,
             "po_details"=> $this->po_details
         ];
        }
        
        return $transactions_details;
+    }
+
+    public function stateChange($state){
+
+        switch($state){
+            case "tag":
+                    $state = "Tagged";
+            break;
+            case "request":
+            case "pending":
+                    $state = "Pending";
+            break;
+            case "hold":
+                    $state = "Held";
+            break;
+            case "transmit":
+                    $state = "Transmitted";
+            break;
+            case "receive-approver":
+                    $state = "Received";
+            break;
+            case "receive-requestor":
+                    $state = "Received";
+            break;
+            
+            default:
+                if(str_ends_with($state,"e")){
+                    $state = ucfirst($state.'d');
+                }else if(str_ends_with($state,"g")){
+                    $state = ucfirst($state);
+                }else{
+                    $state = ucfirst($state.'ed');
+                }
+        }
+
+        return $state;
     }
 }

@@ -88,8 +88,28 @@ class Transaction extends Model
         ,"referrence_amount"
         ,"referrence_qty"
         ,"referrence_id"
+        ,"period_covered"
+        ,"prm_multiple_from" 
+        ,"prm_multiple_to"
+        ,"cheque_date"
+        ,"gross_amount"
+        ,"witholding_tax"
+        ,"net_amount"
+        ,"total_gross"
+        ,"total_cwt"
+        ,"total_net"
+        
+        ,"release_date"
+        ,"batch_no"
+        ,"amortization"
+        ,"interest"
+        ,"cwt"
+        ,"principal"
 
     ];
+
+
+    
 
     protected $attributes = [
         "status"=>"Pending",

@@ -442,7 +442,7 @@ class TransactionFlow{
                 return GenericMethod::resultResponse('invalid-access','','');
             }
             $state= $subprocess;
-            GenericMethod::reverseTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$role);
+            GenericMethod::reverseTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$role,$distributed_to);
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
             return GenericMethod::resultResponse($state,'','');
         }

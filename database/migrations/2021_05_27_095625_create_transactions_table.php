@@ -87,6 +87,8 @@ class CreateTransactionsTable extends Migration
             $table->string('distributed_name')->nullable();
             $table->bigInteger('approver_id')->nullable();
             $table->string('approver_name')->nullable();
+            $table->bigInteger('reverse_distributed_id')->nullable();
+            $table->string('reverse_distributed_name')->nullable();
 
             // $table->timestamps();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));

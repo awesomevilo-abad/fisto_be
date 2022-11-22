@@ -32,6 +32,7 @@ class TransactionResource extends JsonResource
         $previous_balance=0;
         $first_transaction_keys = [];
         $keys = [];
+        $reverse_distributor = [];
 
        $transaction =  Transaction::with('tag.voucher.account_title')
         ->with('tag.approve')
@@ -170,6 +171,8 @@ class TransactionResource extends JsonResource
             $reverse_user_role= (isset($reverse->user_role)?$reverse->user_role:NULL);
             $reverse_user_id= (isset($reverse->user_id)?$reverse->user_id:NULL);
             $reverse_user_name= (isset($reverse->user_name)?$reverse->user_name:NULL);
+            $reverse_distributed_id= (isset($reverse->distributed_id)?$reverse->distributed_id:NULL);
+            $reverse_distributed_name= (isset($reverse->distributed_name)?$reverse->distributed_name:NULL);
           
         
             }
@@ -532,17 +535,23 @@ class TransactionResource extends JsonResource
                                 ,"remarks"=>$item['remarks']
                                 ]
                             ];
-                    });
-
-
+                });
                 $account_title= $voucher_account_title->values();
+
+                if(!($account_title->isEmpty())){
+                    $account_title = $account_title->first();
+                }else{
+                    $account_title = [];
+                }
             }
             
             if(isset($transaction_tag_distributed_id)){
-                $approver = [
-                    "id"=>$voucher_approver_id,
-                    "name"=>$voucher_approver_name
-                ];
+                if($voucher_approver_id){
+                    $approver = [
+                        "id"=>$voucher_approver_id,
+                        "name"=>$voucher_approver_name
+                    ];
+                }
             }
 
             if(isset($voucher_reason_id)){
@@ -624,7 +633,7 @@ class TransactionResource extends JsonResource
                                 // "id"=>$item['treasury_id']
                                 "type"=>"Cheque"
                                 ,"bank"=>[
-                                        "id"=>$item['bank_id'],
+                                        "id"=>intval($item['bank_id']),
                                         "name"=>$item['bank_name'],
                                     ]
                                 ,"no"=>$item['cheque_no'],
@@ -764,12 +773,30 @@ class TransactionResource extends JsonResource
                 ];
             }
 
+            if(isset($reverse_distributed_id)){
+                $reverse_distributor = [
+                        "id"=>$reverse_distributed_id,
+                        "name"=>$reverse_distributed_name
+                    ];
+            }
+
             $reverse_description = [
+                "status"=>$reverse_status,
+                "date"=>$reverse_date,
+                "modified_by"=>$modified_by,
+                "reason"=>$reason,
+                "distributed_to"=>$reverse_distributor
+            ];
+
+            if($reverse_status != "reverse-request"){
+                $reverse_description = [
                     "status"=>$reverse_status,
                     "date"=>$reverse_date,
                     "modified_by"=>$modified_by,
-                    "reason"=>$reason
+                    "reason"=>$reason,
                 ];
+            }
+
 
         }
         

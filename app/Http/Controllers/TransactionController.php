@@ -108,7 +108,7 @@ class TransactionController extends Controller
         })
         ->when(in_array($role,$request_window),function($query) use($status,$department){
             $query->when(strtoupper($status) == "PENDING", function ($query){
-                $query->whereNotIn('status',['requestor-void','tag-hold','tag-void','tag-return']);
+                $query->whereNotIn('status',['requestor-void','tag-return']);
             },function ($query) use($status){
                 $query->when(strtolower($status) == "return-return", function ($query) use ($status){
                     $query->whereIn('status',['tag-return']);
@@ -168,7 +168,7 @@ class TransactionController extends Controller
                                 $query->whereIn('status',['file-file']);
                             },function ($query) use($status){
                                 $query->when(strtolower($status) == 'reverse-request',function ($query) use ($status){
-                                    $query->whereIn('status',['reverse-request','reverse-receive-approver']);
+                                    $query->whereIn('status',['reverse-request']);
                                 },function ($query) use($status){
                                     $query->when(strtolower($status) == "return-return", function ($query) use ($status){
                                         $query->whereIn('status',['voucher-return']);
@@ -219,29 +219,33 @@ class TransactionController extends Controller
         ->when(in_array($role,$voucher_window),function($query) use ($users_id,$status){
             $query->when(strtolower($status) == "voucher-receive", function ($query) {
                 $query->whereIn('status',['voucher-receive','voucher-unhold','voucher-unreturn']);
-            }, function ($query) use ($status) {
+            }, function ($query) use ($users_id, $status) {
                 $query->when(strtolower($status) == "pending", function ($query){
                     $query->whereIn('status',['tag-tag']);
-                },function ($query) use($status){
+                },function ($query) use($users_id, $status){
                     $query->when(strtolower($status) == "pending-transmit", function ($query){
                         $query->whereIn('status',['approve-approve']);
-                    }, function ($query) use ($status){
+                    }, function ($query) use ($users_id, $status){
                         $query->when(strtolower($status) == "pending-file", function ($query){
                             $query->whereIn('status',['release-release']);
-                        },function ($query) use ($status){
-                            $query->when(strtolower($status) == "pending-request",function($query){
+                        },function ($query) use ($users_id, $status){
+                            $query->when(strtolower($status) == "pending-request",function($query) use ($users_id){
                                 $query->whereIn('status',['reverse-request']);
-                            },function ($query) use($status){
-                                $query->when(strtolower($status) == "return-return", function ($query) use ($status){
-                                    $query->whereIn('status',['cheque-return','approve-return']);
-                                },function ($query) use ($status){
-                                    $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
-                                        $query->whereIn('status',['cheque-hold','approve-hold']);
-                                     },function ($query) use($status){
-                                        $query->when(strtolower($status) == "return-void", function ($query) use ($status){
-                                            $query->whereIn('status',['cheque-void','approve-void']);
-                                        },function ($query) use($status){
-                                            $query->where('status',preg_replace('/\s+/', '', $status));
+                            },function($query) use($users_id, $status){
+                                $query->when(strtolower($status) == "reverse-receive-approver", function($query){
+                                    $query->whereIn('status',['reverse-receive-approver']);
+                                },function ($query) use($status){
+                                    $query->when(strtolower($status) == "return-return", function ($query) use ($status){
+                                        $query->whereIn('status',['cheque-return','approve-return']);
+                                    },function ($query) use ($status){
+                                        $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
+                                            $query->whereIn('status',['cheque-hold','approve-hold']);
+                                         },function ($query) use($status){
+                                            $query->when(strtolower($status) == "return-void", function ($query) use ($status){
+                                                $query->whereIn('status',['cheque-void','approve-void']);
+                                            },function ($query) use($status){
+                                                $query->where('status',preg_replace('/\s+/', '', $status));
+                                            });
                                         });
                                     });
                                 });
@@ -280,7 +284,12 @@ class TransactionController extends Controller
                 'distributed_id',
                 'distributed_name'
             ])
-            ->where('distributed_id',$users_id);
+            ->when(in_array(strtolower($status),["pending-request","reverse-receive-approver","reverse-approve"]), function($query) use($users_id){
+                $query->where('reverse_distributed_id', $users_id);
+            }, function ($query) use($users_id){
+                $query->where('distributed_id',$users_id);
+            });
+            
         })
         ->when(in_array($role,$approve_window),function($query) use ($users_id,$status){
             $query->when(strtolower($status) == "approve-receive", function ($query) {
@@ -381,7 +390,7 @@ class TransactionController extends Controller
         ->latest('updated_at')
         ->paginate($rows);
 
-         TransactionIndex::collection($transactions);
+        TransactionIndex::collection($transactions);
 
         if (count($transactions)) return $this->resultResponse('fetch', 'Transaction', $transactions);
         return $this->resultResponse('not-found', 'Transaction', []);
@@ -453,6 +462,17 @@ class TransactionController extends Controller
                 if(isset($transaction->transaction_id)){
                    return $this->resultResponse('save','Transaction',[]);
                 }
+            break;
+
+            case 3: // PRM Multiple
+                GenericMethod::documentNoValidation($request['document']['no']);
+                $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
+                $request_id,$date_requested,$fields);
+                
+                if(isset($transaction->transaction_id)){
+                   return $this->resultResponse('save','Transaction',[]);
+                }
+                return $transaction;
             break;
 
             case 6: //Utilities
