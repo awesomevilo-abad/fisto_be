@@ -993,6 +993,17 @@ class GenericMethod{
                 ]);
             }else if($fields['document']['id'] == 3){
 
+                if(isset($fields['transaction'])){
+                    $transaction_id = $fields['transaction']['no'];
+                    $is_transacted = Tagging::where('transaction_id',$transaction_id)
+                    ->whereNotIn('status',['tag-return','tag-void'])
+                    ->exists();
+                    if($is_transacted){
+                        return "On Going Transaction";
+                    }
+                    Transaction::where('transaction_id',$transaction_id)->delete();
+                }
+
                 $category = $fields['document']['category']['name'];
                 $prm_group = $fields['prm_group'];
 
@@ -1012,7 +1023,7 @@ class GenericMethod{
                         $error_date_format = GenericMethod::validate_prm_date_range_format($prm_group, $errors);
                         $error_period_covered = GenericMethod::validate_period_covered($period_covered_array, $errors);
                         $error_multiple_cheque = GenericMethod::validate_multiple_cheque_dates($cheque_dates_array,$errors);
-                        $error_amount_per_line = GenericMethod::validate_amount_per_line($prm_group, $errors);
+                        // $error_amount_per_line = GenericMethod::validate_amount_per_line($prm_group, $errors);
                         $error_duplicate_transaction = GenericMethod::validate_duplicate_prm_multiple_transaction($prm_group,$fields);
                         $errors =  array_merge($error_date_format, $error_period_covered, $error_multiple_cheque, $error_amount_per_line, $error_duplicate_transaction);
                         
@@ -1095,7 +1106,7 @@ class GenericMethod{
                         $total_principal = array_sum(array_column($prm_group,"principal"));
                         $cheque_dates_array = array_column($prm_group, 'cheque_date');
                         $error_multiple_cheque = GenericMethod::validate_multiple_cheque_dates($cheque_dates_array,$errors);
-                        $error_amount_per_line = GenericMethod::validate_amount_per_line_leasing($prm_group, $errors);
+                        // $error_amount_per_line = GenericMethod::validate_amount_per_line_leasing($prm_group, $errors);
                         $error_duplicate_transaction = GenericMethod::validate_duplicate_prm_multiple_transaction_leasing_and_loans($prm_group,$fields);
                         $errors =  array_merge($error_multiple_cheque, $error_amount_per_line, $error_duplicate_transaction);
                         
@@ -1177,7 +1188,7 @@ class GenericMethod{
                         $total_principal = array_sum(array_column($prm_group,"principal"));
                         $cheque_dates_array = array_column($prm_group, 'cheque_date');
                         $error_multiple_cheque = GenericMethod::validate_multiple_cheque_dates($cheque_dates_array,$errors);
-                    //   return  $error_amount_per_line = GenericMethod::validate_amount_per_line_loans($prm_group, $errors);
+                     //   return  $error_amount_per_line = GenericMethod::validate_amount_per_line_loans($prm_group, $errors);
                         $error_duplicate_transaction = GenericMethod::validate_duplicate_prm_multiple_transaction_leasing_and_loans($prm_group,$fields);
                         $errors =  array_merge($error_multiple_cheque, $error_amount_per_line, $error_duplicate_transaction);
                         
@@ -1293,6 +1304,12 @@ class GenericMethod{
 
         public static function updateTransaction($transaction_id,$po_total_amount=0,
         $request_id,$date_requested,$fields,$balance_po_ref_amount=0,$changes){
+            
+            if($fields['document']['name'] == "PRM Multiple"){
+                $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount=0,$request_id,
+                $date_requested,$fields,$balance_po_ref_amount=0);
+                return $transaction;
+             }
 
             $currentTransaction = Transaction::with('po_details')->where('id',$transaction_id)->first();
             $currentTransaction->isClean();
@@ -1404,15 +1421,10 @@ class GenericMethod{
             $currentTransaction->referrence_no = $reference_no;
             $currentTransaction->referrence_amount = $reference_amount;
             $currentTransaction->balance_po_ref_amount = $balance_po_ref_amount;
-           
 
-        // if(count($currentTransaction->getDirty()) == 0){
-        //     return "Nothing Has Changed";
-        //   }else{
-                $currentTransaction->save();
-                GenericMethod::insertRequestorLogs($transaction_id,$fields['transaction']['no'],$date_requested,$fields['document']['remarks'],$fields['requestor']['id'],$status,NULL,NULL,NULL,$changes);
-                return $currentTransaction;
-        //   }
+            $currentTransaction->save();
+            GenericMethod::insertRequestorLogs($transaction_id,$fields['transaction']['no'],$date_requested,$fields['document']['remarks'],$fields['requestor']['id'],$status,NULL,NULL,NULL,$changes);
+            return $currentTransaction;
         }
         
         public static function validateIfNothingChangeThenSave($model,$modelName,$is_tagged_array_modified=0){
@@ -2192,7 +2204,7 @@ class GenericMethod{
                     $error_details =[
                         "error_type"=>$error_type,
                         "line"=>$k+1,
-                        "description"=>"Gross and computed witholding and & net of amount not equal."
+                        "description"=>"Gross and computed withholding & net of amount not equal."
                     ];
                     array_push($error_summary, $error_details);
                 }
@@ -2209,7 +2221,7 @@ class GenericMethod{
                     $error_details =[
                         "error_type"=>$error_type,
                         "line"=>$k+1,
-                        "description"=>"Amortization and interest and principal amount not equal."
+                        "description"=>"Amortization and interest & principal amount not equal."
                     ];
                     array_push($error_summary, $error_details);
                 }
@@ -2227,7 +2239,7 @@ class GenericMethod{
                     $error_details =[
                         "error_type"=>$error_type,
                         "line"=>$k+1,
-                        "description"=>"Net of amount ".round($prm_batch['net_of_amount'])." and interest, principal and cwt amount ".((round($prm_batch['interest'])+round($prm_batch['principal']))-round($prm_batch['cwt']))." not equal."
+                        "description"=>"Net of amount ".round($prm_batch['net_of_amount'])." and interest, principal & cwt amount ".((round($prm_batch['interest'])+round($prm_batch['principal']))-round($prm_batch['cwt']))." not equal."
                     ];
                     array_push($error_summary, $error_details);
                 }
@@ -2434,13 +2446,13 @@ class GenericMethod{
             }
         }
         
-        public static function documentNoValidationUpdate($doc_no,$id){
+        public static function documentNoValidationUpdate($doc_no,$id,$transaction_id=null){
             if(!isset($doc_no)){
                 
                 throw new FistoException("Document number is empty.", 404, NULL, []);
             }
             
-            if(TransactionValidationMethod::validateIfDocumentNoExistUpdate($doc_no,$id) > 0){
+            if(TransactionValidationMethod::validateIfDocumentNoExistUpdate($doc_no,$id,$transaction_id) > 0){
                 throw new FistoLaravelException("The given data was invalid.", 422, NULL, collect(["document.no"=>["The Document number has already been taken."]]));
             }
         }
@@ -3117,6 +3129,10 @@ class GenericMethod{
                 throw new FistoException("No ".Str::plural(strtolower($modelName))." were imported. Kindly check the errors.", 409, NULL, $data);
             break;
             
+            case('ongoing'):
+                return GenericMethod::result(422,"On-going Transaction encountered.",[]);
+            break;
+
             case('upload-error'):
                 return GenericMethod::result(422,"The given data was invalid..",$data);
             break;

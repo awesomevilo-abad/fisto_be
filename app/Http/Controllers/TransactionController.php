@@ -687,6 +687,25 @@ class TransactionController extends Controller
                }
             break;
 
+            
+            case 3: //PRM Multiple
+                $po_total_amount=NULL;
+               GenericMethod::documentNoValidationUpdate($request['document']['no'],$id,$request['transaction']['no']);
+               $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+               $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
+               $request_id,$date_requested,$request,0,$changes);
+
+               if($transaction == "Nothing Has Changed"){
+                   return $this->resultResponse('nothing-has-changed',"Transaction",[]);
+               }else if($transaction == "On Going Transaction"){
+                return GenericMethod::resultResponse("ongoing","",[] );
+               }
+               
+               if(isset($transaction->transaction_id)){
+                  return $this->resultResponse('update','Transaction',[]);
+               }
+            break;
+
             case 6: //Utilities
                 $po_total_amount=NULL;
                 $duplicateUtilities = GenericMethod::validateTransactionByDateRange(
