@@ -325,7 +325,7 @@ class TransactionResource extends JsonResource
                         $document['prm_multiple_to'] = $this->prm_multiple_to;
                         $document['gross_amount'] = $this->gross_amount;
                         $document['witholding_tax'] = $this->witholding_tax;
-                        $document['net_amount'] = $this->net_amount;
+                        $document['net_of_amount'] = $this->net_amount;
                         $document['cheque_date'] = $this->cheque_date;
                         break;
                     case "leasing":
@@ -333,14 +333,14 @@ class TransactionResource extends JsonResource
                         $document['principal'] = $this->principal;
                         $document['interest'] = $this->interest;
                         $document['cwt'] = $this->cwt;
-                        $document['net_amount'] = $this->net_amount;
+                        $document['net_of_amount'] = $this->net_amount;
                         $document['cheque_date'] = $this->cheque_date;
                     break;
                     case "loans":
                         $document['principal'] = $this->principal;
                         $document['interest'] = $this->interest;
                         $document['cwt'] = $this->cwt;
-                        $document['net_amount'] = $this->net_amount;
+                        $document['net_of_amount'] = $this->net_amount;
                         $document['cheque_date'] = $this->cheque_date;
                     break;
                 }
