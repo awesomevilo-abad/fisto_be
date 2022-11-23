@@ -866,13 +866,13 @@ class TransactionResource extends JsonResource
         if($this->document_type == "PRM Multiple"){
             switch($this->category){
                 case "rental":
-                    $prm_fields = Transaction::where('transaction_id',$this->transaction_id)->select(["status","period_covered","gross_amount","witholding_tax","net_amount","cheque_date"])->get();
+                    $prm_fields = Transaction::where('transaction_id',$this->transaction_id)->select(["status","period_covered","gross_amount","witholding_tax","net_amount as net_of_amount","cheque_date"])->get();
                 break;
                 case "leasing":
-                    $prm_fields = Transaction::where('transaction_id',$this->transaction_id)->select(["status","amortization","principal","interest","cwt","net_amount","cheque_date"])->get();
+                    $prm_fields = Transaction::where('transaction_id',$this->transaction_id)->select(["status","amortization","principal","interest","cwt","net_amount as net_of_amount","cheque_date"])->get();
                 break;
                 case "loans":
-                    $prm_fields = Transaction::where('transaction_id',$this->transaction_id)->select(["status","principal","interest","cwt","net_amount","cheque_date"])->get();
+                    $prm_fields = Transaction::where('transaction_id',$this->transaction_id)->select(["status","principal","interest","cwt","net_amount as net_of_amount","cheque_date"])->get();
                 break;
             }
            $prm_group = $prm_fields;
