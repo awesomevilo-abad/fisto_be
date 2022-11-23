@@ -293,6 +293,8 @@ class TransactionResource extends JsonResource
                     ,"date"=>$this->document_date
                     ,"payment_type"=>$this->payment_type
                     ,"amount"=>$this->document_amount
+                    ,"release_date"=>$this->release_date
+                    ,"batch_no"=>$this->batch_no
                     ,"remarks"=>$this->remarks
                     ,"category"=>[
                         "id"=>$this->category_id,

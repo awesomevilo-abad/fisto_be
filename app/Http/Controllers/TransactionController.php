@@ -391,7 +391,7 @@ class TransactionController extends Controller
         ->latest('updated_at')
         ->paginate($rows);
 
-       return TransactionIndex::collection($transactions);
+        TransactionIndex::collection($transactions);
 
         if (count($transactions)) return $this->resultResponse('fetch', 'Transaction', $transactions);
         return $this->resultResponse('not-found', 'Transaction', []);

@@ -1415,7 +1415,7 @@ class GenericMethod{
         //   }
         }
         
-        public function validateIfNothingChangeThenSave($model,$modelName,$is_tagged_array_modified=0){
+        public static function validateIfNothingChangeThenSave($model,$modelName,$is_tagged_array_modified=0){
             // return $model->isClean().'&&'.$is_tagged_array_modified;
             if($model->isClean() && $is_tagged_array_modified == 0){
               return GenericMethod::resultResponse('nothing-has-changed',$modelName,[]);
@@ -2135,26 +2135,26 @@ class GenericMethod{
     #########################################      VALIDATION           ######################################
     ##########################################################################################################
 
-        public function validate_document_amount($document_amount,$compared_amount, $message){
+        public static function validate_document_amount($document_amount,$compared_amount, $message){
             if(round($compared_amount,2) != round($document_amount,2)){
                 throw new FistoLaravelException("The given data was invalid.", 422, NULL, collect(["document.amount"=>[$message]]));
             }
         }
 
-        public function checkIfValidDateFormat($date, $original_date){
+        public static function checkIfValidDateFormat($date, $original_date){
 
             if($date == "1970-01-01"){
                 return "$original_date";   
             }
         }
 
-        public function validate_prm_date_covered($prm_date_range,$line_no,$errors){
+        public static function validate_prm_date_covered($prm_date_range,$line_no,$errors){
             $period_covered_array= explode("-",$prm_date_range);
             $prm_from = $period_covered_array[0];
             $prm_to = $period_covered_array[1];
         }
 
-        public function validate_if_date_within_date_range($date,$from_dates,$to_dates,$line_no,$errors=[],$date_type){
+        public static function validate_if_date_within_date_range($date,$from_dates,$to_dates,$line_no,$errors=[],$date_type){
             $error_type="invalid";
             foreach($from_dates as $k => $v){
                 if($line_no == $k){
@@ -2184,7 +2184,7 @@ class GenericMethod{
             return $errors;
         }
 
-        public function validate_amount_per_line($prm_group,$errors){
+        public static function validate_amount_per_line($prm_group,$errors){
             $error_summary = [];
             foreach($prm_group as $k=>$prm_batch){
                 $error_type = "invalid";
@@ -2201,7 +2201,7 @@ class GenericMethod{
             return $error_summary;
         }
 
-        public function validate_amount_per_line_leasing($prm_group,$errors){
+        public static function validate_amount_per_line_leasing($prm_group,$errors){
             $error_summary = [];
             foreach($prm_group as $k=>$prm_batch){
                 $error_type = "invalid";
@@ -2218,7 +2218,7 @@ class GenericMethod{
             return $error_summary;
         }
 
-        public function validate_amount_per_line_loans($prm_group,$errors){
+        public static function validate_amount_per_line_loans($prm_group,$errors){
             $error_summary = [];
             foreach($prm_group as $k=>$prm_batch){
                 $error_type = "invalid";
@@ -2236,7 +2236,7 @@ class GenericMethod{
             return $error_summary;
         }
 
-        public function is_duplicate_prm_multiple($company_id,$supplier_id,$period_covered,$cheque_date){
+        public static function is_duplicate_prm_multiple($company_id,$supplier_id,$period_covered,$cheque_date){
 
             return $transaction = Transaction::where('company_id',$company_id)
             ->where('supplier_id',$supplier_id)
@@ -2245,7 +2245,7 @@ class GenericMethod{
             ->exists();
         }
 
-        public function is_duplicate_prm_multiple_leasing_and_loans($company_id,$supplier_id,$category,$release_date,$batch_no,$cheque_date){
+        public static function is_duplicate_prm_multiple_leasing_and_loans($company_id,$supplier_id,$category,$release_date,$batch_no,$cheque_date){
 
             return $transaction = Transaction::where('company_id',$company_id)
             ->where('supplier_id',$supplier_id)
@@ -2256,7 +2256,7 @@ class GenericMethod{
             ->exists();
         }
 
-        public function validate_duplicate_prm_multiple_transaction($prm_group,$fields){
+        public static function validate_duplicate_prm_multiple_transaction($prm_group,$fields){
 
             $error_summary = [];
             $company_id = $fields['document']['company']['id'];
@@ -2280,7 +2280,7 @@ class GenericMethod{
             return $error_summary;
         }
         
-        public function validate_duplicate_prm_multiple_transaction_leasing_and_loans($prm_group,$fields){
+        public static function validate_duplicate_prm_multiple_transaction_leasing_and_loans($prm_group,$fields){
 
             $error_summary = [];
             $category =  $fields['document']['category']['name'];
@@ -2307,7 +2307,7 @@ class GenericMethod{
             return $error_summary;
         }
 
-        public function validate_multiple_cheque_dates($cheque_dates,$errors){
+        public static function validate_multiple_cheque_dates($cheque_dates,$errors){
             $error_type="duplicate";
 
             foreach($cheque_dates as $k=>$v){
@@ -2335,7 +2335,7 @@ class GenericMethod{
             return $errors;
         }
         
-        public function validate_period_covered($period_covered_array,$errors){
+        public static function validate_period_covered($period_covered_array,$errors){
 
            $period_covered_array = array_map(function($values){
                 $batch = explode("-",$values);
@@ -2355,7 +2355,7 @@ class GenericMethod{
             return ($errors);
         }
 
-        public function validate_prm_date_range_format($prm_group, $errors){
+        public static function validate_prm_date_range_format($prm_group, $errors){
 
             $error_summary = [];
             $error_invalid_prm_from = [];
@@ -2445,7 +2445,7 @@ class GenericMethod{
             }
         }
             
-        public function getEmptyErrorBag($tableName,$index,$errorBag) {
+        public static function getEmptyErrorBag($tableName,$index,$errorBag) {
             foreach($tableName as $key=>$value){
                 if(empty($value)){
                 $errorBag[] = [
