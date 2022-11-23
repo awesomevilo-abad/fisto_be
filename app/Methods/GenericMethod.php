@@ -1239,7 +1239,7 @@ class GenericMethod{
                                 , "principal" => (($principal)?$principal:NULL)
                                 , "interest" => (($interest)?$interest:NULL)
                                 , "cwt" => (($cwt)?$cwt:NULL)
-                                , "net_of_amount" => (($net_of_amount)?$net_of_amount:NULL)
+                                , "net_amount" => (($net_of_amount)?$net_of_amount:NULL)
                                 , "cheque_date" => (($cheque_date)?$cheque_date:NULL)
                                 , "release_date" => $fields['document']['release_date']
                                 , "batch_no" => $fields['document']['batch_no']
