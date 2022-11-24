@@ -583,7 +583,7 @@ class GenericMethod{
                 && 
                 ((abs($transaction_amount - $po_total_amount) ) < 1.00)) 
             ){
-                return $errorMessage = GenericMethod::resultLaravelFormat($affeced_field,[$type." amount (".$transaction_amount.") and total PO amount (".$po_total_amount.")  are not equal."]);
+                return $errorMessage = GenericMethod::resultLaravelFormat($affeced_field,[$type." amount and total po amount are not equal."]);
             }
         }
 
@@ -1073,7 +1073,7 @@ class GenericMethod{
                                 , "supplier" => $fields['document']['supplier']['name']
                                 , "payment_type" => $fields['document']['payment_type']
                                 , "document_no" => $fields['document']['no']
-                                , "document_date" => $fields['document']['date']
+                                , "document_date" => (isset($fields['document']['date'])?$fields['document']['date']:NULL)
                                 , "document_amount" => $fields['document']['amount']
                                 , "remarks" => $fields['document']['remarks']
                                 , "document_type" => $fields['document']['name']
@@ -1157,7 +1157,7 @@ class GenericMethod{
                                 , "supplier" => $fields['document']['supplier']['name']
                                 , "payment_type" => $fields['document']['payment_type']
                                 , "document_no" => $fields['document']['no']
-                                , "document_date" => $fields['document']['date']
+                                , "document_date" => (isset($fields['document']['date'])?$fields['document']['date']:NULL)
                                 , "document_amount" => $fields['document']['amount']
                                 , "remarks" => $fields['document']['remarks']
                                 , "document_type" => $fields['document']['name']
@@ -1238,7 +1238,7 @@ class GenericMethod{
                                 , "supplier" => $fields['document']['supplier']['name']
                                 , "payment_type" => $fields['document']['payment_type']
                                 , "document_no" => $fields['document']['no']
-                                , "document_date" => $fields['document']['date']
+                                , "document_date" => (isset($fields['document']['date'])?$fields['document']['date']:NULL)
                                 , "document_amount" => $fields['document']['amount']
                                 , "remarks" => $fields['document']['remarks']
                                 , "document_type" => $fields['document']['name']
