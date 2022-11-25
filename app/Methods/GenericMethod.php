@@ -1001,7 +1001,6 @@ class GenericMethod{
                     if($is_transacted){
                         return "On Going Transaction";
                     }
-                    Transaction::where('transaction_id',$transaction_id)->delete();
                 }
 
                 $category = $fields['document']['category']['name'];
@@ -1020,6 +1019,17 @@ class GenericMethod{
                         $total_witholding_and_net = ($total_cwt + $total_net);
                         $cheque_dates_array = array_column($prm_group, 'cheque_date');
                         $period_covered_array = array_column($prm_group, 'period_covered');
+
+                        $message_if_error = "Document Amount and Total Gross amount not equal.";
+                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_gross,$message_if_error);
+                        if($validate_document_amount){
+                            return $validate_document_amount;
+                        }
+
+                        if(isset($fields['transaction'])){
+                            Transaction::where('transaction_id',$transaction_id)->delete();
+                        }
+
                         $error_date_format = GenericMethod::validate_prm_date_range_format($prm_group, $errors);
                         $error_period_covered = GenericMethod::validate_period_covered($period_covered_array, $errors);
                         $error_multiple_cheque = GenericMethod::validate_multiple_cheque_dates($cheque_dates_array,$errors);
@@ -1035,9 +1045,7 @@ class GenericMethod{
                             // $error_list =  collect($errors)->unique('description')->all();
                             return GenericMethod::resultResponse("upload-error","",$error_list );
                         }
-                        $message_if_error = "Document Amount and Total Gross amount not equal.";
-                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_gross,$message_if_error);
-
+                 
                         // PROCEED RENTAL
                         foreach($prm_group as $key=>$prm_batch){
                             $period_covered = (isset($prm_batch['period_covered'])?$prm_batch['period_covered']:NULL);
@@ -1105,6 +1113,17 @@ class GenericMethod{
                         $error_duplicate_transaction = [];
                         $total_principal = array_sum(array_column($prm_group,"principal"));
                         $cheque_dates_array = array_column($prm_group, 'cheque_date');
+
+                        $message_if_error = "Document amount and total principal amount not equal.";
+                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_principal,$message_if_error);
+                        if($validate_document_amount){
+                            return $validate_document_amount;
+                        }
+
+                        if(isset($fields['transaction'])){
+                            Transaction::where('transaction_id',$transaction_id)->delete();
+                        }
+
                         $error_multiple_cheque = GenericMethod::validate_multiple_cheque_dates($cheque_dates_array,$errors);
                         // $error_amount_per_line = GenericMethod::validate_amount_per_line_leasing($prm_group, $errors);
                         $error_duplicate_transaction = GenericMethod::validate_duplicate_prm_multiple_transaction_leasing_and_loans($prm_group,$fields);
@@ -1117,12 +1136,6 @@ class GenericMethod{
                             })->values());
                             // $error_list =  collect($errors)->unique('description')->all();
                             return GenericMethod::resultResponse("upload-error","",$error_list );
-                        }
-                        $message_if_error = "Document amount and total principal amount not equal.";
-                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_principal,$message_if_error);
-
-                        if($validate_document_amount){
-                            return $validate_document_amount;
                         }
                         // PROCEED LEASING
                         foreach($prm_group as $key=>$prm_batch){
@@ -1187,6 +1200,20 @@ class GenericMethod{
                         $error_duplicate_transaction = [];
                         $total_principal = array_sum(array_column($prm_group,"principal"));
                         $cheque_dates_array = array_column($prm_group, 'cheque_date');
+
+
+                        $message_if_error = "Document amount and total principal amount not equal.";
+                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_principal,$message_if_error);
+
+                        if($validate_document_amount){
+                            return $validate_document_amount;
+                        }
+                        
+                        if(isset($fields['transaction'])){
+                            Transaction::where('transaction_id',$transaction_id)->delete();
+                        }
+
+
                         $error_multiple_cheque = GenericMethod::validate_multiple_cheque_dates($cheque_dates_array,$errors);
                      //   return  $error_amount_per_line = GenericMethod::validate_amount_per_line_loans($prm_group, $errors);
                         $error_duplicate_transaction = GenericMethod::validate_duplicate_prm_multiple_transaction_leasing_and_loans($prm_group,$fields);
@@ -1199,12 +1226,6 @@ class GenericMethod{
                             })->values());
                             // $error_list =  collect($errors)->unique('description')->all();
                             return GenericMethod::resultResponse("upload-error","",$error_list );
-                        }
-                        $message_if_error = "Document amount and total principal amount not equal.";
-                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_principal,$message_if_error);
-
-                        if($validate_document_amount){
-                            return $validate_document_amount;
                         }
                         // PROCEED LOANS
                         foreach($prm_group as $key=>$prm_batch){
