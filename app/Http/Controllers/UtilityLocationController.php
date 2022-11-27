@@ -16,8 +16,10 @@ class UtilityLocationController extends Controller
     $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
     $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
+    $category = (isset($request['category']))? $request['category']:NULL;
     
-    $utility_locations= UtilityLocation::withTrashed()
+     $utility_locations= UtilityLocation::withTrashed()
+    ->with('credit_cards.utility_categories')
     ->where(function ($query) use ($status){
       ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
     })
@@ -29,6 +31,12 @@ class UtilityLocationController extends Controller
       ->paginate($rows);
     }else if ($paginate == 0){
       $utility_locations = $utility_locations
+      ->when(isset($category), function($query) use ($category){
+        $query->whereHas('credit_cards.utility_categories', function ($query) use($category){
+          $query->where('category',$category);
+        });
+      })
+      ->without('credit_cards')
       ->get(['id','location as name']);
       if(count($utility_locations)==true){
           $utility_locations = array("utility_locations"=>$utility_locations);;

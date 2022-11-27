@@ -30,4 +30,15 @@ class UtilityLocation extends Model
   {
       return $this->belongsTo(AccountNumber::class);
   }
+
+  
+  public function document_categories()
+  {
+      return $this->belongsToMany(Category::class, 'user_document_category','document_id','category_id')->select('categories.id as category_id','categories.name as category_name');
+  }
+
+  public function credit_cards()
+  {
+    return $this->belongsToMany(CreditCard::class, 'credit_card_utility_locations','utility_location_id','credit_card_id');
+  }
 }
