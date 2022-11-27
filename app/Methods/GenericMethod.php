@@ -1369,7 +1369,6 @@ class GenericMethod{
                 $date_requested,$fields,$balance_po_ref_amount=0);
                 return $transaction;
              }
-
             $currentTransaction = Transaction::with('po_details')->where('id',$transaction_id)->first();
             $currentTransaction->isClean();
             $status = 'update';
@@ -1410,7 +1409,7 @@ class GenericMethod{
             $reference_no = (isset($fields['document']['reference']['no'])?$fields['document']['reference']['no']:NULL);
             $reference_amount = (isset($fields['document']['reference']['amount'])?$fields['document']['reference']['amount']:NULL);
             $balance_po_ref_amount = (isset($balance_po_ref_amount)?$balance_po_ref_amount:NULL);
-
+          
             $currentTransaction->transaction_id = $fields['transaction']['no'];
             $currentTransaction->users_id = $fields['requestor']['id'];
             $currentTransaction->id_prefix = $fields['requestor']['id_prefix'];
@@ -1545,6 +1544,26 @@ class GenericMethod{
             }
         }
 
+        
+        public static function update_debit_attachment($request_id,$autoDebit_group,$id){
+            
+            DebitBatch::where('request_id',$request_id)->delete();
+            $autoDebit_count = count($autoDebit_group);
+            for($i=0;$i<$autoDebit_count;$i++){
+                $insert_po_batch = DebitBatch::create([
+                    'request_id' => $request_id,
+                    'pn_no' => $autoDebit_group[$i]['pn_no'],
+                    'interest_from' => $autoDebit_group[$i]['interest_from'],
+                    'interest_to' => $autoDebit_group[$i]['interest_to'],
+                    'outstanding_amount' => $autoDebit_group[$i]['outstanding_amount'],
+                    'interest_rate' => $autoDebit_group[$i]['interest_rate'],
+                    'no_of_days' => $autoDebit_group[$i]['no_of_days'],
+                    'principal_amount' => $autoDebit_group[$i]['principal_amount'],
+                    'interest_due' => $autoDebit_group[$i]['interest_due'],
+                    'cwt' => $autoDebit_group[$i]['cwt'],
+                ]);
+            }
+        }
         
         public static function insertPO($request_id,$po_group,$po_total_amount,$payment_type){
             $po_count = count($po_group);
@@ -2225,13 +2244,25 @@ class GenericMethod{
     ##########################################################################################################
     #########################################      VALIDATION           ######################################
     ##########################################################################################################
+        public static function validate_debit_amount($document_amount,$autoDebit_group, $message){
+            $total_principal = array_sum(array_column($autoDebit_group,"principal_amount"));
+            $total_interest = array_sum(array_column($autoDebit_group,"interest_due"));
+            $total_cwt = array_sum(array_column($autoDebit_group,"cwt"));
+            $total_net = ($total_principal + $total_interest) - $total_cwt;
 
+            if($document_amount != $total_net){
+                throw new FistoLaravelException("The given data was invalid.", 422, NULL, collect(["document.amount"=>[$message]]));
+            }
+        }
     
-        public static function is_duplicate_auto_debit($company_id,$supplier_id,$document_date){
+        public static function is_duplicate_auto_debit($company_id,$supplier_id,$document_date,$id=0){
             return $transaction = Transaction::where('company_id',$company_id)
             ->where('supplier_id',$supplier_id)
             ->where('document_date',$document_date)
             ->where('document_type',"Auto Debit")
+            ->when($id,function ($query) use ($id){
+                $query->where('id','<>',$id);
+            })
             ->exists();
         }
         public static function validate_document_amount($document_amount,$compared_amount, $message){
@@ -2683,9 +2714,9 @@ class GenericMethod{
 
         }
 
-        public static function validateAutoDebit($company_id,$supplier_id,$document_date){
-            $is_duplicate = GenericMethod::is_duplicate_auto_debit($company_id,$supplier_id,$document_date);
-            if(!empty($is_duplicate)){
+        public static function validateAutoDebit($company_id,$supplier_id,$document_date,$id=0){
+            $is_duplicate = GenericMethod::is_duplicate_auto_debit($company_id,$supplier_id,$document_date,$id);
+            if(($is_duplicate)){
                 return GenericMethod::resultLaravelFormat(
                     [
                         'document.date',

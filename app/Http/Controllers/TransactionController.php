@@ -871,11 +871,16 @@ class TransactionController extends Controller
             break;
             
             case 9: //Auto Debit
-               $is_duplicate = GenericMethod::validateAutoDebit($fields['document']['company']['id'],$fields['document']['supplier']['id'],$fields['document']['date']);
-                
+               $po_total_amount=NULL;
+               $is_duplicate = GenericMethod::validateAutoDebit($fields['document']['company']['id'],$fields['document']['supplier']['id'],$fields['document']['date'],$id);
+               if($is_duplicate){
+                    return $this->resultResponse('invalid','',$is_duplicate);
+               }
                
                $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
-
+               
+               GenericMethod::validate_debit_amount($fields['document']['amount'],$fields['autoDebit_group'],"Document amount and net of cwt amount is not equal.");
+               GenericMethod::update_debit_attachment($request_id,$fields['autoDebit_group'],$id);
                $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
                $request_id,$date_requested,$request,0,$changes);
 
