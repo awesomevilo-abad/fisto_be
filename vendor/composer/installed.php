@@ -5,7 +5,7 @@
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '485a989a277d2c275c953072b26f8c028136c06a',
+        'reference' => '11b3206f806d9b0779b722576db66d230afd5d42',
         'name' => 'laravel/laravel',
         'dev' => true,
     ),
@@ -201,6 +201,15 @@
             'aliases' => array(),
             'reference' => '8c3d0a3f6af734494ad8f6fbbee0ba92422859f3',
             'dev_requirement' => true,
+        ),
+        'haruncpi/laravel-id-generator' => array(
+            'pretty_version' => 'v1.1.0',
+            'version' => '1.1.0.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../haruncpi/laravel-id-generator',
+            'aliases' => array(),
+            'reference' => 'b227dc2391ea45e9d070f19d35dc0a5f7a8f4185',
+            'dev_requirement' => false,
         ),
         'illuminate/auth' => array(
             'dev_requirement' => false,
@@ -409,7 +418,7 @@
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '485a989a277d2c275c953072b26f8c028136c06a',
+            'reference' => '11b3206f806d9b0779b722576db66d230afd5d42',
             'dev_requirement' => false,
         ),
         'laravel/sanctum' => array(

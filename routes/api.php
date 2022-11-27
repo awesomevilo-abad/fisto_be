@@ -25,6 +25,7 @@ use App\Http\Controllers\CreditCardController;
 use App\Http\Controllers\PayrollClientController;
 use App\Http\Controllers\PayrollCategoryController;
 use App\Http\Controllers\PayrollTypeController;
+use App\Http\Controllers\CounterReceiptController;
 
 
 
@@ -212,6 +213,13 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::post('transactions/flow/validate-voucher-no',[TransactionFlowController::class,'validateVoucherNo']);
     Route::post('transactions/flow/validate-cheque-no',[TransactionFlowController::class,'validateChequeNo']);
     Route::put('transactions/flow/transfer/{id}',[TransactionFlowController::class, 'transfer']);
+
+    // COUNTER RECEIPT 
+    Route::post('counter-receipts/validate-receipt-no',[CounterReceiptController::class,'validate_receipt']);
+    Route::post('counter-receipts/',[CounterReceiptController::class,'store']);
+    Route::get('counter-receipts/',[CounterReceiptController::class,'index']);
+    Route::get('counter-receipts/{id}',[CounterReceiptController::class,'show']);
+
     // Route::get('transactions/flow/',[TransactionFlowController::class,'pullRequest']);
     // Route::get('transactions/flow/{id}',[TransactionFlowController::class,'pullSingleRequest']);
     // Route::post('transactions/flow/update-status/{id}',[TransactionFlowController::class,'receivedRequest']);

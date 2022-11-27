@@ -132,6 +132,10 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
             'Illuminate\\Support\\' => 19,
             'Illuminate\\' => 11,
         ),
+        'H' => 
+        array (
+            'Haruncpi\\LaravelIdGenerator\\' => 28,
+        ),
         'G' => 
         array (
             'GuzzleHttp\\Psr7\\' => 16,
@@ -408,6 +412,10 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         array (
             0 => __DIR__ . '/..' . '/laravel/framework/src/Illuminate',
         ),
+        'Haruncpi\\LaravelIdGenerator\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/haruncpi/laravel-id-generator/src',
+        ),
         'GuzzleHttp\\Psr7\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
@@ -527,6 +535,7 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'App\\Http\\Controllers\\CategoryController' => __DIR__ . '/../..' . '/app/Http/Controllers/CategoryController.php',
         'App\\Http\\Controllers\\CompanyController' => __DIR__ . '/../..' . '/app/Http/Controllers/CompanyController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
+        'App\\Http\\Controllers\\CounterReceiptController' => __DIR__ . '/../..' . '/app/Http/Controllers/CounterReceiptController.php',
         'App\\Http\\Controllers\\CreditCardController' => __DIR__ . '/../..' . '/app/Http/Controllers/CreditCardController.php',
         'App\\Http\\Controllers\\DepartmentController' => __DIR__ . '/../..' . '/app/Http/Controllers/DepartmentController.php',
         'App\\Http\\Controllers\\DocumentController' => __DIR__ . '/../..' . '/app/Http/Controllers/DocumentController.php',
@@ -561,6 +570,7 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'App\\Http\\Middleware\\VerifyCsrfToken' => __DIR__ . '/../..' . '/app/Http/Middleware/VerifyCsrfToken.php',
         'App\\Http\\Middleware\\isAdmin' => __DIR__ . '/../..' . '/app/Http/Middleware/isAdmin.php',
         'App\\Http\\Requests\\AccountNumberRequest' => __DIR__ . '/../..' . '/app/Http/Requests/AccountNumberRequest.php',
+        'App\\Http\\Requests\\CounterReceiptRequest' => __DIR__ . '/../..' . '/app/Http/Requests/CounterReceiptRequest.php',
         'App\\Http\\Requests\\CreditCardRequest' => __DIR__ . '/../..' . '/app/Http/Requests/CreditCardRequest.php',
         'App\\Http\\Requests\\PODetailsRequest' => __DIR__ . '/../..' . '/app/Http/Requests/PODetailsRequest.php',
         'App\\Http\\Requests\\TransactionPostRequest' => __DIR__ . '/../..' . '/app/Http/Requests/TransactionPostRequest.php',
@@ -571,6 +581,7 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'App\\Http\\Resources\\TransactionIndex' => __DIR__ . '/../..' . '/app/Http/Resources/TransactionIndex.php',
         'App\\Http\\Resources\\TransactionResource' => __DIR__ . '/../..' . '/app/Http/Resources/TransactionResource.php',
         'App\\Http\\Resources\\UserResource' => __DIR__ . '/../..' . '/app/Http/Resources/UserResource.php',
+        'App\\Methods\\CounterReceiptMethod' => __DIR__ . '/../..' . '/app/Methods/CounterReceiptMethod.php',
         'App\\Methods\\GenericMethod' => __DIR__ . '/../..' . '/app/Methods/GenericMethod.php',
         'App\\Methods\\MasterlistMethod' => __DIR__ . '/../..' . '/app/Methods/MasterlistMethod.php',
         'App\\Methods\\PADValidationMethod' => __DIR__ . '/../..' . '/app/Methods/PADValidationMethod.php',
@@ -590,6 +601,7 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'App\\Models\\ChequeReleased' => __DIR__ . '/../..' . '/app/Models/ChequeReleased.php',
         'App\\Models\\ChequeTable' => __DIR__ . '/../..' . '/app/Models/ChequeTable.php',
         'App\\Models\\Company' => __DIR__ . '/../..' . '/app/Models/Company.php',
+        'App\\Models\\CounterReceipt' => __DIR__ . '/../..' . '/app/Models/CounterReceipt.php',
         'App\\Models\\CreditCard' => __DIR__ . '/../..' . '/app/Models/CreditCard.php',
         'App\\Models\\DebitBatch' => __DIR__ . '/../..' . '/app/Models/DebitBatch.php',
         'App\\Models\\Department' => __DIR__ . '/../..' . '/app/Models/Department.php',
@@ -1695,6 +1707,9 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'Hamcrest\\Type\\IsString' => __DIR__ . '/..' . '/hamcrest/hamcrest-php/hamcrest/Hamcrest/Type/IsString.php',
         'Hamcrest\\Util' => __DIR__ . '/..' . '/hamcrest/hamcrest-php/hamcrest/Hamcrest/Util.php',
         'Hamcrest\\Xml\\HasXPath' => __DIR__ . '/..' . '/hamcrest/hamcrest-php/hamcrest/Hamcrest/Xml/HasXPath.php',
+        'Haruncpi\\LaravelIdGenerator\\IdGenerator' => __DIR__ . '/..' . '/haruncpi/laravel-id-generator/src/IdGenerator.php',
+        'Haruncpi\\LaravelIdGenerator\\IdGeneratorServiceProvider' => __DIR__ . '/..' . '/haruncpi/laravel-id-generator/src/IdGeneratorServiceProvider.php',
+        'Haruncpi\\LaravelIdGenerator\\Traits\\IdFactory' => __DIR__ . '/..' . '/haruncpi/laravel-id-generator/src/Traits/IdFactory.php',
         'Illuminate\\Auth\\Access\\AuthorizationException' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Auth/Access/AuthorizationException.php',
         'Illuminate\\Auth\\Access\\Events\\GateEvaluated' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Auth/Access/Events/GateEvaluated.php',
         'Illuminate\\Auth\\Access\\Gate' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Auth/Access/Gate.php',
