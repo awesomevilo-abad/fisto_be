@@ -34,8 +34,9 @@ class TransactionResource extends JsonResource
         $first_transaction_keys = [];
         $keys = [];
         $reverse_distributor = [];
+        $autoDebit_group = [];
 
-       $transaction =  Transaction::with('tag.voucher.account_title')
+        $transaction =  Transaction::with('tag.voucher.account_title')
         ->with('tag.approve')
         ->with('tag.transmit')
         ->with('tag.cheque.cheques')
@@ -43,12 +44,14 @@ class TransactionResource extends JsonResource
         ->with('tag.release')
         ->with('tag.file')
         ->with('tag.reverse')
+        ->when($this->document_type =="Auto Debit", function($query){
+            $query->with('auto_debit');
+        })
         ->where('id',$this->id)->get()->first();
         $transaction_tag_no= (isset($transaction->tag_no)?$transaction->tag_no:NULL);
         $transaction_voucher_no = (isset($transaction->voucher_no)?$transaction->voucher_no:NULL);
         $transaction_voucher_month = (isset($transaction->voucher_month)?$transaction->voucher_month:NULL);
-        
-        // return $transaction;
+        $transaction_with_debit = $transaction;
         // TAG PROCESS
         if(count($transaction->tag)>0){
             $transaction_tag= $transaction->tag->first();
@@ -529,6 +532,36 @@ class TransactionResource extends JsonResource
                 ]
             ];
             break;
+            case 9: //Auto Debit
+                $document = [
+                    "id"=>$this->document_id
+                    ,"name"=>$this->document_type
+                    ,"date"=>$this->document_date
+                    ,"payment_type"=>$this->payment_type
+                    ,"amount"=>$this->document_amount
+                    ,"remarks"=>$this->remarks
+                    ,"category"=>[
+                        "id"=>$this->category_id,
+                        "name"=>$this->category
+                    ],
+                    "company"=>[
+                        "id"=>$this->company_id,
+                        "name"=>$this->company
+                    ],
+                    "department"=>[
+                        "id"=>$this->department_id,
+                        "name"=>$this->department
+                    ],
+                    "location"=>[
+                        "id"=>$this->location_id,
+                        "name"=>$this->location
+                    ],
+                    "supplier"=>[
+                        "id"=>$this->supplier_id,
+                        "name"=>$this->supplier
+                    ]
+                ];
+            break;
         }
 
         // TAG
@@ -878,6 +911,11 @@ class TransactionResource extends JsonResource
             }
            $prm_group = $prm_fields;
         }
+        
+        // AUTO DEBIT GROUP
+        if($this->document_type == "Auto Debit"){
+           $autoDebit_group = $transaction_with_debit->auto_debit;
+        }
         $transaction_result= [
             "transaction"=>[
                 "id"=>$this->id
@@ -908,6 +946,7 @@ class TransactionResource extends JsonResource
             "document"=>$document
         ];
 
+        $transaction_result['autoDebit_group']=$autoDebit_group;
         $transaction_result['po_group']=$po_details;
         $transaction_result['prm_group']=$prm_group;
         $transaction_result['tag']=$tag;

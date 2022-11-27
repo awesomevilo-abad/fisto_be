@@ -102,6 +102,16 @@ class TransactionPostRequest extends FormRequest
             , "document.batch_no" => 'nullable'
             , "document.release_date" => 'nullable'
 
+            ,"autoDebit_group.*.pn_no"=>'nullable'
+            ,"autoDebit_group.*.interest_from"=>'nullable'
+            ,"autoDebit_group.*.interest_to"=>'nullable'
+            ,"autoDebit_group.*.outstanding_amount"=>'nullable'
+            ,"autoDebit_group.*.interest_rate"=>'nullable'
+            ,"autoDebit_group.*.no_of_days"=>'nullable'
+            ,"autoDebit_group.*.principal_amount"=>'nullable'
+            ,"autoDebit_group.*.interest_due"=>'nullable'
+            ,"autoDebit_group.*.cwt"=>'nullable'
+
         ];
     }
 
@@ -165,6 +175,16 @@ class TransactionPostRequest extends FormRequest
             ,'po_group.*.rr_no' => 'RR number'
 
             , "document.batch_no" => 'Batch no.'
+            
+            ,"autoDebit_group.*.pn_no"=>'Promisory note number'
+            ,"autoDebit_group.*.interest_from"=>'Interest from'
+            ,"autoDebit_group.*.interest_to"=>'Interest to'
+            ,"autoDebit_group.*.outstanding_amount"=>'Outstanding amount'
+            ,"autoDebit_group.*.interest_rate"=>'Interest rate'
+            ,"autoDebit_group.*.no_of_days"=>'No of days'
+            ,"autoDebit_group.*.principal_amount"=>'Principal amount'
+            ,"autoDebit_group.*.interest_due"=>'Interest due'
+            ,"autoDebit_group.*.cwt"=>'Computed witholding tax'
         ];
     }
     

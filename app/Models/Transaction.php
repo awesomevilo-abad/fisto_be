@@ -138,6 +138,10 @@ class Transaction extends Model
         return $this->hasMany(Tagging::class,'transaction_id','transaction_id')->select('transaction_id','date_status as date','status','distributed_id','distributed_name','reason_id','remarks')->latest()->limit(1);
     }
 
+    public function auto_debit(){
+        return $this->hasMany(DebitBatch::class,'request_id','request_id')->select(['request_id','pn_no','interest_from','interest_to','outstanding_amount','interest_rate','no_of_days','principal_amount','interest_due','cwt']);
+    }
+
     public function cheque(){
         return $this->hasMany(Cheque::class,'transaction_id','transaction_id')->latest();
     }

@@ -28,6 +28,7 @@ use App\Models\Release;
 use App\Models\Transfer;
 use App\Models\Reason;
 use App\Models\Reverse;
+use App\Models\DebitBatch;
 
 use App\Models\UserDocumentCategory;
 use Illuminate\Routing\Route;
@@ -1281,6 +1282,43 @@ class GenericMethod{
                     break;
                 }
 
+            }else if($fields['document']['id'] == 9){
+                $new_transaction = Transaction::create([
+                    'transaction_id' => $transaction_id
+                    , "users_id" => $fields['requestor']['id']
+                    , "id_prefix" => $fields['requestor']['id_prefix']
+                    , "id_no" => $fields['requestor']['id_no']
+                    , "first_name" => $fields['requestor']['first_name']
+                    , "middle_name" => $fields['requestor']['middle_name']
+                    , "last_name" => $fields['requestor']['last_name']
+                    , "suffix" => $fields['requestor']['suffix']
+                    , "department_details" => $fields['requestor']['department']
+                    , "document_id" => $fields['document']['id']
+                    , "category_id" => $fields['document']['category']['id']
+                    , "category" => $fields['document']['category']['name']
+                    , "company_id" => $fields['document']['company']['id']
+                    , "company" => $fields['document']['company']['name']
+                    , "department_id" => $fields['document']['department']['id']
+                    , "department" => $fields['document']['department']['name']
+                    , "location_id" => $fields['document']['location']['id']
+                    , "location" => $fields['document']['location']['name']
+                    , "supplier_id" => $fields['document']['supplier']['id']
+                    , "supplier" => $fields['document']['supplier']['name']
+                    , "payment_type" => $fields['document']['payment_type']
+                    , "document_date" => $fields['document']['date']
+                    , "document_amount" => $fields['document']['amount']
+                    , "remarks" => $fields['document']['remarks']
+                    , "document_type" => $fields['document']['name']
+                    , "po_total_amount" => $po_total_amount
+                    , "request_id" => $request_id
+                    , "tagging_tag_id" => 0
+                    , "date_requested" => $date_requested
+                    , "status" => "Pending"
+                ]);
+
+                if($new_transaction->id){
+                    GenericMethod::insert_debit_attachment($request_id,$fields['autoDebit_group']);
+                }
             }
             else{
                 $new_transaction = Transaction::create([
@@ -1483,6 +1521,26 @@ class GenericMethod{
                     'request_id' => $request_id,
                     'client_id' => $id,
                     'client_name' => $name
+                ]);
+            }
+        }
+
+        
+        
+        public static function insert_debit_attachment($request_id,$autoDebit_group){
+            $autoDebit_count = count($autoDebit_group);
+            for($i=0;$i<$autoDebit_count;$i++){
+                $insert_po_batch = DebitBatch::create([
+                    'request_id' => $request_id,
+                    'pn_no' => $autoDebit_group[$i]['pn_no'],
+                    'interest_from' => $autoDebit_group[$i]['interest_from'],
+                    'interest_to' => $autoDebit_group[$i]['interest_to'],
+                    'outstanding_amount' => $autoDebit_group[$i]['outstanding_amount'],
+                    'interest_rate' => $autoDebit_group[$i]['interest_rate'],
+                    'no_of_days' => $autoDebit_group[$i]['no_of_days'],
+                    'principal_amount' => $autoDebit_group[$i]['principal_amount'],
+                    'interest_due' => $autoDebit_group[$i]['interest_due'],
+                    'cwt' => $autoDebit_group[$i]['cwt'],
                 ]);
             }
         }
@@ -2168,6 +2226,14 @@ class GenericMethod{
     #########################################      VALIDATION           ######################################
     ##########################################################################################################
 
+    
+        public static function is_duplicate_auto_debit($company_id,$supplier_id,$document_date){
+            return $transaction = Transaction::where('company_id',$company_id)
+            ->where('supplier_id',$supplier_id)
+            ->where('document_date',$document_date)
+            ->where('document_type',"Auto Debit")
+            ->exists();
+        }
         public static function validate_document_amount($document_amount,$compared_amount, $message){
             if(round($compared_amount,2) != round($document_amount,2)){
                 throw new FistoLaravelException("The given data was invalid.", 422, NULL, collect(["document.amount"=>[$message]]));
@@ -2617,6 +2683,23 @@ class GenericMethod{
 
         }
 
+        public static function validateAutoDebit($company_id,$supplier_id,$document_date){
+            $is_duplicate = GenericMethod::is_duplicate_auto_debit($company_id,$supplier_id,$document_date);
+            if(!empty($is_duplicate)){
+                return GenericMethod::resultLaravelFormat(
+                    [
+                        'document.date',
+                        'document.company.id',
+                        'document.supplier.id'
+                    ],
+                    [
+                        ["Document date has already been taken."],
+                        ["Company has already been taken."],
+                        ["Supplier has already been taken."]
+                    ]
+                );
+            }
+        }
         public static function validateReferenceNo($fields,$id=0){
             $validateTransactionCount =  Transaction::where('company_id',$fields['document']['company']['id'])
             ->where('referrence_no',$fields['document']['reference']['no'])

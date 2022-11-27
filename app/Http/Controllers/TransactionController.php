@@ -622,6 +622,20 @@ class TransactionController extends Controller
                 }
 
             break;
+            
+            case 9: //Auto Debit
+                $is_duplicate = GenericMethod::validateAutoDebit($fields['document']['company']['id'],$fields['document']['supplier']['id'],$fields['document']['date']);
+                
+                if($is_duplicate){
+                    return $this->resultResponse('invalid','',$is_duplicate);
+                }
+                
+                $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
+                $request_id,$date_requested,$fields);
+                if(isset($transaction->transaction_id)){
+                   return $this->resultResponse('save','Transaction',[]);
+                }
+            break;
         }
         return $this->resultResponse('not-exist','Document number',[]);
     }
@@ -687,7 +701,6 @@ class TransactionController extends Controller
                }
             break;
 
-            
             case 3: //PRM Multiple
                 $po_total_amount=NULL;
                GenericMethod::documentNoValidationUpdate($request['document']['no'],$id,$request['transaction']['no']);
@@ -856,6 +869,24 @@ class TransactionController extends Controller
                 }
 
             break;
+            
+            case 9: //Auto Debit
+               $is_duplicate = GenericMethod::validateAutoDebit($fields['document']['company']['id'],$fields['document']['supplier']['id'],$fields['document']['date']);
+                
+               
+               $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
+
+               $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
+               $request_id,$date_requested,$request,0,$changes);
+
+               if($transaction == "Nothing Has Changed"){
+                   return $this->resultResponse('nothing-has-changed',"Transaction",[]);
+               }
+               if(isset($transaction->transaction_id)){
+                  return $this->resultResponse('update','Transaction',[]);
+               }
+            break;
+
         }
 
         return $this->resultResponse('not-exist','Document number',[]);
