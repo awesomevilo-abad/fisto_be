@@ -591,6 +591,7 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'App\\Models\\ChequeTable' => __DIR__ . '/../..' . '/app/Models/ChequeTable.php',
         'App\\Models\\Company' => __DIR__ . '/../..' . '/app/Models/Company.php',
         'App\\Models\\CreditCard' => __DIR__ . '/../..' . '/app/Models/CreditCard.php',
+        'App\\Models\\DebitBatch' => __DIR__ . '/../..' . '/app/Models/DebitBatch.php',
         'App\\Models\\Department' => __DIR__ . '/../..' . '/app/Models/Department.php',
         'App\\Models\\Document' => __DIR__ . '/../..' . '/app/Models/Document.php',
         'App\\Models\\DocumentCategory' => __DIR__ . '/../..' . '/app/Models/DocumentCategory.php',

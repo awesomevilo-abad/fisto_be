@@ -235,7 +235,10 @@ class TransactionFlow{
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
 
         }else if($process == 'transmit'){
+            
+            $transaction_type =  $request['transaction_type'];
             $model = new Transmit;
+
             if($subprocess == 'receive'){
                 $status= 'transmit-receive';
             }else if($subprocess == 'transmit'){
@@ -245,9 +248,10 @@ class TransactionFlow{
                 return GenericMethod::resultResponse('invalid-access','','');
             }
             $state= $subprocess;
+            
 
-            GenericMethod::transmitTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$distributed_to );
-            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
+            GenericMethod::transmitTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$distributed_to,$transaction_type );
+            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name,$transaction_type);
 
         }else if($process == 'cheque'){
             $account_titles = $cheque_account_titles;
@@ -323,6 +327,8 @@ class TransactionFlow{
                 $status= 'cheque-reverse';
             }else if(in_array($subprocess,['unhold','unreturn'])){
                 $status = GenericMethod::getStatus($process,$transaction);
+            }else if($subprocess == 'file'){
+                $status= 'cheque-file';
             }
             
             if(!isset($status)){
@@ -335,7 +341,6 @@ class TransactionFlow{
             if(!$document_amount){
                 $document_amount = $transaction['referrence_amount'];
             }
-            
             if(!empty($cheques)){
                $cheque_amount= array_sum(array_column($cheques,'amount'));
                $cheque_amount = isset($new_cheque_amount)?$new_cheque_amount:$cheque_amount;

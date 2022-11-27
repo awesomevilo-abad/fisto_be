@@ -19,6 +19,7 @@ class Cheque extends Model
         'cheque_no',
         'cheque_date',
         'cheque_amount',
-        'transaction_type'
+        'transaction_type',
+        'entry_type'
     ];
 }

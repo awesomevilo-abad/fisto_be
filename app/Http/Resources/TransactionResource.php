@@ -727,7 +727,7 @@ class TransactionResource extends JsonResource
                 return [$item['treasury_id'] => 
                             [
                                 // "id"=>$item['treasury_id']
-                                "type"=>"Cheque"
+                                "type"=>$item['entry_type']
                                 ,"bank"=>[
                                         "id"=>intval($item['bank_id']),
                                         "name"=>$item['bank_name'],

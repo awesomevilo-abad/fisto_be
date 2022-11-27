@@ -45,6 +45,7 @@ class TransactionController extends Controller
         $search =  $request['search'];
         $state = isset($request['state'])? $request['state']: 'request';
         !empty($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department[0]['name']) ;
+        $is_auto_debit =  isset($request['is_auto_debit']) && $request['is_auto_debit'] ? 1 :0;
 
         $request_window = ['Requestor'];
         $admin_window = ['Administrator'];
@@ -106,6 +107,11 @@ class TransactionController extends Controller
                 ),
             'like', '%' . $search . '%');
             });
+        })
+        ->when($is_auto_debit,function ($query){
+            $query->where('transaction_type','debit');
+        },function($query){
+            $query->where('transaction_type','<>','debit');
         })
         ->when(in_array($role,$request_window),function($query) use($status,$department){
             $query->when(strtoupper($status) == "PENDING", function ($query){

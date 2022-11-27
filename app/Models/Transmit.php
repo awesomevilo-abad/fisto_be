@@ -18,5 +18,6 @@ class Transmit extends Model
         'date_received',
         'status',
         'date_status',
+        'transaction_type'
     ];
 }

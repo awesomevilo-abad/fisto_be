@@ -183,6 +183,7 @@ class GenericMethod{
                     return $cheques->mapToGroups(function ($item, $key) {
                         return ["cheques"=> 
                                     [
+                                    "type"=>$item['entry_type'],
                                     "bank"=>
                                         [
                                             "id"=>$item['bank_id']
@@ -340,13 +341,14 @@ class GenericMethod{
             ]);
         }
         
-        public static function transmitTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$distributed_to=[]){
+        public static function transmitTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$distributed_to=[],$transaction_type="cheque"){
            
             $model::Create([
                 "transaction_id"=>$transaction_id,
                 "tag_id"=>$tag_no,
                 "date_status"=>$date_now,
                 "reason_id"=>$reason_id,
+                "transaction_type"=>$transaction_type,
                 "status"=>$status
             ]);
         }
@@ -525,6 +527,7 @@ class GenericMethod{
 
         public static function addCheque($transaction_id, $id,$cheques){
             foreach( $cheques as $specific_cheques){
+                $entry_type = $specific_cheques['type'];
                 $bank_id = $specific_cheques['bank']['id'];
                 $bank_name = $specific_cheques['bank']['name'];
                 $cheque_no = $specific_cheques['no'];
@@ -535,6 +538,7 @@ class GenericMethod{
                 Cheque::Create([
                     "transaction_id"=>$transaction_id
                     ,"treasury_id"=>$id
+                    ,"entry_type"=>$entry_type
                     ,"bank_id"=>$bank_id
                     ,"bank_name"=>$bank_name
                     ,"cheque_no"=>$cheque_no
@@ -1658,7 +1662,7 @@ class GenericMethod{
             return new LengthAwarePaginator($items->forPage($page, $perPage)->values(), $items->count(), $perPage, $page, $options);
         }
 
-        public static function updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name)
+        public static function updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name,$transaction_type="cheque")
         {
             // return Transaction::where('tag_no',$tag_no)->get();
             // if($status != 'tag-tag'){
@@ -1696,7 +1700,7 @@ class GenericMethod{
                         ,'approver_name' => $approver_name
                     ]);
                 }, function($query) use($status,$state,$tag_no,$reason_id,$reason,$reason_remarks
-                ,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name){
+                ,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name, $transaction_type){
                     $query->update([
                         'status' => $status
                         ,'state' => $state
@@ -1710,6 +1714,7 @@ class GenericMethod{
                         ,'distributed_name' => $distributed_name
                         ,'approver_id' => $approver_id
                         ,'approver_name' => $approver_name
+                        ,'transaction_type' => $transaction_type
                     ]);
                 });
         }

@@ -80,6 +80,7 @@ return array(
     'App\\Models\\ChequeTable' => $baseDir . '/app/Models/ChequeTable.php',
     'App\\Models\\Company' => $baseDir . '/app/Models/Company.php',
     'App\\Models\\CreditCard' => $baseDir . '/app/Models/CreditCard.php',
+    'App\\Models\\DebitBatch' => $baseDir . '/app/Models/DebitBatch.php',
     'App\\Models\\Department' => $baseDir . '/app/Models/Department.php',
     'App\\Models\\Document' => $baseDir . '/app/Models/Document.php',
     'App\\Models\\DocumentCategory' => $baseDir . '/app/Models/DocumentCategory.php',
