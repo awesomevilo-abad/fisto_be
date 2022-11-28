@@ -108,11 +108,6 @@ class TransactionController extends Controller
             'like', '%' . $search . '%');
             });
         })
-        ->when($is_auto_debit,function ($query){
-            $query->where('transaction_type','debit');
-        },function($query){
-            $query->where('transaction_type','<>','debit');
-        })
         ->when(in_array($role,$request_window),function($query) use($status,$department){
             $query->when(strtoupper($status) == "PENDING", function ($query){
                 $query->whereNotIn('status',['requestor-void','tag-return']);
@@ -340,8 +335,13 @@ class TransactionController extends Controller
             ])
             ->where('approver_id',$users_id);
         })
-        ->when(in_array($role,$cheque_window),function($query) use ($status){
-            $query->when(strtolower($status) == "cheque-receive", function ($query) {
+        ->when(in_array($role,$cheque_window),function($query) use ($status, $is_auto_debit){
+            $query->when($is_auto_debit,function ($query){
+                $query->where('document_type','Auto Debit');
+            },function($query){
+                $query->where('document_type','<>','Auto Debit');
+            })
+           ->when(strtolower($status) == "cheque-receive", function ($query) {
                 $query->whereIn('status',['cheque-receive','cheque-unhold','cheque-unreturn']);
             }, function($query) use ($status){
                 $query->when(strtolower($status) == "cheque-cheque", function($query){
@@ -635,7 +635,7 @@ class TransactionController extends Controller
                 if($is_duplicate){
                     return $this->resultResponse('invalid','',$is_duplicate);
                 }
-                
+                GenericMethod::validate_debit_amount($fields['document']['amount'],$fields['autoDebit_group'],"Document amount and net of cwt amount is not equal.");
                 $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
                 $request_id,$date_requested,$fields);
                 if(isset($transaction->transaction_id)){

@@ -8,6 +8,7 @@ use App\Methods\GenericMethod;
 
 class CounterReceiptMethod{
 
+    
     public static function generate_cr_no(){
         $id = CounterReceipt::select('counter_receipt_no')->max('counter_receipt_no');
         $id = (!$id)?1:$id+1;
