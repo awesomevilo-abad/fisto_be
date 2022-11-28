@@ -15,6 +15,33 @@ class CounterReceiptMethod{
         return $id;
     }
 
+    public static function multiple_counter($counter){
+        $error_type="duplicate";
+        $receipt_nos = array_column($counter->counter_receipt,"receipt_no");
+        $errors = [];
+
+        foreach($receipt_nos as $k=>$v){
+            $receipt_no = $v;
+            foreach($receipt_nos as $j => $u){
+                if($k == $j){
+                    unset($receipt_nos[$j]);
+                    $removal_of_receipt = $receipt_nos;
+                    foreach($removal_of_receipt as $l => $w){
+                        if(($receipt_no == $removal_of_receipt[$l])){
+                            $error_details =[
+                                "error_type"=>$error_type,
+                                "line"=>($k+1) .' & '.($l+1),
+                                "description"=>"Receipt number has a duplicate in counter receipt."
+                            ];
+                            array_push($errors, $error_details);
+                        }
+                    }
+                }
+            }
+        }
+        return $errors;
+    }
+
     public static function duplicate_counter($fields,$counter_receipt_no=0){
         $supplier_id = $fields['supplier']['id'];
         $counter_receipt = $fields['counter_receipt'];
@@ -57,10 +84,16 @@ class CounterReceiptMethod{
         }
     }
 
-    public static function create_counter($fields){
+    public static function create_counter($fields,$counter_receipt_no=0){
         $counter_receipt = $fields['counter_receipt'];
         $date_countered = date('Y-m-d');
-        $counter_receipt_no = CounterReceiptMethod::generate_cr_no();
+
+        if($counter_receipt_no){
+            $counter_receipt_no = $counter_receipt_no;
+            CounterReceipt::where('counter_receipt_no',$counter_receipt_no)->delete();
+        }else{
+            $counter_receipt_no = CounterReceiptMethod::generate_cr_no();
+        }
 
         foreach($counter_receipt as $receipt){
             $counter_receipt = CounterReceipt::create([

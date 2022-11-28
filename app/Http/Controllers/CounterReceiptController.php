@@ -38,9 +38,11 @@ class CounterReceiptController extends Controller
     public function store(CounterReceiptRequest $request){
         $fields = $request->validated();
         
+        $is_multiple = CounterReceiptMethod::multiple_counter($request);
         $is_duplicate = CounterReceiptMethod::duplicate_counter($fields);
-        if($is_duplicate){
-            return GenericMethod::resultResponse("upload-error","",$is_duplicate );
+        if($is_multiple || $is_duplicate){
+            $errors = array_merge($is_multiple, $is_duplicate);
+            return GenericMethod::resultResponse("upload-error","",$errors );
         }
         
         $is_created = CounterReceiptMethod::create_counter($fields);
@@ -50,14 +52,16 @@ class CounterReceiptController extends Controller
     }
     
 
-    public function update(Request $request, $id){
-        $is_duplicate = CounterReceiptMethod::duplicate_counter($request);
-        if($is_duplicate){
-            return GenericMethod::resultResponse("upload-error","",$is_duplicate );
+    public function update(Request $request, CounterReceipt $counter,$errors=[]){
+        $is_multiple = CounterReceiptMethod::multiple_counter($request);
+        $is_duplicate = CounterReceiptMethod::duplicate_counter($request,$counter->counter_receipt_no);
+        if($is_multiple || $is_duplicate){
+            $errors = array_merge($is_multiple, $is_duplicate);
+            return GenericMethod::resultResponse("upload-error","",$errors );
         }
         
-        $is_created = CounterReceiptMethod::create_counter($fields);
-        if($is_created){
+        $is_update = CounterReceiptMethod::create_counter($request,$counter->counter_receipt_no);
+        if($is_update){
             return GenericMethod::resultResponse("save","Transaction",[]);
         }
     }
