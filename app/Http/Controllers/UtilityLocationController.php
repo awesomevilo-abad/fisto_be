@@ -33,7 +33,7 @@ class UtilityLocationController extends Controller
       $utility_locations = $utility_locations
       ->when(isset($category), function($query) use ($category){
         $query->whereHas('credit_cards.utility_categories', function ($query) use($category){
-          $query->where('category',$category);
+          $query->where('category','<>',$category);
         });
       })
       ->without('credit_cards')

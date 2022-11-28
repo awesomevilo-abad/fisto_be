@@ -34,6 +34,7 @@ use App\Models\UserDocumentCategory;
 use Illuminate\Routing\Route;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class GenericMethod{
 

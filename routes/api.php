@@ -72,6 +72,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::get('associate',[MasterlistController::class,'associateDropdown']);
         Route::get('approver',[MasterlistController::class,'approverDropdown']);
         Route::get('account-title',[MasterlistController::class,'transactionAccountTitleDropdown']);
+        Route::get('credit-card',[MasterlistController::class,'creditCardAccountNoDropdown']);
         // TRANSACTION
         Route::get('company',[CompanyController::class,'index']);
         Route::get('department',[DepartmentController::class,'index']);
@@ -219,6 +220,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::post('counter-receipts/',[CounterReceiptController::class,'store']);
     Route::get('counter-receipts/',[CounterReceiptController::class,'index']);
     Route::get('counter-receipts/{id}',[CounterReceiptController::class,'show']);
+    Route::put('counter-receipts/{counter}',[CounterReceiptController::class,'update']);
 
     // Route::get('transactions/flow/',[TransactionFlowController::class,'pullRequest']);
     // Route::get('transactions/flow/{id}',[TransactionFlowController::class,'pullSingleRequest']);

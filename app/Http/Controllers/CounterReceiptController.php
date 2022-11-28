@@ -12,16 +12,17 @@ use App\Http\Resources\CounterReceipt as CounterReceiptResource;
 class CounterReceiptController extends Controller
 {
     public function index(Request $request){
-        $transactions = CounterReceipt::all();
+        $transactions = CounterReceipt::latest()->get();
+        $transactions = CounterReceiptResource::collection($transactions);
         
         if ($transactions) {
-            $transactions = CounterReceiptResource::collection($transactions);
-            return $this->resultResponse('fetch', 'Counter Receipt Transaction', $transactions);
+            return GenericMethod::resultResponse('fetch', 'Counter Receipt Transaction', $transactions);
         }
-         return $this->resultResponse('not-found', 'Transaction', []);
+         return GenericMethod::resultResponse('not-found', 'Transaction', []);
     }
     
     public function show(Request $request, $id){
+
         $transaction = CounterReceipt::where('id',$id);
         $transaction_exists = $transaction->exists();
         $transaction_details = $transaction->get();
@@ -48,6 +49,19 @@ class CounterReceiptController extends Controller
         }
     }
     
+
+    public function update(Request $request, $id){
+        $is_duplicate = CounterReceiptMethod::duplicate_counter($request);
+        if($is_duplicate){
+            return GenericMethod::resultResponse("upload-error","",$is_duplicate );
+        }
+        
+        $is_created = CounterReceiptMethod::create_counter($fields);
+        if($is_created){
+            return GenericMethod::resultResponse("save","Transaction",[]);
+        }
+    }
+
     public function validate_receipt(Request $request){
         $supplier = $request['supplier_id'];
         $receipt_no = $request['receipt_no'];

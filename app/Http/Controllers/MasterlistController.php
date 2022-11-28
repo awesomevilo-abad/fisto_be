@@ -108,6 +108,15 @@ class MasterlistController extends Controller
   }
 
   
+  public function creditCardAccountNoDropdown(Request $request){
+    $credit_card_account_no =  DB::table('credit_cards')
+    ->get(['id','account_no as no']);
+    $credit_card_account_no =  collect(['account_numbers' => $credit_card_account_no]);
+    return $this->resultResponse('fetch','Credit Card Account No',$credit_card_account_no);
+  }
+
+
+  
   public function chargingDropdown(){
     $company =  DB::table('companies')
     ->get(['id','company']);
