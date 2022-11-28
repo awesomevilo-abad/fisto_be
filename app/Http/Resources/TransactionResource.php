@@ -914,7 +914,22 @@ class TransactionResource extends JsonResource
         
         // AUTO DEBIT GROUP
         if($this->document_type == "Auto Debit"){
-           $autoDebit_group = $transaction_with_debit->auto_debit;
+            $auto_debit = [];
+            foreach($transaction_with_debit->auto_debit as $k=>$auto_debit_batch){
+                $auto_debit[$k]["request_id"]=$auto_debit_batch->request_id;
+                $auto_debit[$k]["pn_no"] = $auto_debit_batch->pn_no;
+                $auto_debit[$k]["interest_from"] = $auto_debit_batch->interest_from;
+                $auto_debit[$k]["interest_to"] = $auto_debit_batch->interest_to;
+                $auto_debit[$k]["outstanding_amount"] = floatVal($auto_debit_batch->outstanding_amount);
+                $auto_debit[$k]["interest_rate"] = floatVal($auto_debit_batch->interest_rate);
+                $auto_debit[$k]["no_of_days"] = floatVal($auto_debit_batch->no_of_days);
+                $auto_debit[$k]["principal_amount"] = floatVal($auto_debit_batch->principal_amount);
+                $auto_debit[$k]["interest_due"] = floatVal($auto_debit_batch->interest_due);
+                $auto_debit[$k]["cwt"]=floatVal($auto_debit_batch->cwt);
+            }
+            return $auto_debit;
+
+           return $autoDebit_group = $transaction_with_debit->auto_debit;
         }
         $transaction_result= [
             "transaction"=>[
