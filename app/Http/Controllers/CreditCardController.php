@@ -20,6 +20,7 @@ class CreditCardController extends Controller
       $status =  $request['status'];
       $rows =  (empty($request['rows']))?10:(int)$request['rows'];
       $search =  $request['search'];
+      $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
       
       $credit_card= CreditCard::with(['utility_categories','utility_locations'])->withTrashed()
       ->where(function ($query) use ($status){
@@ -28,9 +29,17 @@ class CreditCardController extends Controller
       ->where(function ($query) use ($search){
         $query->where('name', 'like', '%'.$search.'%')
           ->orWhere('account_no', 'like', '%'.$search.'%');
-      })
-      ->latest('updated_at')
-      ->paginate($rows);
+      });
+
+      if($paginate==0){
+        $credit_card = CreditCard::withTrashed()
+        ->where(function ($query) use ($status){
+          ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
+        })->get(['id','account_no']);
+      }else{
+        $credit_card = $credit_card->latest('updated_at')
+        ->paginate($rows);
+      }
   
       if(count($credit_card) == true)
         return $this->resultResponse('fetch','Credit Card',$credit_card);

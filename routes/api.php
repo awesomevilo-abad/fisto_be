@@ -72,7 +72,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::get('associate',[MasterlistController::class,'associateDropdown']);
         Route::get('approver',[MasterlistController::class,'approverDropdown']);
         Route::get('account-title',[MasterlistController::class,'transactionAccountTitleDropdown']);
-        Route::get('credit-card',[MasterlistController::class,'creditCardAccountNoDropdown']);
+        Route::get('credit-card',[CreditCardController::class,'index']);
         // TRANSACTION
         Route::get('company',[CompanyController::class,'index']);
         Route::get('department',[DepartmentController::class,'index']);
