@@ -26,6 +26,10 @@ class CounterReceipt extends JsonResource
             "counter_receipt_no"=>$this->counter_receipt_no,
             
         ];
+        $receipt_type = [
+            "id"=>$this->receipt_type_id,
+            "type"=>$this->receipt_type,
+        ];
 
         return [
             "transaction"=>$transaction,
@@ -33,10 +37,11 @@ class CounterReceipt extends JsonResource
                 "id"=> $this->supplier_id,
                 "name"=> $this->supplier
             ],
+            "remarks"=>$this->remarks,
             "counter_receipt"=>[
                 "department"=>$department,
+                "receipt_type"=>$receipt_type,
                 "date_transaction"=>$this->date_transaction,
-                "receipt_type"=>$this->receipt_type,
                 "receipt_no"=>$this->receipt_no,
                 "amount"=>$this->amount,
                 "status"=>$this->status

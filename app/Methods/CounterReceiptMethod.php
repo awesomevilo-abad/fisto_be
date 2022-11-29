@@ -103,11 +103,13 @@ class CounterReceiptMethod{
                 "supplier"=>$fields['supplier']['name'],
                 "department_id"=>$receipt['department']['id'],
                 "department"=>$receipt['department']['name'],
-                "receipt_type"=>$receipt['receipt_type'],
+                "receipt_type_id"=>$receipt['receipt_type']['id'],
+                "receipt_type"=>$receipt['receipt_type']['type'],
                 "receipt_no"=>$receipt['receipt_no'],
                 "date_transaction"=>$receipt['date_transaction'],
                 "amount"=>$receipt['amount'],
                 "status"=>"Pending",
+                "remarks"=>$fields['remarks'],
             ]);
 
         }

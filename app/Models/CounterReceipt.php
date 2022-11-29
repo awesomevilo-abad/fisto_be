@@ -13,6 +13,7 @@ class CounterReceipt extends Model
         "date_countered",
         "date_transaction",
         "counter_receipt_no",
+        "receipt_type_id",
         "receipt_type",
         "receipt_no",
         "supplier_id",
@@ -22,5 +23,6 @@ class CounterReceipt extends Model
         "amount",
         "status",
         "receiver",
+        "remarks"
     ];
 }
