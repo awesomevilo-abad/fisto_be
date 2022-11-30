@@ -120,8 +120,26 @@ class CounterReceiptMethod{
         return $counter_receipt;
     }
 
-    public static function update_flow_counter($fields){
-        return $fields;
+    public static function update_flow_counter($fields, $id){
+        if($fields['process'] = "counter"){
+            if($fields['subprocess'] = "void"){
+                $status= 'Voided';
+                $state= 'counter-void';
+            }
+            $update_flow_status = CounterReceiptMethod::update_flow_status($fields,$status,$state,$id);
+        }else if($fields['process'] = "monitoring"){
+
+        }
+
+        return $update_flow_status;
+
     }
 
+    public static function update_flow_status($fields,$status,$state,$id){
+        CounterReceipt::where('id',$id)
+        ->update([
+            "status"=>$status,
+            "state"=>$state
+        ]);
+    }
 }

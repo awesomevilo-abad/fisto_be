@@ -67,16 +67,14 @@ class CounterReceiptController extends Controller
         })
         ->where('status',preg_replace('/\s+/', '', $status));
         
-        // $transactions = CounterReceiptResource::collection($transactions);
         if ($transactions->count() > 0) {
             return GenericMethod::resultResponse('fetch', 'Counter Receipt Transaction', $transactions->paginate($rows));
         }
          return GenericMethod::resultResponse('not-found', 'Transaction', []);
     }
     
-    public function show(Request $request, $id){
-
-        $transaction = CounterReceipt::where('id',$id);
+    public function show(Request $request, CounterReceipt $counter){
+        $transaction = CounterReceipt::where('id',$counter->id);
         $transaction_exists = $transaction->exists();
         $transaction_details = $transaction->get();
 
@@ -118,8 +116,9 @@ class CounterReceiptController extends Controller
         }
     }
 
-    public function update_flow_counter(Request $request){
-        return CounterReceiptMethod::update_flow_counter($request);
+    public function update_flow_counter(Request $request, $id){
+        $is_flow_update =  CounterReceiptMethod::update_flow_counter($request, $id);
+        
     }   
 
     public function validate_receipt(Request $request){

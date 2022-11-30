@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Methods\CounterReceiptMethod;
+use App\Models\CounterReceipt as CounterReceiptModel;
 
 class CounterReceipt extends JsonResource
 {
@@ -15,20 +16,43 @@ class CounterReceipt extends JsonResource
      */
     public function toArray($request)
     {
+        $counter_receipt_group = [];
+        $counter_receipt = [];
+        $counter_receipts = CounterReceiptModel::where('counter_receipt_no',$this->counter_receipt_no)->get();
+      
+        
+        foreach ($counter_receipts as $receipt){
+            
+            $department = [
+                "id"=> $receipt->department_id,
+                "name"=> $receipt->department
+            ];
+            
+            $receipt_type = [
+                "id"=>$receipt->receipt_type_id,
+                "type"=>$receipt->receipt_type,
+            ];
 
-        $department = [
-            "id"=> $this->department_id,
-            "name"=> $this->department
-        ];
+            $counter_receipt = [
+                "department"=>$department,
+                "receipt_type"=>$receipt_type,
+                "date_transaction"=>$receipt->date_transaction,
+                "receipt_no"=>$receipt->receipt_no,
+                "amount"=>$receipt->amount,
+                "status"=>$receipt->status,
+                "state"=>$receipt->state
+            ];
+
+            array_push($counter_receipt_group,$counter_receipt);
+        }
+
+
+
         $transaction = [
             "id"=>$this->id,
             "date_countered"=>$this->date_countered,
             "counter_receipt_no"=>$this->counter_receipt_no,
             
-        ];
-        $receipt_type = [
-            "id"=>$this->receipt_type_id,
-            "type"=>$this->receipt_type,
         ];
 
         return [
@@ -38,15 +62,7 @@ class CounterReceipt extends JsonResource
                 "name"=> $this->supplier
             ],
             "remarks"=>$this->remarks,
-            "counter_receipt"=>[
-                "department"=>$department,
-                "receipt_type"=>$receipt_type,
-                "date_transaction"=>$this->date_transaction,
-                "receipt_no"=>$this->receipt_no,
-                "amount"=>$this->amount,
-                "status"=>$this->status,
-                "state"=>$this->state
-            ],
+            "counter_receipt"=>$counter_receipt_group,
         ];
     }
 }
