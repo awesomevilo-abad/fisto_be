@@ -577,6 +577,7 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'App\\Http\\Requests\\UserControllerRequest' => __DIR__ . '/../..' . '/app/Http/Requests/UserControllerRequest.php',
         'App\\Http\\Resources\\ChargingCollection' => __DIR__ . '/../..' . '/app/Http/Resources/ChargingCollection.php',
         'App\\Http\\Resources\\ChargingResource' => __DIR__ . '/../..' . '/app/Http/Resources/ChargingResource.php',
+        'App\\Http\\Resources\\CounterReceipt' => __DIR__ . '/../..' . '/app/Http/Resources/CounterReceipt.php',
         'App\\Http\\Resources\\RequestLog' => __DIR__ . '/../..' . '/app/Http/Resources/RequestLog.php',
         'App\\Http\\Resources\\TransactionIndex' => __DIR__ . '/../..' . '/app/Http/Resources/TransactionIndex.php',
         'App\\Http\\Resources\\TransactionResource' => __DIR__ . '/../..' . '/app/Http/Resources/TransactionResource.php',

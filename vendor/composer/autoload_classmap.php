@@ -58,6 +58,7 @@ return array(
     'App\\Http\\Requests\\UserControllerRequest' => $baseDir . '/app/Http/Requests/UserControllerRequest.php',
     'App\\Http\\Resources\\ChargingCollection' => $baseDir . '/app/Http/Resources/ChargingCollection.php',
     'App\\Http\\Resources\\ChargingResource' => $baseDir . '/app/Http/Resources/ChargingResource.php',
+    'App\\Http\\Resources\\CounterReceipt' => $baseDir . '/app/Http/Resources/CounterReceipt.php',
     'App\\Http\\Resources\\RequestLog' => $baseDir . '/app/Http/Resources/RequestLog.php',
     'App\\Http\\Resources\\TransactionIndex' => $baseDir . '/app/Http/Resources/TransactionIndex.php',
     'App\\Http\\Resources\\TransactionResource' => $baseDir . '/app/Http/Resources/TransactionResource.php',
