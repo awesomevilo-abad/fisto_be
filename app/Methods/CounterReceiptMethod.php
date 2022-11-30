@@ -71,15 +71,17 @@ class CounterReceiptMethod{
         return $error_summary;
     }
 
-    public static function is_duplicate_receipt($supplier_id,$receipt_no, $counter_receipt_no=0){
+    public static function is_duplicate_receipt($supplier_id,$receipt_no, $transaction_id){
 
-        $counter_receipt_no = CounterReceipt::where('supplier_id',$supplier_id)
-        ->where('receipt_no',$receipt_no)
-        ->where('state','!=','counter-void')
+         $counter_receipt_no = CounterReceipt::where('id',$transaction_id)
         ->select('counter_receipt_no')->get();
+        
         if(!$counter_receipt_no){
             $counter_receipt_no = 0;
+        }else{
+            $counter_receipt_no = $counter_receipt_no->first()->counter_receipt_no;
         }
+
         $is_duplicate = CounterReceipt::where('supplier_id',$supplier_id)
         ->where('receipt_no',$receipt_no)
         ->where('state','!=','counter-void')

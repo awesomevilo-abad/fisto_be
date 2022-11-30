@@ -125,6 +125,7 @@ class CounterReceiptController extends Controller
     public function validate_receipt(Request $request){
         $supplier = $request['supplier_id'];
         $receipt_no = $request['receipt_no'];
-        $is_duplicate = CounterReceiptMethod::is_duplicate_receipt($supplier, $receipt_no);
+        $transaction_id = $request['transaction_id'];
+        $is_duplicate = CounterReceiptMethod::is_duplicate_receipt($supplier, $receipt_no, $transaction_id);
     }
 }
