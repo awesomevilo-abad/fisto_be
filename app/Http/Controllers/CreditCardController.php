@@ -35,7 +35,7 @@ class CreditCardController extends Controller
         $credit_card = CreditCard::withTrashed()
         ->where(function ($query) use ($status){
           ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
-        })->get(['id','account_no']);
+        })->get(['id','account_no as no']);
         $credit_card = array("account_numbers"=>$credit_card);
       }else{
         $credit_card = $credit_card->latest('updated_at')
