@@ -64,7 +64,11 @@ class CounterReceiptController extends Controller
             ->orWhere('status', 'like', '%' . $search . '%');
           
         })
-        ->where('state',preg_replace('/\s+/', '', $status));
+        ->when(strtolower($status) == "pending", function($query){
+            $query->whereIn('state',['pending','monitoring-return']);
+        }, function ($query) use ($status){
+            $query->where('state',preg_replace('/\s+/', '', $status));
+        });
         
         if ($transactions->count() > 0) {
             return GenericMethod::resultResponse('fetch', 'Counter Receipt Transaction', $transactions->paginate($rows));
@@ -116,10 +120,16 @@ class CounterReceiptController extends Controller
     }
 
     public function update_flow_counter(Request $request, $id){
+        $subprocess = $request['subprocess'];
         $is_flow_update =  CounterReceiptMethod::update_flow_counter($request, $id);
+
         if($is_flow_update){
+            if($subprocess == "void"){
+                return GenericMethod::resultResponse("void","Transaction",[]);
+            }
             return GenericMethod::resultResponse("save","Transaction",[]);
         }
+
     }   
 
     public function validate_receipt(Request $request){

@@ -4,6 +4,7 @@ namespace App\Methods;
 
 use Illuminate\Validation\ValidationException;
 use App\Models\CounterReceipt;
+use App\Models\Monitoring;
 use App\Methods\GenericMethod;
 
 class CounterReceiptMethod{
@@ -131,14 +132,26 @@ class CounterReceiptMethod{
     }
 
     public static function update_flow_counter($fields, $id){
-        if($fields['process'] = "counter"){
-            if($fields['subprocess'] = "void"){
+
+        if($fields['process'] == "counter"){
+            if($fields['subprocess'] == "void"){
                 $status= 'Voided';
                 $state= 'counter-void';
             }
             $update_flow_status = CounterReceiptMethod::update_flow_status($fields,$status,$state,$id);
-        }else if($fields['process'] = "monitoring"){
-
+        }else if($fields['process'] == "monitoring"){
+            if($fields['subprocess'] == "receive"){
+                $status= 'Received';
+                $state= 'monitoring-receive';
+            }else if($fields['subprocess'] == "return"){
+                $status= 'Returned';
+                $state= 'monitoring-return';
+            }else if($fields['subprocess'] == "unreturn"){
+                $status= 'Unreturned';
+                $state= 'monitoring-unreturn';
+            }
+            $update_flow_status = CounterReceiptMethod::update_flow_status($fields,$status,$state,$id);
+            $add_counter_log = CounterReceiptMethod::add_counter_log($fields,$status,$state,$id);
         }
 
         return $update_flow_status;
@@ -150,5 +163,45 @@ class CounterReceiptMethod{
             "status"=>$status,
             "state"=>$state
         ]);
+    }
+
+    public static function add_counter_log($fields,$status,$state,$id){
+        $counter_receipt =CounterReceipt::where('id',$id)->get([
+            'date_countered',
+            'date_transaction',
+            'counter_receipt_no',
+            'receipt_type',
+            'receipt_no',
+            'supplier_id',
+            'supplier',
+            'department_id',
+            'department',
+            'amount',
+            'status',
+            'state',
+            'receiver',
+            'remarks',
+        ]);
+         $counter_receipt = $counter_receipt->first();
+
+        $log = Monitoring::create([
+            "counter_receipt_id"=>$id
+            ,"date_countered"=>$counter_receipt['date_countered']
+            ,"date_transaction"=>$counter_receipt['date_transaction']
+            ,"counter_receipt_no"=>$counter_receipt['counter_receipt_no']
+            ,"receipt_type"=>$counter_receipt['receipt_type']
+            ,"receipt_no"=>$counter_receipt['receipt_no']
+            ,"supplier_id"=>$counter_receipt['supplier_id']
+            ,"supplier"=>$counter_receipt['supplier']
+            ,"department_id"=>$counter_receipt['department_id']
+            ,"department"=>$counter_receipt['department']
+            ,"amount"=>$counter_receipt['amount']
+            ,"status"=>$status
+            ,"state"=>$state
+            ,"receiver"=>$counter_receipt['receiver']
+            ,"remarks"=>$counter_receipt['remarks']
+        ]);
+        return $log;
+
     }
 }
