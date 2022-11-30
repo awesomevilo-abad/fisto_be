@@ -16,6 +16,7 @@ class CounterReceiptController extends Controller
     public function index(Request $request){
 
         $department = [];
+        $dateToday = Carbon::now()->timezone('Asia/Manila');
         $status =  isset($request['state']) && $request['state'] ? $request['state'] : "request";
         $rows =  isset($request['rows']) && $request['rows'] ? (int)$request['rows'] : 10;
         $suppliers =  isset($request['suppliers']) && $request['suppliers'] ? array_map('intval', json_decode($request['suppliers'])) : [];
