@@ -132,11 +132,10 @@ class CounterReceiptMethod{
         }
 
         return $update_flow_status;
-
     }
 
     public static function update_flow_status($fields,$status,$state,$id){
-        CounterReceipt::where('id',$id)
+        return CounterReceipt::where('id',$id)
         ->update([
             "status"=>$status,
             "state"=>$state

@@ -25,7 +25,6 @@ class CounterReceiptController extends Controller
         $search =  $request['search'];
         !empty($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department[0]['name']) ;
         
-       
         $transactions = CounterReceipt::latest()->select([
             'id',
             'date_countered',
@@ -65,7 +64,7 @@ class CounterReceiptController extends Controller
             ->orWhere('status', 'like', '%' . $search . '%');
           
         })
-        ->where('status',preg_replace('/\s+/', '', $status));
+        ->where('state',preg_replace('/\s+/', '', $status));
         
         if ($transactions->count() > 0) {
             return GenericMethod::resultResponse('fetch', 'Counter Receipt Transaction', $transactions->paginate($rows));
@@ -118,7 +117,9 @@ class CounterReceiptController extends Controller
 
     public function update_flow_counter(Request $request, $id){
         $is_flow_update =  CounterReceiptMethod::update_flow_counter($request, $id);
-        
+        if($is_flow_update){
+            return GenericMethod::resultResponse("save","Transaction",[]);
+        }
     }   
 
     public function validate_receipt(Request $request){
