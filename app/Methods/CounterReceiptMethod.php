@@ -158,11 +158,25 @@ class CounterReceiptMethod{
     }
 
     public static function update_flow_status($fields,$status,$state,$id){
+        $is_with_reason = $fields['reason']['id'];
+        $reason_id = NULL;
+        $reason = NULL;
+        $reason_remarks = NULL;
+
+        if($is_with_reason){
+            $reason_id =$fields['reason']['id'];
+            $reason =$fields['reason']['description'];
+            $reason_remarks =$fields['reason']['remarks'];
+        }
+
         return CounterReceipt::where('id',$id)
-        ->update([
-            "status"=>$status,
-            "state"=>$state
-        ]);
+            ->update([
+                "status"=>$status,
+                "state"=>$state,
+                "reason_id"=>$reason_id,
+                "reason"=>$reason,
+                "reason_remarks"=>$reason_remarks
+            ]);
     }
 
     public static function add_counter_log($fields,$status,$state,$id){

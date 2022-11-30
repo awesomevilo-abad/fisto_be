@@ -615,6 +615,7 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'App\\Models\\LocationDepartment' => __DIR__ . '/../..' . '/app/Models/LocationDepartment.php',
         'App\\Models\\Masterlist' => __DIR__ . '/../..' . '/app/Models/Masterlist.php',
         'App\\Models\\Match' => __DIR__ . '/../..' . '/app/Models/Match.php',
+        'App\\Models\\Monitoring' => __DIR__ . '/../..' . '/app/Models/Monitoring.php',
         'App\\Models\\POBatch' => __DIR__ . '/../..' . '/app/Models/POBatch.php',
         'App\\Models\\POGroupBatches' => __DIR__ . '/../..' . '/app/Models/POGroupBatches.php',
         'App\\Models\\PayrollCategory' => __DIR__ . '/../..' . '/app/Models/PayrollCategory.php',

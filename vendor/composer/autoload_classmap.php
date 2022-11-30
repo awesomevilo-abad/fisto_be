@@ -96,6 +96,7 @@ return array(
     'App\\Models\\LocationDepartment' => $baseDir . '/app/Models/LocationDepartment.php',
     'App\\Models\\Masterlist' => $baseDir . '/app/Models/Masterlist.php',
     'App\\Models\\Match' => $baseDir . '/app/Models/Match.php',
+    'App\\Models\\Monitoring' => $baseDir . '/app/Models/Monitoring.php',
     'App\\Models\\POBatch' => $baseDir . '/app/Models/POBatch.php',
     'App\\Models\\POGroupBatches' => $baseDir . '/app/Models/POGroupBatches.php',
     'App\\Models\\PayrollCategory' => $baseDir . '/app/Models/PayrollCategory.php',

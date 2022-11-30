@@ -23,8 +23,8 @@ class CounterReceiptController extends Controller
         $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : $dateToday->startOfDay()->format('Y-m-d H:i:s');
         $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday->endOfDay()->format('Y-m-d H:i:s');
         $search =  $request['search'];
-        !empty($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department[0]['name']) ;
-        
+        $department =  isset($request['department']) ? array_map('intval', json_decode($request['department'])) : [];
+
         $transactions = CounterReceipt::latest()->select([
             'id',
             'date_countered',
@@ -43,6 +43,9 @@ class CounterReceiptController extends Controller
         ])
         ->when(!empty($suppliers),function($query) use ($suppliers){
             $query->whereIn('supplier_id',$suppliers);
+        })
+        ->when(!empty($department),function($query) use ($department){
+            $query->whereIn('department_id',$department);
         })
         ->when(!empty($transaction_from) || !empty($transaction_to),function($query) use ($transaction_from, $transaction_to){
             $query->where('date_countered','>=',$transaction_from) 
@@ -121,7 +124,7 @@ class CounterReceiptController extends Controller
 
     public function update_flow_counter(Request $request, $id){
         $subprocess = $request['subprocess'];
-        $is_flow_update =  CounterReceiptMethod::update_flow_counter($request, $id);
+       return $is_flow_update =  CounterReceiptMethod::update_flow_counter($request, $id);
 
         if($is_flow_update){
             if($subprocess == "void"){
