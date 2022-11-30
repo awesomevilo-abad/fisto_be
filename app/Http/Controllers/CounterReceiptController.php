@@ -124,7 +124,7 @@ class CounterReceiptController extends Controller
 
     public function update_flow_counter(Request $request, $id){
         $subprocess = $request['subprocess'];
-       return $is_flow_update =  CounterReceiptMethod::update_flow_counter($request, $id);
+        $is_flow_update =  CounterReceiptMethod::update_flow_counter($request, $id);
 
         if($is_flow_update){
             if($subprocess == "void"){

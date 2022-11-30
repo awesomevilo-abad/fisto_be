@@ -150,8 +150,8 @@ class CounterReceiptMethod{
                 $status= 'Unreturned';
                 $state= 'monitoring-unreturn';
             }
-            $update_flow_status = CounterReceiptMethod::update_flow_status($fields,$status,$state,$id);
             $add_counter_log = CounterReceiptMethod::add_counter_log($fields,$status,$state,$id);
+            $update_flow_status = CounterReceiptMethod::update_flow_status($fields,$status,$state,$id);
         }
 
         return $update_flow_status;
@@ -169,14 +169,27 @@ class CounterReceiptMethod{
             $reason_remarks =$fields['reason']['remarks'];
         }
 
-        return CounterReceipt::where('id',$id)
-            ->update([
-                "status"=>$status,
-                "state"=>$state,
-                "reason_id"=>$reason_id,
-                "reason"=>$reason,
-                "reason_remarks"=>$reason_remarks
-            ]);
+       $monitoring_id = Monitoring::where('counter_receipt_id',$id)->latest()->get()->first()->id;
+        $counter_receipt_log = CounterReceipt::where('id',$id)
+        ->update([
+            "status"=>$status,
+            "state"=>$state,
+            "reason_id"=>$reason_id,
+            "reason"=>$reason,
+            "reason_remarks"=>$reason_remarks
+        ]);
+
+        $monitoring_receipt_log = Monitoring::where('id',$monitoring_id)
+           ->update([
+               "status"=>$status,
+               "state"=>$state,
+               "reason_id"=>$reason_id,
+               "reason"=>$reason,
+               "reason_remarks"=>$reason_remarks
+           ]);
+        
+           return $counter_receipt_log;
+
     }
 
     public static function add_counter_log($fields,$status,$state,$id){

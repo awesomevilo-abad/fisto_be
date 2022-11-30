@@ -21,7 +21,6 @@ class CounterReceipt extends JsonResource
         $counter_receipts = CounterReceiptModel::where('counter_receipt_no',$this->counter_receipt_no)
         ->where('state', '!=', 'counter-void')
         ->get();
-      
         
         foreach ($counter_receipts as $receipt){
             
@@ -59,6 +58,11 @@ class CounterReceipt extends JsonResource
 
         return [
             "transaction"=>$transaction,
+            "reason"=>[
+                "id"=>$this->reason_id,
+                "description"=>$this->reason,
+                "remarks"=>$this->reason_remarks,
+            ],
             "supplier"=>[
                 "id"=> $this->supplier_id,
                 "name"=> $this->supplier
