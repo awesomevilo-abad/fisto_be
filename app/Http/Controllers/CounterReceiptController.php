@@ -23,7 +23,7 @@ class CounterReceiptController extends Controller
         $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : $dateToday->startOfDay()->format('Y-m-d H:i:s');
         $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday->endOfDay()->format('Y-m-d H:i:s');
         $search =  $request['search'];
-        $department =  isset($request['department']) ? array_map('intval', json_decode($request['department'])) : [];
+        $department =  isset($request['departments']) ? array_map('intval', json_decode($request['departments'])) : [];
 
         $transactions = CounterReceipt::latest()->select([
             'id',
