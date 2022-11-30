@@ -28,10 +28,12 @@ class UtilityLocationController extends Controller
    ->where('location','like','%'.$search.'%');
 
    if($paginate == 0){
-    $utility_Locations_ids = DB::table('credit_card_utility_locations')
+     $utility_Locations_ids = DB::table('credit_card_utility_locations')
       ->selectRaw("utility_location_id")
       ->leftJoin('credit_card_utility_categories','credit_card_utility_locations.credit_card_id','=','credit_card_utility_categories.credit_card_id')
-    ->where("credit_card_utility_categories.utility_category_id","=",$category)->pluck('utility_location_id');
+      ->leftJoin('credit_cards','credit_card_utility_locations.credit_card_id','=','credit_cards.id')
+      ->whereNull('credit_cards.deleted_at')
+      ->where("credit_card_utility_categories.utility_category_id","=",$category)->pluck('utility_location_id');
 
      $utility_locations = DB::table('utility_locations')
      ->when($status, function ($query){
@@ -43,9 +45,12 @@ class UtilityLocationController extends Controller
      ->leftJoin('credit_card_utility_locations','utility_locations.id','=','credit_card_utility_locations.utility_location_id')
      ->leftJoin('credit_card_utility_categories','credit_card_utility_locations.credit_card_id','=','credit_card_utility_categories.credit_card_id')
      ->leftJoin('utility_categories','credit_card_utility_categories.utility_category_id','=','utility_categories.id')
+     ->leftJoin('credit_cards','credit_card_utility_locations.credit_card_id','=','credit_cards.id')
      ->whereNotIn('utility_locations.id',$utility_Locations_ids)
      ->groupBy('utility_locations.id','utility_locations.location')
      ->get(['utility_locations.id','utility_locations.location as name']);
+     
+     $utility_locations = array("utility_locations"=>$utility_locations);
    }else{
     $utility_locations = $utility_locations->latest()
     ->paginate($rows);

@@ -36,6 +36,7 @@ class CreditCardController extends Controller
         ->where(function ($query) use ($status){
           ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
         })->get(['id','account_no']);
+        $credit_card = array("account_numbers"=>$credit_card);
       }else{
         $credit_card = $credit_card->latest('updated_at')
         ->paginate($rows);
