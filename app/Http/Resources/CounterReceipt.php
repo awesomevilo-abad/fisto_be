@@ -18,7 +18,9 @@ class CounterReceipt extends JsonResource
     {
         $counter_receipt_group = [];
         $counter_receipt = [];
-        $counter_receipts = CounterReceiptModel::where('counter_receipt_no',$this->counter_receipt_no)->get();
+        $counter_receipts = CounterReceiptModel::where('counter_receipt_no',$this->counter_receipt_no)
+        ->where('state', '!=', 'counter-void')
+        ->get();
       
         
         foreach ($counter_receipts as $receipt){
