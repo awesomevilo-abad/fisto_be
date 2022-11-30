@@ -26,6 +26,7 @@ class CreateCounterReceiptsTable extends Migration
             $table->string('department')->nullable();
             $table->float('amount')->nullable();
             $table->string('status')->nullable();
+            $table->string('state')->nullable();
             $table->string('receiver')->nullable();
             $table->longText('remarks')->nullable();
             $table->timestamps();

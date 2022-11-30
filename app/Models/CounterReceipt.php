@@ -22,6 +22,7 @@ class CounterReceipt extends Model
         "department",
         "amount",
         "status",
+        "state",
         "receiver",
         "remarks"
     ];

@@ -221,6 +221,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::get('counter-receipts/',[CounterReceiptController::class,'index']);
     Route::get('counter-receipts/{id}',[CounterReceiptController::class,'show']);
     Route::put('counter-receipts/{counter}',[CounterReceiptController::class,'update']);
+    Route::post('counter-receipts/flow/',[CounterReceiptController::class,'update_flow_counter']);
 
     // Route::get('transactions/flow/',[TransactionFlowController::class,'pullRequest']);
     // Route::get('transactions/flow/{id}',[TransactionFlowController::class,'pullSingleRequest']);

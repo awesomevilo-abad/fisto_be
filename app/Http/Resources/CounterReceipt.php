@@ -44,7 +44,8 @@ class CounterReceipt extends JsonResource
                 "date_transaction"=>$this->date_transaction,
                 "receipt_no"=>$this->receipt_no,
                 "amount"=>$this->amount,
-                "status"=>$this->status
+                "status"=>$this->status,
+                "state"=>$this->state
             ],
         ];
     }

@@ -52,6 +52,7 @@ class CounterReceiptMethod{
 
             $is_duplicate = CounterReceipt::where('supplier_id',$supplier_id)
             ->where('receipt_no',$receipt_no)
+            ->where('state','!=','counter-void')
             ->when($counter_receipt_no, function ($query) use ($counter_receipt_no){
                 $query->where('counter_receipt_no','<>',$counter_receipt_no);
             })
@@ -73,6 +74,7 @@ class CounterReceiptMethod{
     public static function is_duplicate_receipt($supplier_id,$receipt_no, $counter_receipt_no=0){
         $is_duplicate = CounterReceipt::where('supplier_id',$supplier_id)
         ->where('receipt_no',$receipt_no)
+        ->where('state','!=','counter-void')
         ->when($counter_receipt_no, function ($query) use ($counter_receipt_no){
             $query->where('counter_receipt_no','<>',$counter_receipt_no);
         })
@@ -109,12 +111,17 @@ class CounterReceiptMethod{
                 "date_transaction"=>$receipt['date_transaction'],
                 "amount"=>$receipt['amount'],
                 "status"=>"Pending",
+                "state"=>"pending",
                 "remarks"=>$fields['remarks'],
             ]);
 
         }
 
         return $counter_receipt;
+    }
+
+    public static function update_flow_counter($fields){
+        return $fields;
     }
 
 }

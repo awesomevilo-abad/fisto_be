@@ -39,7 +39,8 @@ class CounterReceiptController extends Controller
             'department_id',
             'department',
             'amount',
-            'status'
+            'status',
+            'state'
         ])
         ->when(!empty($suppliers),function($query) use ($suppliers){
             $query->whereIn('supplier_id',$suppliers);
@@ -102,7 +103,6 @@ class CounterReceiptController extends Controller
             return GenericMethod::resultResponse("save","Transaction",[]);
         }
     }
-    
 
     public function update(Request $request, CounterReceipt $counter,$errors=[]){
         $is_multiple = CounterReceiptMethod::multiple_counter($request);
@@ -117,6 +117,10 @@ class CounterReceiptController extends Controller
             return GenericMethod::resultResponse("save","Transaction",[]);
         }
     }
+
+    public function update_flow_counter(Request $request){
+        return CounterReceiptMethod::update_flow_counter($request);
+    }   
 
     public function validate_receipt(Request $request){
         $supplier = $request['supplier_id'];
