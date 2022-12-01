@@ -20,8 +20,8 @@ class CounterReceiptController extends Controller
         $status =  isset($request['state']) && $request['state'] ? $request['state'] : "request";
         $rows =  isset($request['rows']) && $request['rows'] ? (int)$request['rows'] : 10;
         $suppliers =  isset($request['suppliers']) && $request['suppliers'] ? array_map('intval', json_decode($request['suppliers'])) : [];
-        $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : $dateToday->startOfDay()->format('Y-m-d H:i:s');
-        $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday->endOfDay()->format('Y-m-d H:i:s');
+        $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : NULL;
+        $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : NULL;
         $search =  $request['search'];
         $department =  isset($request['departments']) ? array_map('intval', json_decode($request['departments'])) : [];
 
@@ -127,10 +127,7 @@ class CounterReceiptController extends Controller
         $is_flow_update =  CounterReceiptMethod::update_flow_counter($request, $id);
 
         if($is_flow_update){
-            if($subprocess == "void"){
-                return GenericMethod::resultResponse("void","Transaction",[]);
-            }
-            return GenericMethod::resultResponse("save","Transaction",[]);
+            return GenericMethod::resultResponse($subprocess,"Transaction",[]);
         }
 
     }   
