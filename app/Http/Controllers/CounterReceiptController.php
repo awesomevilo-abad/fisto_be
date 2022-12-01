@@ -8,6 +8,7 @@ use App\Methods\CounterReceiptMethod;
 use App\Methods\GenericMethod;
 use App\Http\Requests\CounterReceiptRequest;
 use App\Http\Resources\CounterReceipt as CounterReceiptResource;
+use App\Http\Resources\CounterReceiptIndex;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -76,9 +77,14 @@ class CounterReceiptController extends Controller
                 $query->where('state',preg_replace('/\s+/', '', $status));
             });
         });
-        
+
         if ($transactions->count() > 0) {
-            return GenericMethod::resultResponse('fetch', 'Counter Receipt Transaction', $transactions->paginate($rows));
+            $transactions = $transactions
+            ->latest('updated_at')
+            ->paginate($rows);
+            
+            CounterReceiptIndex::collection($transactions);
+            return GenericMethod::resultResponse('fetch', 'Counter Receipt Transaction', $transactions);
         }
          return GenericMethod::resultResponse('not-found', 'Transaction', []);
     }
@@ -141,5 +147,9 @@ class CounterReceiptController extends Controller
         $receipt_no = $request['receipt_no'];
         $transaction_id = $request['transaction_id'];
         $is_duplicate = CounterReceiptMethod::is_duplicate_receipt($supplier, $receipt_no, $transaction_id);
+    }
+
+    public function update_receiver_notice(Request $request){
+        return $request;
     }
 }
