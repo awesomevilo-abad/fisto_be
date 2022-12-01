@@ -70,8 +70,8 @@ class CounterReceiptController extends Controller
         ->when(strtolower($status) == "pending", function($query){
             $query->whereIn('state',['pending','monitoring-return']);
         }, function ($query) use ($status){
-            $query->when(strtolower($status) == "pending-monitoring", function ($query) use ($status){
-                $query->whereIn('state',['monitoring-receive']);
+            $query->when(strtolower($status) == "monitoring-receive", function ($query) use ($status){
+                $query->whereIn('state',['monitoring-receive','monitoring-unreturn']);
             }, function ($query) use ($status){
                 $query->where('state',preg_replace('/\s+/', '', $status));
             });
