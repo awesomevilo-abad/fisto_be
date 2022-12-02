@@ -16,6 +16,8 @@ class BankController extends Controller
     $status =  $request['status'];
     $rows =  (empty($request['rows']))?10:(int)$request['rows'];
     $search =  $request['search'];
+    $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
+    $account_title_id = (isset($request['account_title_id']))? $request['account_title_id']:NULL;
     
     $banks = Bank::withTrashed()
     ->with('AccountTitleOne')
@@ -30,8 +32,18 @@ class BankController extends Controller
       ->orWhere('banks.account_no', 'like', '%'.$search.'%')
       ->orWhere('banks.location', 'like', '%'.$search.'%');
     })
-    ->latest('updated_at')
-    ->paginate($rows);
+    ->latest('updated_at');
+    
+   if($paginate == 0){
+     $banks = $banks->where('account_title_1',$account_title_id)
+     ->without('AccountTitleOne')
+     ->without('AccountTitleTwo')->get(['id','name','branch']);
+     $banks = ["banks"=>$banks];
+    }else{
+      $banks = $banks->paginate($rows);
+
+    }
+
     
     if(count($banks)==true){
       return $this->resultResponse('fetch','Bank',$banks);
@@ -317,13 +329,13 @@ class BankController extends Controller
 
   public function bankAccountTitleDropdown(Request $request){
     $id = $request['id'];
+    $status = $request['status'];
+    $paginate = $request['paginate'];
     
     $bank_details = Bank::where('account_title_1',$id)->select('id','name','branch')->get();
     if(!($bank_details)->isEmpty()){
-      return ["banks"=>$bank_details];
+      return $this->resultResponse('fetch','Bank',["banks"=>$bank_details]);
     }
     return $this->resultResponse('not-found','Bank',[]);
-
-
   }
 }

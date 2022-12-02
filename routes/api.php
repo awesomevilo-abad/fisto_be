@@ -77,7 +77,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::get('company',[CompanyController::class,'index']);
         Route::get('department',[DepartmentController::class,'index']);
         Route::get('location',[LocationController::class,'index']);
-        Route::get('bank-account-title',[BankController::class,'bankAccountTitleDropdown']);
+        Route::get('bank-account-title',[BankController::class,'index']);
     });
 
     Route::group(['prefix' => 'admin', 'middleware' => ['auth'=>'is_admin']], function(){

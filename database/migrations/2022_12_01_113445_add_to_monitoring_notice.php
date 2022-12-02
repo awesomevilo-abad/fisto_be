@@ -15,6 +15,7 @@ class AddToMonitoringNotice extends Migration
     {
         Schema::table('monitoring', function (Blueprint $table) {
             //
+            $table->string('counter_receipt_status')->nullable();
             $table->integer('notice_count')->default(0);
         });
     }
@@ -28,6 +29,7 @@ class AddToMonitoringNotice extends Migration
     {
         Schema::table('monitoring', function (Blueprint $table) {
             //
+            $table->dropColumn('counter_receipt_status');
             $table->dropColumn('notice_count');
         });
     }

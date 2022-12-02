@@ -16,17 +16,16 @@ class CounterReceiptIndex extends JsonResource
      */
     public function toArray($request)
     {
-        $transaction =  Transaction::where('supplier_id',$this->supplier_id)
-        ->where('company_id',$this->company_id)
-        ->where('referrence_no',"2133");
+        $transaction =  Transaction::where('referrence_no',"2133")
+        ->where('supplier_id',$this->supplier_id)
+        ->where('department_id',$this->department_id);
         
         if($transaction->exists()){
-           $counter_receipt_status =  $this->stateChange($transaction->get()->first()->state);
+           $counter_receipt_status =  $this->stateChange($transaction->get()->first()->status);
         }
         else{
             $counter_receipt_status = "Unprocessed";
         }
-
 
         return
             [
@@ -46,7 +45,6 @@ class CounterReceiptIndex extends JsonResource
                 "state"=> $this->state,
                 "counter_receipt_status"=> $counter_receipt_status
             ];
-            
     }
 
     public function stateChange($state){
@@ -74,11 +72,11 @@ class CounterReceiptIndex extends JsonResource
             
             default:
                 if(str_ends_with($state,"e")){
-                    $state = ucfirst($state.'d');
+                    $state = ($state.'d');
                 }else if(str_ends_with($state,"g")){
-                    $state = ucfirst($state);
+                    $state = ($state);
                 }else{
-                    $state = ucfirst($state.'ed');
+                    $state = ($state.'ed');
                 }
         }
 

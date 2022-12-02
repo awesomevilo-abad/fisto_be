@@ -25,6 +25,10 @@ class CounterReceiptController extends Controller
         $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : NULL;
         $search =  $request['search'];
         $department =  isset($request['departments']) ? array_map('intval', json_decode($request['departments'])) : [];
+        $counter_receipt_status = isset($request['counter_receipt_status'])?$request['counter_receipt_status']:NULL;
+
+        // return $counter_receipt_status;
+
 
         $transactions = CounterReceipt::latest()->select([
             'id',
@@ -52,6 +56,16 @@ class CounterReceiptController extends Controller
             $query->where('date_countered','>=',$transaction_from) 
             ->where('date_countered','<=',$transaction_to);
         })
+        // ->when($counter_receipt_status, function ($query) use ($counter_receipt_status){
+        //     $query->when($counter_receipt_status == "Unprocessed", function ($query){
+        //            $query->join('transactions', function ($join){
+        //                 $join->on('counter_receipts.department_id','=','transactions.department_id')
+        //                 ->on('counter_receipts.supplier_id','=','transactions.supplier_id')
+        //                 ->on('counter_receipts.receipt_no','=','transactions.referrence_no');
+        //            });
+        //     });
+        //     // $query->where('counter_receipt_status',)
+        // })
         ->where(function ($query) use ($search) {
             $query->where('id', 'like', '%' . $search . '%')
             ->orWhere('date_countered', 'like', '%' . $search . '%')
@@ -66,7 +80,6 @@ class CounterReceiptController extends Controller
             ->orWhere('department', 'like', '%' . $search . '%')
             ->orWhere('amount', 'like', '%' . $search . '%')
             ->orWhere('status', 'like', '%' . $search . '%');
-          
         })
         ->when(strtolower($status) == "pending", function($query){
             $query->whereIn('state',['pending','monitoring-return']);
@@ -82,7 +95,6 @@ class CounterReceiptController extends Controller
             $transactions = $transactions
             ->latest('updated_at')
             ->paginate($rows);
-            
             CounterReceiptIndex::collection($transactions);
             return GenericMethod::resultResponse('fetch', 'Counter Receipt Transaction', $transactions);
         }
