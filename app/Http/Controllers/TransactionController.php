@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Requests\PODetailsRequest;
 use App\Methods\PADValidationMethod;
 use App\Methods\GenericMethod;
+use App\Methods\CounterReceiptMethod;
 use App\Models\Transaction;
 use App\Models\POBatch;
 use App\Models\Tagging;
@@ -405,9 +406,26 @@ class TransactionController extends Controller
 
     public function showTransaction($id)
     {
+        $counter_receipt_status = NULL;
+        $counter_receipt_no = NULL;
         // $transaction = DB::table('transactions')->where('id',$id)->first();
         $transaction = Transaction::where('id',$id)->get();
-        $singleTransaction = TransactionResource::collection($transaction);
+        if($transaction->isEmpty()){
+            throw new FistoException("No records found.", 404, NULL, []);
+        }
+
+       $counter_receipt_details = CounterReceiptMethod::get_counter_receipt_id($transaction->first()->referrence_no,$transaction->first()->supplier_id,$transaction->first()->department_id);
+       if($counter_receipt_details){
+           $counter_receipt_status = $counter_receipt_details->counter_receipt_status;
+           $counter_receipt_no = $counter_receipt_details->counter_receipt_no;
+       }
+
+      $transaction->map(function ($value) use($counter_receipt_status, $counter_receipt_no){
+        $value['counter_receipt_status'] =$counter_receipt_status;
+        $value['counter_receipt_no'] =$counter_receipt_no;
+      });
+      
+       $singleTransaction = TransactionResource::collection($transaction);
         if(count($singleTransaction)!=true){
             throw new FistoException("No records found.", 404, NULL, []);
         }

@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Http\Resources;
+
 use App\Models\User;
 use App\Models\POBatch;
 use App\Models\Transaction;
 use App\Models\Reason;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class TransactionResource extends JsonResource
+class CounterReceiptSingleView extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -36,8 +37,18 @@ class TransactionResource extends JsonResource
         $reverse_distributor = [];
         $autoDebit_group = [];
 
-        $counter_receipt_status = ($this->counter_receipt_status)?$this->counter_receipt_status:NULL;
-        $counter_receipt_no = ($this->counter_receipt_no)?$this->counter_receipt_no:NULL;
+        $transaction =  Transaction::where('referrence_no',$this->referrence_no)
+        ->where('supplier_id',$this->supplier_id)
+        ->where('department_id',$this->department_id);
+
+        if($transaction->exists()){
+            $counter_receipt_status =  $transaction->get()->first()->status;
+            $counter_receipt_no =  $this->counter_receipt_no;
+        }
+        else{
+            $counter_receipt_status = "Unprocessed";
+            $counter_receipt_no = NULL;
+        }
 
         $transaction =  Transaction::with('tag.voucher.account_title')
         ->with('tag.approve')
@@ -55,6 +66,7 @@ class TransactionResource extends JsonResource
         $transaction_voucher_no = (isset($transaction->voucher_no)?$transaction->voucher_no:NULL);
         $transaction_voucher_month = (isset($transaction->voucher_month)?$transaction->voucher_month:NULL);
         $transaction_with_debit = $transaction;
+     
         // TAG PROCESS
         if(count($transaction->tag)>0){
             $transaction_tag= $transaction->tag->first();
@@ -256,7 +268,7 @@ class TransactionResource extends JsonResource
             }else{
             }
             $po_details->last()->balance = $po_details->pluck('previous_balance')->sum() - $this->referrence_amount;
-    }
+        }
         $transaction =($po_transaction->where('request_id',$this->request_id));
  
         switch($this->document_id){
@@ -933,6 +945,7 @@ class TransactionResource extends JsonResource
 
             $autoDebit_group = $auto_debit;
         }
+        
         $transaction_result= [
             "counter_receipt"=>[
                 "status"=>$counter_receipt_status
@@ -987,6 +1000,4 @@ class TransactionResource extends JsonResource
         }
         return $result;
     }
-    
-    
 }

@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\CounterReceipt;
+use App\Models\Transaction;
 use App\Methods\CounterReceiptMethod;
 use App\Methods\GenericMethod;
 use App\Http\Requests\CounterReceiptRequest;
 use App\Http\Resources\CounterReceipt as CounterReceiptResource;
 use App\Http\Resources\CounterReceiptIndex;
+use App\Http\Resources\CounterReceiptSingleView;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -94,7 +96,7 @@ class CounterReceiptController extends Controller
                 ->orderByDesc('counter_receipts.id');
             }, function ($query) use ($status){
                 $query->when(strtolower($status) == "monitoring-receive", function ($query) use ($status){
-                    $query->whereIn('state',['monitoring-receive','monitoring-unreturn']);
+                    $query->whereIn('counter_receipts.state',['monitoring-receive','monitoring-unreturn']);
                 }, function ($query) use ($status){
                     $query->where('counter_receipts.state',preg_replace('/\s+/', '', $status));
                 });
@@ -112,16 +114,33 @@ class CounterReceiptController extends Controller
     }
     
     public function show(Request $request, CounterReceipt $counter){
-        $transaction = CounterReceipt::where('id',$counter->id);
-        $transaction_exists = $transaction->exists();
-        $transaction_details = $transaction->get();
+        // $transaction = CounterReceipt::where('id',$counter->id);
+        // $transaction_exists = $transaction->exists();
+        // $transaction_details = $transaction->get();
 
-        if ($transaction_exists) {
-            $transaction = CounterReceiptResource::collection($transaction_details);
-            return $this->resultResponse('fetch', 'Counter Receipt Transaction', $transaction->first());
-        }else{
-            return $this->resultResponse('not-found', 'Transaction', []);
+        // if ($transaction_exists) {
+        //     $transaction = CounterReceiptResource::collection($transaction_details);
+        //     return $this->resultResponse('fetch', 'Counter Receipt Transaction', $transaction->first());
+        // }else{
+        //     return $this->resultResponse('not-found', 'Transaction', []);
+        // }
+
+        $transaction_id = CounterReceiptMethod::get_trasanction_id($counter->receipt_no,$counter->supplier_id,$counter->department_id);
+        if(!$transaction_id){
+                return $this->resultResponse('not-found', 'Transaction', []);
         }
+
+        $transaction = Transaction::where('id',$transaction_id)->get();
+       
+        $transaction->map(function ($value) use($counter){
+                $value['counter_receipt_no'] =$counter->counter_receipt_no;
+        });
+
+        $singleTransaction = CounterReceiptSingleView::collection($transaction);
+        if(count($singleTransaction)!=true){
+            throw new FistoException("No records found.", 404, NULL, []);
+        }
+        return $this->resultResponse('fetch','Counter Receipt Transaction',$singleTransaction->first());
     }
 
     public function store(CounterReceiptRequest $request){

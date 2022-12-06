@@ -5,17 +5,40 @@ namespace App\Methods;
 use Illuminate\Validation\ValidationException;
 use App\Models\CounterReceipt;
 use App\Models\Monitoring;
+use App\Models\Transaction;
 use App\Methods\GenericMethod;
 
 class CounterReceiptMethod{
 
     
     public static function generate_cr_no(){
-        $id = CounterReceipt::select('counter_receipt_no')->max('counter_receipt_no');
+        $id = CounterReceipt::orderByDesc('id')->value('counter_receipt_no');
         $id = (!$id)?1:$id+1;
         return $id;
     }
 
+    public static function get_trasanction_id($receipt_no,$supplier_id,$department_id){
+        $transaction = Transaction::where('referrence_no',$receipt_no)
+         ->where('supplier_id',$supplier_id)
+         ->where('department_id',$department_id)
+         ->first();
+ 
+         if($transaction){
+             return $transaction->id;
+         }
+     }
+
+     public static function get_counter_receipt_id($receipt_no,$supplier_id,$department_id){
+        $transaction = CounterReceipt::where('receipt_no',$receipt_no)
+         ->where('supplier_id',$supplier_id)
+         ->where('department_id',$department_id)
+         ->first();
+ 
+         if($transaction){
+             return $transaction;
+         }
+     }
+  
     public static function multiple_counter($counter){
         $error_type="duplicate";
         $receipt_nos = array_column($counter->counter_receipt,"receipt_no");
@@ -124,6 +147,7 @@ class CounterReceiptMethod{
                 "status"=>"Pending",
                 "state"=>"pending",
                 "remarks"=>$fields['remarks'],
+                "counter_receipt_status"=>NULL,
             ]);
 
         }
@@ -169,24 +193,27 @@ class CounterReceiptMethod{
             $reason_remarks =$fields['reason']['remarks'];
         }
 
-       $monitoring_id = Monitoring::where('counter_receipt_id',$id)->latest()->get()->first()->id;
-        $counter_receipt_log = CounterReceipt::where('id',$id)
-        ->update([
-            "status"=>$status,
-            "state"=>$state,
-            "reason_id"=>$reason_id,
-            "reason"=>$reason,
-            "reason_remarks"=>$reason_remarks
+       $is_received_in_monitoring = Monitoring::where('counter_receipt_id',$id)->exists();
+        
+       if($is_received_in_monitoring){
+            $monitoring_id = Monitoring::where('counter_receipt_id',$id)->latest()->get()->first()->id;
+            $monitoring_receipt_log = Monitoring::where('id',$monitoring_id)
+            ->update([
+                "status"=>$status,
+                "state"=>$state,
+                "reason_id"=>$reason_id,
+                "reason"=>$reason,
+                "reason_remarks"=>$reason_remarks
+            ]);
+       }
+       $counter_receipt_log = CounterReceipt::where('id',$id)
+       ->update([
+           "status"=>$status,
+           "state"=>$state,
+           "reason_id"=>$reason_id,
+           "reason"=>$reason,
+           "reason_remarks"=>$reason_remarks
         ]);
-
-        $monitoring_receipt_log = Monitoring::where('id',$monitoring_id)
-           ->update([
-               "status"=>$status,
-               "state"=>$state,
-               "reason_id"=>$reason_id,
-               "reason"=>$reason,
-               "reason_remarks"=>$reason_remarks
-           ]);
         
            return $counter_receipt_log;
 

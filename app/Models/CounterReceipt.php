@@ -24,7 +24,8 @@ class CounterReceipt extends Model
         "status",
         "state",
         "receiver",
-        "remarks"
+        "remarks",
+        "counter_receipt_status"
     ];
     
 }
