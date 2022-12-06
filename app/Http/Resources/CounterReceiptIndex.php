@@ -16,17 +16,6 @@ class CounterReceiptIndex extends JsonResource
      */
     public function toArray($request)
     {
-        $transaction =  Transaction::where('referrence_no',"2133")
-        ->where('supplier_id',$this->supplier_id)
-        ->where('department_id',$this->department_id);
-        
-        if($transaction->exists()){
-           $counter_receipt_status =  $this->stateChange($transaction->get()->first()->status);
-        }
-        else{
-            $counter_receipt_status = "Unprocessed";
-        }
-
         return
             [
                 "id"=> $this->id,
@@ -43,7 +32,7 @@ class CounterReceiptIndex extends JsonResource
                 "amount"=> $this->amount,
                 "status"=> $this->status,
                 "state"=> $this->state,
-                "counter_receipt_status"=> $counter_receipt_status
+                "counter_receipt_status"=> $this->counter_receipt_status
             ];
     }
 

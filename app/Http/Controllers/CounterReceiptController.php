@@ -11,6 +11,7 @@ use App\Http\Resources\CounterReceipt as CounterReceiptResource;
 use App\Http\Resources\CounterReceiptIndex;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CounterReceiptController extends Controller
 {
@@ -18,7 +19,7 @@ class CounterReceiptController extends Controller
 
         $department = [];
         $dateToday = Carbon::now()->timezone('Asia/Manila');
-        $status =  isset($request['state']) && $request['state'] ? $request['state'] : "request";
+        $status =  isset($request['state']) && $request['state'] ? $request['state'] : NULL;
         $rows =  isset($request['rows']) && $request['rows'] ? (int)$request['rows'] : 10;
         $suppliers =  isset($request['suppliers']) && $request['suppliers'] ? array_map('intval', json_decode($request['suppliers'])) : [];
         $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : NULL;
@@ -27,75 +28,84 @@ class CounterReceiptController extends Controller
         $department =  isset($request['departments']) ? array_map('intval', json_decode($request['departments'])) : [];
         $counter_receipt_status = isset($request['counter_receipt_status'])?$request['counter_receipt_status']:NULL;
 
-        // return $counter_receipt_status;
-
-
-        $transactions = CounterReceipt::latest()->select([
-            'id',
-            'date_countered',
-            'date_transaction',
-            'counter_receipt_no',
-            'receipt_type_id',
-            'receipt_type',
-            'receipt_no',
-            'supplier_id',
-            'supplier',
-            'department_id',
-            'department',
-            'amount',
-            'status',
-            'state'
+        $transactions = CounterReceipt::select([
+            'counter_receipts.id',
+            'counter_receipts.date_countered',
+            'counter_receipts.date_transaction',
+            'counter_receipts.counter_receipt_no',
+            'counter_receipts.receipt_type_id',
+            'counter_receipts.receipt_type',
+            'counter_receipts.receipt_no',
+            'counter_receipts.supplier_id',
+            'counter_receipts.supplier',
+            'counter_receipts.department_id',
+            'counter_receipts.department',
+            'counter_receipts.amount',
+            'counter_receipts.status',
+            'counter_receipts.state',
+            DB::raw("IFNULL(transactions.status, 'Unprocessed') as counter_receipt_status")
         ])
         ->when(!empty($suppliers),function($query) use ($suppliers){
-            $query->whereIn('supplier_id',$suppliers);
+            $query->whereIn('counter_receipts.supplier_id',$suppliers);
         })
         ->when(!empty($department),function($query) use ($department){
-            $query->whereIn('department_id',$department);
+            $query->whereIn('counter_receipts.department_id',$department);
         })
         ->when(!empty($transaction_from) || !empty($transaction_to),function($query) use ($transaction_from, $transaction_to){
-            $query->where('date_countered','>=',$transaction_from) 
-            ->where('date_countered','<=',$transaction_to);
+            $query->where('counter_receipts.date_countered','>=',$transaction_from) 
+            ->where('counter_receipts.date_countered','<=',$transaction_to);
         })
-        // ->when($counter_receipt_status, function ($query) use ($counter_receipt_status){
-        //     $query->when($counter_receipt_status == "Unprocessed", function ($query){
-        //            $query->join('transactions', function ($join){
-        //                 $join->on('counter_receipts.department_id','=','transactions.department_id')
-        //                 ->on('counter_receipts.supplier_id','=','transactions.supplier_id')
-        //                 ->on('counter_receipts.receipt_no','=','transactions.referrence_no');
-        //            });
-        //     });
-        //     // $query->where('counter_receipt_status',)
-        // })
+        ->leftJoin('transactions', function ($join){
+            $join
+            ->on('counter_receipts.department_id','=','transactions.department_id')
+            ->on('counter_receipts.supplier_id','=','transactions.supplier_id')
+            ->on('counter_receipts.receipt_no','=','transactions.referrence_no');
+        })
+        ->when($counter_receipt_status, function ($query) use ($counter_receipt_status){
+            $query->when(strtolower($counter_receipt_status) == strtolower("Processed"), function ($query){
+                   $query->whereNotNull('transactions.status');
+            },function ($query) use ($counter_receipt_status){
+                    $query->when(strtolower($counter_receipt_status) == strtolower("Unprocessed"), function ($query){
+                        $query->whereNull('transactions.status');
+                    }, function ($query) use ($counter_receipt_status){
+                        $query->where('transactions.status',$counter_receipt_status);
+                    });
+            });
+        })
         ->where(function ($query) use ($search) {
-            $query->where('id', 'like', '%' . $search . '%')
-            ->orWhere('date_countered', 'like', '%' . $search . '%')
-            ->orWhere('date_transaction', 'like', '%' . $search . '%')
-            ->orWhere('counter_receipt_no', 'like', '%' . $search . '%')
-            ->orWhere('receipt_type_id', 'like', '%' . $search . '%')
-            ->orWhere('receipt_type', 'like', '%' . $search . '%')
-            ->orWhere('receipt_no', 'like', '%' . $search . '%')
-            ->orWhere('supplier_id', 'like', '%' . $search . '%')
-            ->orWhere('supplier', 'like', '%' . $search . '%')
-            ->orWhere('department_id', 'like', '%' . $search . '%')
-            ->orWhere('department', 'like', '%' . $search . '%')
-            ->orWhere('amount', 'like', '%' . $search . '%')
-            ->orWhere('status', 'like', '%' . $search . '%');
+            $query->where('counter_receipts.id', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.date_countered', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.date_transaction', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.counter_receipt_no', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.receipt_type_id', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.receipt_type', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.receipt_no', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.supplier_id', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.supplier', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.department_id', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.department', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.amount', 'like', '%' . $search . '%')
+            ->orWhere('counter_receipts.status', 'like', '%' . $search . '%');
         })
-        ->when(strtolower($status) == "pending", function($query){
-            $query->whereIn('state',['pending','monitoring-return']);
-        }, function ($query) use ($status){
-            $query->when(strtolower($status) == "monitoring-receive", function ($query) use ($status){
-                $query->whereIn('state',['monitoring-receive','monitoring-unreturn']);
+        ->when($status, function ($query) use ($status){
+            $query
+            ->when(strtolower($status) == "pending", function($query){
+                $query->whereIn('counter_receipts.state',['pending','monitoring-return'])
+                ->orderByDesc('counter_receipts.id');
             }, function ($query) use ($status){
-                $query->where('state',preg_replace('/\s+/', '', $status));
+                $query->when(strtolower($status) == "monitoring-receive", function ($query) use ($status){
+                    $query->whereIn('state',['monitoring-receive','monitoring-unreturn']);
+                }, function ($query) use ($status){
+                    $query->where('counter_receipts.state',preg_replace('/\s+/', '', $status));
+                });
             });
         });
 
         if ($transactions->count() > 0) {
             $transactions = $transactions
-            ->latest('updated_at')
+            ->latest('counter_receipts.updated_at')
             ->paginate($rows);
-            CounterReceiptIndex::collection($transactions);
+            // CounterReceiptIndex::collection($transactions);
             return GenericMethod::resultResponse('fetch', 'Counter Receipt Transaction', $transactions);
         }
          return GenericMethod::resultResponse('not-found', 'Transaction', []);

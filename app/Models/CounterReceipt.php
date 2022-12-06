@@ -26,5 +26,5 @@ class CounterReceipt extends Model
         "receiver",
         "remarks"
     ];
-
+    
 }
