@@ -216,11 +216,12 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::put('transactions/flow/transfer/{id}',[TransactionFlowController::class, 'transfer']);
 
     // COUNTER RECEIPT 
+    Route::get('counter-receipts/view/{counter}',[CounterReceiptController::class,'showView']);
+    Route::get('counter-receipts/edit/{counter}',[CounterReceiptController::class,'showEdit']);
     Route::post('counter-receipts/validate-receipt-no',[CounterReceiptController::class,'validate_receipt']);
     Route::post('counter-receipts/download-demo',[CounterReceiptController::class,'update_receiver_notice']);
     Route::post('counter-receipts/',[CounterReceiptController::class,'store']);
     Route::get('counter-receipts/',[CounterReceiptController::class,'index']);
-    Route::get('counter-receipts/{counter}',[CounterReceiptController::class,'show']);
     Route::put('counter-receipts/{counter}',[CounterReceiptController::class,'update']);
     Route::post('counter-receipts/flow/{id}',[CounterReceiptController::class,'update_flow_counter']);
 

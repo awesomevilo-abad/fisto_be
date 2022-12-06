@@ -113,18 +113,22 @@ class CounterReceiptController extends Controller
          return GenericMethod::resultResponse('not-found', 'Transaction', []);
     }
     
-    public function show(Request $request, CounterReceipt $counter){
-        // $transaction = CounterReceipt::where('id',$counter->id);
-        // $transaction_exists = $transaction->exists();
-        // $transaction_details = $transaction->get();
 
-        // if ($transaction_exists) {
-        //     $transaction = CounterReceiptResource::collection($transaction_details);
-        //     return $this->resultResponse('fetch', 'Counter Receipt Transaction', $transaction->first());
-        // }else{
-        //     return $this->resultResponse('not-found', 'Transaction', []);
-        // }
+    public function showEdit(Request $request, CounterReceipt $counter){
+        $transaction = CounterReceipt::where('id',$counter->id);
+        $transaction_exists = $transaction->exists();
+        $transaction_details = $transaction->get();
 
+        if ($transaction_exists) {
+            $transaction = CounterReceiptResource::collection($transaction_details);
+            return $this->resultResponse('fetch', 'Counter Receipt Transaction', $transaction->first());
+        }else{
+            return $this->resultResponse('not-found', 'Transaction', []);
+        }
+
+    }
+
+    public function showView(Request $request, CounterReceipt $counter){
         $transaction_id = CounterReceiptMethod::get_trasanction_id($counter->receipt_no,$counter->supplier_id,$counter->department_id);
         if(!$transaction_id){
                 return $this->resultResponse('not-found', 'Transaction', []);

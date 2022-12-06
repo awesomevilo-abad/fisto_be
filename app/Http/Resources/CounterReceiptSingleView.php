@@ -945,13 +945,18 @@ class CounterReceiptSingleView extends JsonResource
 
             $autoDebit_group = $auto_debit;
         }
+
+        $counter_receipt = [];
+        if($counter_receipt_status){
+            $counter_receipt = [
+                    "status"=>$counter_receipt_status
+                    ,"no"=>$counter_receipt_no
+            ];
+        }
         
         $transaction_result= [
-            "counter_receipt"=>[
-                "status"=>$counter_receipt_status
-                ,"no"=>$counter_receipt_no
-            ],
-            "transaction"=>[
+            "counter_receipt"=>$counter_receipt
+            ,"transaction"=>[
                 "id"=>$this->id
                 ,"is_latest_transaction"=>$is_latest_transaction
                 ,"request_id"=>$this->request_id
