@@ -195,6 +195,17 @@ class CounterReceiptController extends Controller
     }
 
     public function update_receiver_notice(Request $request){
-        return $request;
+        foreach($request['counter_receipts'] as $counter_receipt){
+            $id = $counter_receipt['id'];
+            $notice_count = CounterReceiptMethod::get_notice_count($id);
+
+            if($request['is_with_notice']){
+               $notice_count = CounterReceiptMethod::add_notice_count($notice_count);
+            }
+
+            $update_counter = CounterReceiptMethod::update_for_counter_memo($id,$counter_receipt['receiver'],$notice_count);
+        }
+
+        return GenericMethod::resultResponse("counter-save","Counter Receipt Transaction",[]);
     }
 }

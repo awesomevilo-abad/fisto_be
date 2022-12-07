@@ -219,7 +219,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::get('counter-receipts/view/{counter}',[CounterReceiptController::class,'showView']);
     Route::get('counter-receipts/edit/{counter}',[CounterReceiptController::class,'showEdit']);
     Route::post('counter-receipts/validate-receipt-no',[CounterReceiptController::class,'validate_receipt']);
-    Route::post('counter-receipts/download-demo',[CounterReceiptController::class,'update_receiver_notice']);
+    Route::post('counter-receipts/download-memo',[CounterReceiptController::class,'update_receiver_notice']);
     Route::post('counter-receipts/',[CounterReceiptController::class,'store']);
     Route::get('counter-receipts/',[CounterReceiptController::class,'index']);
     Route::put('counter-receipts/{counter}',[CounterReceiptController::class,'update']);

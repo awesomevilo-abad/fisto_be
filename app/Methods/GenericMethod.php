@@ -3229,6 +3229,10 @@ class GenericMethod{
             case('save'):
                 return GenericMethod::result(201,"New ".strtolower($modelName)." has been saved.",$data);
             break;
+
+            case('counter-save'):
+                return GenericMethod::result(201,$modelName." has been saved.",$data);
+            break;
         
             case('import'):
                 return GenericMethod::result(201,Str::plural($modelName)." has been imported.",$data);

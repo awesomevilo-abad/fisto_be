@@ -10,6 +10,15 @@ use App\Methods\GenericMethod;
 
 class CounterReceiptMethod{
 
+    public static function get_notice_count($id){
+        $notice_count = CounterReceipt::findorFail($id)->notice_count;
+        return $notice_count;
+    }
+
+    public static function add_notice_count($notice_count){
+        $notice_count = $notice_count+1;
+        return $notice_count;
+    }
     
     public static function generate_cr_no(){
         $id = CounterReceipt::orderByDesc('id')->value('counter_receipt_no');
@@ -26,18 +35,18 @@ class CounterReceiptMethod{
          if($transaction){
              return $transaction->id;
          }
-     }
+    }
 
-     public static function get_counter_receipt_id($receipt_no,$supplier_id,$department_id){
+    public static function get_counter_receipt_id($receipt_no,$supplier_id,$department_id){
         $transaction = CounterReceipt::where('receipt_no',$receipt_no)
-         ->where('supplier_id',$supplier_id)
-         ->where('department_id',$department_id)
-         ->first();
- 
-         if($transaction){
-             return $transaction;
-         }
-     }
+        ->where('supplier_id',$supplier_id)
+        ->where('department_id',$department_id)
+        ->first();
+
+        if($transaction){
+            return $transaction;
+        }
+    }
   
     public static function multiple_counter($counter){
         $error_type="duplicate";
@@ -179,6 +188,14 @@ class CounterReceiptMethod{
         }
 
         return $update_flow_status;
+    }
+
+    public static function update_for_counter_memo($id,$receiver,$notice_count){
+        $update_counter_receipt = CounterReceipt::where('id',$id)
+            ->update([
+                "receiver"=>$receiver,
+                "notice_count"=>$notice_count
+            ]);
     }
 
     public static function update_flow_status($fields,$status,$state,$id){
