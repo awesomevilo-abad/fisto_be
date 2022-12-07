@@ -45,6 +45,9 @@ class CounterReceiptController extends Controller
             'counter_receipts.amount',
             'counter_receipts.status',
             'counter_receipts.state',
+            'counter_receipts.receiver',
+            'counter_receipts.notice_count',
+            'counter_receipts.latest_notice',
             DB::raw("IFNULL(transactions.status, 'Unprocessed') as counter_receipt_status")
         ])
         ->when(!empty($suppliers),function($query) use ($suppliers){
@@ -197,13 +200,17 @@ class CounterReceiptController extends Controller
     public function update_receiver_notice(Request $request){
         foreach($request['counter_receipts'] as $counter_receipt){
             $id = $counter_receipt['id'];
-            $notice_count = CounterReceiptMethod::get_notice_count($id);
+            $counter_details = CounterReceiptMethod::get_counter_details($id);
+
+            $notice_count = $counter_details->notice_count;
+            $latest_notice = $counter_details->latest_notice;
 
             if($request['is_with_notice']){
                $notice_count = CounterReceiptMethod::add_notice_count($notice_count);
+               $latest_notice = date('Y-m-d');
             }
 
-            $update_counter = CounterReceiptMethod::update_for_counter_memo($id,$counter_receipt['receiver'],$notice_count);
+            $update_counter = CounterReceiptMethod::update_for_counter_memo($id,$counter_receipt['receiver'],$notice_count,$latest_notice);
         }
 
         return GenericMethod::resultResponse("counter-save","Counter Receipt Transaction",[]);

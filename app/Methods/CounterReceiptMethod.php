@@ -10,8 +10,8 @@ use App\Methods\GenericMethod;
 
 class CounterReceiptMethod{
 
-    public static function get_notice_count($id){
-        $notice_count = CounterReceipt::findorFail($id)->notice_count;
+    public static function get_counter_details($id){
+        $notice_count = CounterReceipt::findorFail($id);
         return $notice_count;
     }
 
@@ -190,11 +190,12 @@ class CounterReceiptMethod{
         return $update_flow_status;
     }
 
-    public static function update_for_counter_memo($id,$receiver,$notice_count){
+    public static function update_for_counter_memo($id,$receiver,$notice_count,$latest_notice){
         $update_counter_receipt = CounterReceipt::where('id',$id)
             ->update([
                 "receiver"=>$receiver,
-                "notice_count"=>$notice_count
+                "notice_count"=>$notice_count,
+                "latest_notice"=>$latest_notice
             ]);
     }
 
