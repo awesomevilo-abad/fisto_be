@@ -35,6 +35,7 @@ class TransactionResource extends JsonResource
         $keys = [];
         $reverse_distributor = [];
         $autoDebit_group = [];
+        $clear_description = [];
 
         $counter_receipt_status = ($this->counter_receipt_status)?$this->counter_receipt_status:NULL;
         $counter_receipt_no = ($this->counter_receipt_no)?$this->counter_receipt_no:NULL;
@@ -47,6 +48,8 @@ class TransactionResource extends JsonResource
         ->with('tag.release')
         ->with('tag.file')
         ->with('tag.reverse')
+        ->with('clear')
+        ->with('clear.account_title')
         ->when($this->document_type =="Auto Debit", function($query){
             $query->with('auto_debit');
         })
@@ -185,6 +188,15 @@ class TransactionResource extends JsonResource
             }
         }
         // END REVERSE PROCESS
+
+        // CLEAR PROCESS
+        if(count($transaction->clear)>0){
+            $clear = $transaction->clear->first();
+            $clear_status= (isset($clear->status)?$clear->status:NULL);
+            $clear_date_status= (isset($clear->date)?$clear->date:NULL);
+            $clear_date_cleared= (isset($clear->date_cleared)?$clear->date_cleared:NULL);
+        }
+
         $condition =  ($this->state=='void')? '=': '!=';
         $document_amount = Transaction::where('request_id',$this->request_id)->where('state',$condition,'void')->first()->document_amount;
         $payment_type = strtoupper($this->payment_type);
@@ -720,10 +732,10 @@ class TransactionResource extends JsonResource
             $account_title = null;
 
             if(isset($cheque->cheques)){
-             $cheque_cheques = $cheque->cheques;
-             $cheque_cheques = $cheque_cheques->filter( function ($value,$key){
+                $cheque_cheques = $cheque->cheques;
+                $cheque_cheques = $cheque_cheques->filter( function ($value,$key){
                 return $value['transaction_type'] ==  'new';
-             });
+                });
 
             $cheque_details = $cheque_cheques->mapToGroups(function ($item, $key) {
                 
@@ -748,7 +760,7 @@ class TransactionResource extends JsonResource
             if(isset($cheque->account_title)){
                 $cheque_account_title = $cheque->account_title;
                 $cheque_account_title = $cheque_account_title->filter( function ($value,$key){
-                   return $value['transaction_type'] ==  'new';
+                    return $value['transaction_type'] ==  'new';
                 });
                 $cheque_account_title = $cheque_account_title->mapToGroups(function ($item, $key) {
                     return [$item['treasury_id'] => 
@@ -797,7 +809,6 @@ class TransactionResource extends JsonResource
                 ];
 
         }
-
 
         // RELEASE
         if(isset($release_status)){
@@ -899,6 +910,49 @@ class TransactionResource extends JsonResource
 
         }
 
+        // CLEARING
+        if(isset($clear_status)){
+
+            $account_title = null;
+
+            if(isset($clear->account_title)){
+                $clear_account_title = $clear->account_title;
+                $clear_account_title = $clear_account_title->filter( function ($value,$key){
+                   return $value['transaction_type'] ==  'new';
+                });
+                $clear_account_title = $clear_account_title->mapToGroups(function ($item, $key) {
+                    return [$item['clear_id'] => 
+                                [
+                                "id"=>$item['clear_id']
+                                ,"entry"=>$item['entry']
+                                ,"account_title"=>
+                                    [
+                                        "id"=>$item['account_title_id']
+                                        ,"name"=>$item['account_title_name']
+                                    ]
+                                ,"amount"=>$item['amount']
+                                ,"remarks"=>$item['remarks']
+                                ]
+                            ];
+                    });
+                $account_title= $clear_account_title->values();
+            }
+
+            if(!($account_title->isEmpty())){
+                $account_title = $account_title->first();
+            }else{
+                $account_title = [];
+            }      
+            
+            $clear_description = [
+                    "status"=>$clear_status,
+                    "date"=>$clear_date_status,
+                    "date_cleared"=>$clear_date_cleared,
+                    "accounts"=>$account_title,
+                ];
+
+        }
+
         // PRM GROUP
         if($this->document_type == "PRM Multiple"){
             switch($this->category){
@@ -934,6 +988,9 @@ class TransactionResource extends JsonResource
             $autoDebit_group = $auto_debit;
         }
         
+
+
+        // COUNTER RECEIPT
         $counter_receipt = [];
         if($counter_receipt_status){
             $counter_receipt = [
@@ -984,6 +1041,7 @@ class TransactionResource extends JsonResource
         $transaction_result['release']=$release_description;
         $transaction_result['file']=$file_description;
         $transaction_result['reverse']=$reverse_description;
+        $transaction_result['clear']=$clear_description;
         // return $transaction_result;
         $result = [];
         foreach ( $transaction_result as $k=>$v){

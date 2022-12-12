@@ -31,6 +31,7 @@ use App\Methods\GenericMethod;
 use App\Models\Release;
 use App\Models\File;
 use App\Models\Reverse;
+use App\Models\Clear;
 use Carbon\Carbon;
 
 use Illuminate\Support\Facades\Auth;
@@ -98,6 +99,7 @@ class TransactionFlow{
         $distributed_to=  isset($request['distributed_to'])?$request['distributed_to']:null;
         $accounts=  isset($request['accounts'])?$request['accounts']:NULL;
         $cheque_cheques=  isset($request['cheques'])?$request['cheques']:NULL;
+        $date_cleared=  isset($request['date_cleared'])?$request['date_cleared']:NULL;
 
         $receipt_type = GenericMethod::with_previous_transaction($request['tax']['receipt_type'],$previous_receipt_type);
         $percentage_tax = GenericMethod::with_previous_transaction($request['tax']['percentage_tax'],$previous_percentage_tax);
@@ -450,6 +452,23 @@ class TransactionFlow{
             GenericMethod::reverseTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$role,$distributed_to);
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
             return GenericMethod::resultResponse($state,'','');
+        }else if($process == 'clear'){
+            $account_titles = $cheque_account_titles;
+            $model = new Clear;
+            if($subprocess == 'receive'){
+                $status= 'clear-receive';
+            }else if($subprocess == 'clear'){
+                $status= 'clear-clear';
+            }
+            
+            if(!isset($status)){
+                return GenericMethod::resultResponse('invalid-access','','');
+            }
+
+            $state= $subprocess;
+            GenericMethod::clearTransaction($model,$tag_no,$date_now,$status,$account_titles,$subprocess,$date_cleared );
+            GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
+
         }
 
         return GenericMethod::resultResponse($state,'','');

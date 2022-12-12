@@ -158,5 +158,10 @@ class Transaction extends Model
        'date_status as date','status','reason_id','remarks')->where('status','cheque-cheque')->latest();
     }
 
+    public function clear(){
+        return $this->hasMany(Clear::class,'tag_id','tag_no')->select('tag_id','id',
+        'date_status as date','status','date_cleared')->latest();
+    }
+
 
 }

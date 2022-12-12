@@ -55,4 +55,5 @@ class Tagging extends Model
         return $this->hasMany(Reverse::class,'transaction_id','transaction_id')->select('transaction_id','tag_id','id',
         'user_role','user_id','user_name','date_status as date','status','reason_id','remarks','distributed_id','distributed_name')->latest()->limit(1);
     }
+
 }

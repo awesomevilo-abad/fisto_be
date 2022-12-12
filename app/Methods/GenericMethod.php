@@ -29,6 +29,7 @@ use App\Models\Transfer;
 use App\Models\Reason;
 use App\Models\Reverse;
 use App\Models\DebitBatch;
+use App\Models\ClearingAccountTitle;
 
 use App\Models\UserDocumentCategory;
 use Illuminate\Routing\Route;
@@ -478,6 +479,20 @@ class GenericMethod{
 
         }
 
+        public static function clearTransaction($model,$tag_no,$date_now,$status,$account_titles,$subprocess,$date_cleared ){
+            $clear_transaction= $model::Create([
+                "tag_id"=>$tag_no,
+                "status"=>$status,
+                "date_status"=>$date_now,
+                "date_cleared"=>$date_cleared
+            ]);
+            
+            if($subprocess == "clear"){
+                $id = $clear_transaction->id;
+                GenericMethod::addClearAccountTitleEntry($id,$account_titles);
+            }
+        }
+
         public static function transferTransaction($id,$from_user_id,$from_full_name,$to_user_id,$to_full_name){
 
             $transaction = Transaction::where('id',$id)->select('transaction_id','tag_no')->get();
@@ -581,6 +596,31 @@ class GenericMethod{
             }
         }        
         
+        public static function addClearAccountTitleEntry($id,$account_titles){
+
+            $clear_id=$id;
+            foreach( $account_titles as $specific_account_title){
+               
+                $entry = $specific_account_title['entry'];
+                $account_title_id = isset($specific_account_title['account_title']['id'])?$specific_account_title['account_title']['id']:$specific_account_title['account_title_id'];
+                $account_title_name = isset($specific_account_title['account_title']['name'])?$specific_account_title['account_title']['name']:$specific_account_title['account_title_name'];
+                $amount = $specific_account_title['amount'];
+                $remarks = $specific_account_title['remarks'];
+                $transaction_type = isset($specific_account_title['transaction_type'])?$specific_account_title['transaction_type']:'new';
+                
+                ClearingAccountTitle::Create([
+                    "clear_id"=>$clear_id
+                    ,"entry"=>$entry
+                    ,"account_title_id"=>$account_title_id
+                    ,"account_title_name"=>$account_title_name
+                    ,"amount"=>$amount
+                    ,"remarks"=>$remarks
+                    ,"transaction_type"=>$transaction_type
+                ]);
+                
+            }
+        }  
+
         public static function validateWith1PesoDifference($affeced_field,$type,$transaction_amount,$po_total_amount){
             if(
                 !(((abs($transaction_amount - $po_total_amount) ) >= 0.00) 
