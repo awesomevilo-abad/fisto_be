@@ -275,14 +275,13 @@ class TransactionFlow{
             }else if($subprocess == 'release'){
                $cheques = GenericMethod::get_cheque_details_latest($id);
                $cheques =  array_values(array_filter($cheques,function ($item){
-                  return  $item['transaction_type'] == "new";
-               }));
-
-               $account_titles = GenericMethod::get_account_title_details_latest($id);
-               $account_titles =  array_values(array_filter($account_titles,function ($item){
-                return  $item['transaction_type'] == "new";
-             }));
-
+                   return  $item['transaction_type'] == "new";
+                }));
+                $account_titles = GenericMethod::get_account_title_details_latest($id);
+                $account_titles =  array_values(array_filter($account_titles,function ($item){
+                    return  $item['transaction_type'] == "new";
+                }));
+                
                 $status= 'cheque-release';
             }else if($subprocess == 'reverse'){
                 $old_cheques = GenericMethod::get_cheque_details($id);
@@ -341,6 +340,7 @@ class TransactionFlow{
             if(!$document_amount){
                 $document_amount = $transaction['referrence_amount'];
             }
+            
             if(!empty($cheques)){
                $cheque_amount= array_sum(array_column($cheques,'amount'));
                $cheque_amount = isset($new_cheque_amount)?$new_cheque_amount:$cheque_amount;

@@ -357,7 +357,6 @@ class GenericMethod{
         public static function chequeTransaction(
             $model,$transaction_id,$tag_no,$reason_remarks,$date_now,
             $reason_id,$status,$cheques,$account_titles ){
-
             $cheque_transaction= $model::Create([
                 "transaction_id"=>$transaction_id,
                 "tag_id"=>$tag_no,
@@ -366,7 +365,6 @@ class GenericMethod{
                 "reason_id"=>$reason_id,
                 "remarks"=>$reason_remarks,
             ]);
-            
             
             if(isset($cheques)){
                 if(count($cheques) > 0){
@@ -528,7 +526,7 @@ class GenericMethod{
 
         public static function addCheque($transaction_id, $id,$cheques){
             foreach( $cheques as $specific_cheques){
-                $entry_type = $specific_cheques['type'];
+                $entry_type = isset($specific_cheques['transaction_type'])?$specific_cheques['transaction_type']:$specific_cheques['type'];
                 $bank_id = $specific_cheques['bank']['id'];
                 $bank_name = $specific_cheques['bank']['name'];
                 $cheque_no = $specific_cheques['no'];
