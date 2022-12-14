@@ -40,14 +40,15 @@ class TransactionResource extends JsonResource
         $counter_receipt_status = ($this->counter_receipt_status)?$this->counter_receipt_status:NULL;
         $counter_receipt_no = ($this->counter_receipt_no)?$this->counter_receipt_no:NULL;
 
-        $transaction =  Transaction::with('tag.voucher.account_title')
-        ->with('tag.approve')
-        ->with('tag.transmit')
-        ->with('tag.cheque.cheques')
-        ->with('tag.cheque.account_title')
-        ->with('tag.release')
-        ->with('tag.file')
-        ->with('tag.reverse')
+        $transaction =  Transaction::with('tag')
+        ->with('voucher.account_title')
+        ->with('approve')
+        ->with('transmit')
+        ->with('cheques.cheques')
+        ->with('cheques.account_title')
+        ->with('release')
+        ->with('file')
+        ->with('reverse')
         ->with('clear')
         ->with('clear.account_title')
         ->when($this->document_type =="Auto Debit", function($query){
@@ -74,9 +75,8 @@ class TransactionResource extends JsonResource
         // END TAG PROCESS
 
         // VOUCHER PROCESS
-        if(count($transaction->tag)>0){
-            if(count($transaction_tag->voucher)>0){
-            $voucher = $transaction_tag->voucher->first();
+        if(count($transaction->voucher)>0){
+            $voucher = $transaction->voucher->first();
             $voucher_receipt_type= (isset($voucher->receipt_type)?$voucher->receipt_type:NULL);
             $voucher_percentage_tax= (isset($voucher->percentage_tax)?$voucher->percentage_tax:NULL);
             $vouocher_witholding_tax= (isset($voucher->witholding_tax)?$voucher->witholding_tax:NULL);
@@ -88,14 +88,12 @@ class TransactionResource extends JsonResource
             $voucher_reason_id= (isset($voucher->reason_id)?$voucher->reason_id:NULL);
             $voucher_reason = (isset($voucher->reason_id)?Reason::find($voucher->reason_id)->reason:NULL);
             $voucher_reason_remarks= (isset($voucher->remarks)?$voucher->remarks:NULL);
-            }
         }
         // END VOUCHER PROCESS
         
         // APPROVE PROCESS
-        if(count($transaction->tag)>0){
-            if(count($transaction_tag->approve)>0){
-            $approve = $transaction_tag->approve->first();
+        if(count($transaction->approve)>0){
+            $approve = $transaction->approve->first();
 
             $approve_id= (isset($approve->id)?$approve->id:NULL);
             $approve_distributed_id= (isset($transaction->distributed_id)?$transaction->distributed_id:NULL);
@@ -105,39 +103,33 @@ class TransactionResource extends JsonResource
             $approve_reason_id= (isset($approve->reason_id)?$approve->reason_id:NULL);
             $approve_reason = (isset($approve->reason_id)?Reason::find($approve->reason_id)->reason:NULL);
             $approve_reason_remarks= (isset($approve->remarks)?$approve->remarks:NULL);
-            }
         }
         // END APPROVE PROCESS
         
         // TRANSMITAL PROCESS
-        if(count($transaction->tag)>0){
-            if(count($transaction_tag->transmit)>0){
-            $transmit = $transaction_tag->transmit->first();
+        if(count($transaction->transmit)>0){
+            $transmit = $transaction->transmit->first();
 
             $transmit_id= (isset($transmit->id)?$transmit->id:NULL);
             $transmit_date= (isset($transmit->date)?$transmit->date:NULL);
             $transmit_status= (isset($transmit->status)?$transmit->status:NULL);
-            }
         }
         // END TRANSMITAL PROCESS
         
         // CHEQUE PROCESS
-        if(count($transaction->tag)>0){
-            if(count($transaction_tag->cheque)>0){
-            $cheque = $transaction_tag->cheque->first();
+        if(count($transaction->cheques)>0){
+            $cheque = $transaction->cheques->first();
             $cheque_status= (isset($cheque->status)?$cheque->status:NULL);
             $cheque_date_status= (isset($cheque->date)?$cheque->date:NULL);
             $cheque_reason_id= (isset($cheque->reason_id)?$cheque->reason_id:NULL);
             $cheque_reason = (isset($cheque->reason_id)?Reason::find($cheque->reason_id)->reason:NULL);
             $cheque_reason_remarks= (isset($cheque->remarks)?$cheque->remarks:NULL);
-            }
         }
         // END CHEQUE PROCESS
         
         // RELEASE PROCESS
-        if(count($transaction->tag)>0){
-            if(count($transaction_tag->release)>0){
-            $release = $transaction_tag->release->first();
+        if(count($transaction->release)>0){
+            $release = $transaction->release->first();
 
             $release_id= (isset($release->id)?$release->id:NULL);
             $release_date= (isset($release->date)?$release->date:NULL);
@@ -147,15 +139,12 @@ class TransactionResource extends JsonResource
             $release_status= (isset($release->status)?$release->status:NULL);
             $release_distributed_id= (isset($release->distributed_id)?$release->distributed_id:NULL);
             $release_distributed_name= (isset($release->distributed_name)?$release->distributed_name:NULL);
-
-            }
         }
         // END RELEASE PROCESS
         
         // FILE PROCESS
-        if(count($transaction->tag)>0){
-            if(count($transaction_tag->file)>0){
-            $file = $transaction_tag->file->first();
+        if(count($transaction->file)>0){
+            $file = $transaction->file->first();
 
             $file_id= (isset($file->id)?$file->id:NULL);
             $file_date= (isset($file->date)?$file->date:NULL);
@@ -163,14 +152,12 @@ class TransactionResource extends JsonResource
             $file_reason_id= (isset($file->reason_id)?$file->reason_id:NULL);
             $file_reason = (isset($file->reason_id)?Reason::find($file->reason_id)->reason:NULL);
             $file_reason_remarks= (isset($file->remarks)?$file->remarks:NULL);
-            }
         }
         // END FILE PROCESS
 
         // REVERSE PROCESS
-        if(count($transaction->tag)>0){
-            if(count($transaction_tag->reverse)>0){
-            $reverse = $transaction_tag->reverse->first();
+        if(count($transaction->reverse)>0){
+            $reverse = $transaction->reverse->first();
 
             $reverse_id= (isset($reverse->id)?$reverse->id:NULL);
             $reverse_date= (isset($reverse->date)?$reverse->date:NULL);
@@ -183,9 +170,6 @@ class TransactionResource extends JsonResource
             $reverse_user_name= (isset($reverse->user_name)?$reverse->user_name:NULL);
             $reverse_distributed_id= (isset($reverse->distributed_id)?$reverse->distributed_id:NULL);
             $reverse_distributed_name= (isset($reverse->distributed_name)?$reverse->distributed_name:NULL);
-          
-        
-            }
         }
         // END REVERSE PROCESS
 

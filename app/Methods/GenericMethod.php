@@ -880,7 +880,7 @@ class GenericMethod{
                     , "po_total_amount" => $po_total_amount
         
                     , "request_id" => $request_id
-                    , "tagging_tag_id" => 0
+                    
                     , "date_requested" => $date_requested
                     , "status" => "Pending"
                 ]);
@@ -915,7 +915,7 @@ class GenericMethod{
                     , "pcf_date" => $fields['document']['pcf_batch']['date']
                     , "pcf_letter" => $fields['document']['pcf_batch']['letter']
                     , "request_id" => $request_id
-                    , "tagging_tag_id" => 0
+                    
                     , "date_requested" => $date_requested
                 ]);
             }else if($fields['document']['id'] == 7){
@@ -951,7 +951,7 @@ class GenericMethod{
                     , "payroll_type" => $fields['document']['payroll']['type']
                     , "payroll_client" => $fields['document']['payroll']['clients']
                     , "request_id" => $request_id
-                    , "tagging_tag_id" => 0
+                    
                     , "date_requested" => $date_requested
                 ]);
             }else if($fields['document']['id'] == 4){
@@ -991,7 +991,7 @@ class GenericMethod{
                     , "referrence_id" => $fields['document']['reference']['id'] 
 
                     , "request_id" => $request_id
-                    , "tagging_tag_id" => 0
+                    
                     , "date_requested" => $date_requested
                     , "status" => "Pending"
 
@@ -1031,7 +1031,7 @@ class GenericMethod{
                     , "po_total_amount" => $po_total_amount
         
                     , "request_id" => $request_id
-                    , "tagging_tag_id" => 0
+                    
                     , "date_requested" => $date_requested
                     , "status" => "Pending"
                 ]);
@@ -1131,7 +1131,7 @@ class GenericMethod{
                                 , "document_type" => $fields['document']['name']
                                 , "po_total_amount" => $po_total_amount
                                 , "request_id" => (($temporary_request_id)?$temporary_request_id:NULL)
-                                , "tagging_tag_id" => 0
+                                
                                 , "date_requested" => $date_requested
                                 , "status" => "Pending"
                                 , "period_covered" => (($period_covered)?$period_covered:NULL)
@@ -1220,7 +1220,7 @@ class GenericMethod{
                                 , "document_type" => $fields['document']['name']
                                 , "po_total_amount" => $po_total_amount
                                 , "request_id" => (($temporary_request_id)?$temporary_request_id:NULL)
-                                , "tagging_tag_id" => 0
+                                
                                 , "date_requested" => $date_requested
                                 , "status" => "Pending"
                                 , "amortization" => (($amortization)?$amortization:NULL)
@@ -1309,7 +1309,7 @@ class GenericMethod{
                                 , "document_type" => $fields['document']['name']
                                 , "po_total_amount" => $po_total_amount
                                 , "request_id" => (($temporary_request_id)?$temporary_request_id:NULL)
-                                , "tagging_tag_id" => 0
+                                
                                 , "date_requested" => $date_requested
                                 , "status" => "Pending"
                                 , "principal" => (($principal)?$principal:NULL)
@@ -1354,7 +1354,7 @@ class GenericMethod{
                     , "document_type" => $fields['document']['name']
                     , "po_total_amount" => $po_total_amount
                     , "request_id" => $request_id
-                    , "tagging_tag_id" => 0
+                    
                     , "date_requested" => $date_requested
                     , "status" => "Pending"
                 ]);
@@ -1393,7 +1393,7 @@ class GenericMethod{
                     , "document_type" => $fields['document']['name']
                     , "po_total_amount" => $po_total_amount
                     , "request_id" => $request_id
-                    , "tagging_tag_id" => 0
+                    
                     , "date_requested" => $date_requested
                     , "status" => "Pending"
                 ]);

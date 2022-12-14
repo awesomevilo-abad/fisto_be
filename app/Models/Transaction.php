@@ -134,10 +134,6 @@ class Transaction extends Model
         return $this->belongsTo(Supplier::class,'supplier_id','id')->select(['id', 'supplier_type_id', 'name']);
     }
 
-    public function tag(){
-        return $this->hasMany(Tagging::class,'transaction_id','transaction_id')->select('transaction_id','date_status as date','status','distributed_id','distributed_name','reason_id','remarks')->latest()->limit(1);
-    }
-
     public function auto_debit(){
         return $this->hasMany(DebitBatch::class,'request_id','request_id')->select(['request_id','pn_no','interest_from','interest_to','outstanding_amount','interest_rate','no_of_days','principal_amount','interest_due','cwt']);
     }
@@ -162,6 +158,49 @@ class Transaction extends Model
         return $this->hasMany(Clear::class,'tag_id','tag_no')->select('tag_id','id',
         'date_status as date','status','date_cleared')->latest();
     }
+
+    // Transaction Flow
+
+    public function tag(){
+        return $this->hasMany(Tagging::class,'request_id','request_id')->select('request_id','tag_id','transaction_id','date_status as date','status','distributed_id','distributed_name','reason_id','remarks')->latest()->limit(1);
+    }
+
+    public function voucher(){
+        return $this->hasMany(Associate::class,'tag_id','tag_no')->select('transaction_id','tag_id','id',
+        'receipt_type','percentage_tax','witholding_tax','net_amount','approver_id','approver_name','date_status as date','status','reason_id','remarks')->latest()->limit(1);
+    }
+
+    public function approve(){
+        return $this->hasMany(Approver::class,'tag_id','tag_no')->select('transaction_id','tag_id','id',
+        'distributed_id','distributed_name','date_status as date','status','reason_id','remarks')->latest()->limit(1);
+    }
+
+
+    public function cheques(){
+        return $this->hasMany(Treasury::class,'tag_id','tag_no')->select('transaction_id','tag_id','id',
+        'date_status as date','status','reason_id','remarks')->latest()->limit(1);
+    }
+    
+    public function transmit(){
+        return $this->hasMany(Transmit::class,'tag_id','tag_no')->select('transaction_id','tag_id','id',
+        'date_status as date','status')->latest()->limit(1);
+    }
+    
+    public function release(){
+        return $this->hasMany(Release::class,'tag_id','tag_no')->select('transaction_id','tag_id','id',
+        'distributed_id','distributed_name','date_status as date','status','reason_id','remarks')->latest()->limit(1);
+    }
+
+    public function file(){
+        return $this->hasMany(File::class,'tag_id','tag_no')->select('transaction_id','tag_id','id',
+        'receipt_type','percentage_tax','witholding_tax','net_amount','approver_id','approver_name','date_status as date','status','reason_id','remarks')->latest()->limit(1);
+    }
+
+    public function reverse(){
+        return $this->hasMany(Reverse::class,'tag_id','tag_no')->select('transaction_id','tag_id','id',
+        'user_role','user_id','user_name','date_status as date','status','reason_id','remarks','distributed_id','distributed_name')->latest()->limit(1);
+    }
+
 
 
 }

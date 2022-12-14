@@ -534,6 +534,7 @@ class ComposerStaticInite461e60f7fb4b5d69b6eaaa5402c3576
         'App\\Http\\Controllers\\BankController' => __DIR__ . '/../..' . '/app/Http/Controllers/BankController.php',
         'App\\Http\\Controllers\\CategoryController' => __DIR__ . '/../..' . '/app/Http/Controllers/CategoryController.php',
         'App\\Http\\Controllers\\ClearController' => __DIR__ . '/../..' . '/app/Http/Controllers/ClearController.php',
+        'App\\Http\\Controllers\\ClearingAccountTitleController' => __DIR__ . '/../..' . '/app/Http/Controllers/ClearingAccountTitleController.php',
         'App\\Http\\Controllers\\CompanyController' => __DIR__ . '/../..' . '/app/Http/Controllers/CompanyController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
         'App\\Http\\Controllers\\CounterReceiptController' => __DIR__ . '/../..' . '/app/Http/Controllers/CounterReceiptController.php',
