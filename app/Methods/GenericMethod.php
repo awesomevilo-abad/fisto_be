@@ -1703,7 +1703,7 @@ class GenericMethod{
             return new LengthAwarePaginator($items->forPage($page, $perPage)->values(), $items->count(), $perPage, $page, $options);
         }
 
-        public static function updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name,$transaction_type="cheque")
+        public static function updateTransactionStatus($transaction_id,$request_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name,$transaction_type="cheque")
         {
             // return Transaction::where('tag_no',$tag_no)->get();
             // if($status != 'tag-tag'){
@@ -1716,14 +1716,19 @@ class GenericMethod{
             $voucher_month = (isset($voucher_month)?$voucher_month:NULL);
 
             if(in_array($status,['reverse-receive-approver','reverse-receive-requestor','reverse-approve','reverse-return'])){
-               $reason_details = Reverse::where('transaction_id',$transaction_id)->latest()->get()->first();
+               $reason_details = Reverse::where('tag_id',$tag_no)->latest()->get()->first();
                $reason_id =  $reason_details->reason_id;
                $reason =  Reason::where('id',$reason_id)->select('reason')->first()->reason;
                $reason_remarks =  $reason_details->remarks;
                
             }
             DB::table('transactions')
-                ->where('transaction_id', $transaction_id)
+                ->when(in_array($status,['tag-receive','tag-hold','tag-unhold','tag-return','tag-unreturn','tag-void','tag-tag']), function($query) use($request_id){
+                    $query->where('request_id', $request_id);
+                },function ($query) use($tag_no){
+                    $query->where('tag_no', $tag_no);
+
+                })
                 ->when($status == "reverse-request", function($query)  use($status,$state,$tag_no,$reason_id,$reason,$reason_remarks
                 ,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name){
                     $query->update([
