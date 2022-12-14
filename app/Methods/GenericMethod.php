@@ -45,10 +45,10 @@ class GenericMethod{
     ##########################################################################################################
 
         public static function get_account_title_details($id){
-            $account_title_details =  Transaction::with('tag.cheque.account_title')
+            $account_title_details =  Transaction::with('cheques.account_title')
             ->where('id',$id)
             ->where('status','<>','void')->get();
-            $account_title_details = $account_title_details->first()->tag->first()->cheque->first()->account_title;
+            $account_title_details = $account_title_details->first()->cheques->first()->account_title;
             
 
             if(!($account_title_details)->isEmpty()){
@@ -70,10 +70,10 @@ class GenericMethod{
         public static function get_cheque_details($id){
             
             
-            $cheque_details =  Transaction::with('tag.cheque.cheques')
+            $cheque_details =  Transaction::with('cheques.cheques')
            ->where('id',$id)
            ->where('status','<>','void')->get();
-           $cheque_details = $cheque_details->first()->tag->first()->cheque->first()->cheques;
+           $cheque_details = $cheque_details->first()->cheques->first()->cheques;
            
 
          if(!($cheque_details)->isEmpty()){
@@ -93,10 +93,10 @@ class GenericMethod{
         }
        
         public static function get_account_title_details_latest($id){
-            $account_title_details =  Transaction::with('tag.cheque.account_title')
+             $account_title_details =  Transaction::with('cheques.account_title')
             ->where('id',$id)
             ->where('status','<>','void')->get();
-            $account_title_details = $account_title_details->first()->tag->first()->cheque->first()->account_title;
+            $account_title_details = $account_title_details->first()->cheques->first()->account_title;
             
 
             if(!($account_title_details)->isEmpty()){
@@ -117,11 +117,11 @@ class GenericMethod{
         }
 
         public static function get_cheque_details_latest($id){
-            $cheque_details =  Transaction::with('tag.cheque.cheques')
+            $cheque_details =  Transaction::with('cheques.cheques')
             ->where('id',$id)
             ->where('status','<>','void')
             ->get();
-            $cheque_details = $cheque_details->first()->tag->first()->cheque->first()->cheques;
+            $cheque_details = $cheque_details->first()->cheques->first()->cheques;
 
             if(!($cheque_details)->isEmpty()){
                 $cheque_details = $cheque_details->mapToGroups(function($item,$key){
@@ -147,8 +147,8 @@ class GenericMethod{
         }
         
         public static function get_account_title($id){
-            return Transaction::with('tag.cheque.cheques')
-            ->with('tag.cheque.account_title')
+            return Transaction::with('cheques.cheques')
+            ->with('cheques.account_title')
             ->where('id',$id)
             ->where('status','<>','void')->get();
         }   
@@ -268,7 +268,7 @@ class GenericMethod{
             }
         }
 
-        public static function tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to=[] ){
+        public static function tagTransaction($model,$request_id,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to=[] ){
             $distributed_id =null;
             $distributed_name =null;
             if(!empty($distributed_to)){
@@ -277,6 +277,7 @@ class GenericMethod{
             }
             $model::Create([
                 "transaction_id"=>$transaction_id,
+                "request_id"=>$request_id,
                 "description"=>$remarks,
                 "status"=>$status,
                 "date_status"=>$date_now,
@@ -387,7 +388,7 @@ class GenericMethod{
 
         }
         
-        public static function releaseTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to=[] ){
+        public static function releaseTransaction($model,$transaction_id,$tag_no,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to=[] ){
             $distributed_id =null;
             $distributed_name =null;
             if(!empty($distributed_to)){
@@ -402,7 +403,8 @@ class GenericMethod{
                 "reason_id"=>$reason_id,
                 "remarks"=>$reason_remarks,
                 "distributed_id"=>$distributed_id,
-                "distributed_name"=>$distributed_name
+                "distributed_name"=>$distributed_name,
+                "tag_id"=>$tag_no
             ]);
         }
         
@@ -525,8 +527,8 @@ class GenericMethod{
             $duplicate_count=0;
             foreach( $cheques as $specific_cheques){
                 $cheque_no = $specific_cheques['no'];
-                $transaction = Transaction::with('tag.cheque.cheques')
-                ->whereHas('tag.cheque.cheques', function ($query) use ($cheque_no){
+                $transaction = Transaction::with('cheques.cheques')
+                ->whereHas('cheques.cheques', function ($query) use ($cheque_no){
                      $query->where('cheque_no',$cheque_no);
                 })
                 ->where('id','<>',$id)
@@ -3243,6 +3245,9 @@ class GenericMethod{
                 return GenericMethod::result(200,"Transaction has been saved.",[]);
             break;
             case('file'):
+                return GenericMethod::result(200,"Transaction has been saved.",[]);
+            break;
+            case('clear'):
                 return GenericMethod::result(200,"Transaction has been saved.",[]);
             break;
             case('request'):

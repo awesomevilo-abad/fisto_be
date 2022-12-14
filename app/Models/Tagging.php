@@ -11,6 +11,7 @@ class Tagging extends Model
 
     protected $fillable = [
         'transaction_id',
+        'request_id',
         'description',
         'status',
         'date_status',

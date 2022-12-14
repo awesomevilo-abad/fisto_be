@@ -59,9 +59,11 @@ class TransactionFlow{
             ,'referrence_amount'
             ,'distributed_id'
             ,'approver_id'
+            ,'request_id'
             )
             ->find($id);
 
+        $request_id = $transaction->request_id;
         $transaction_id = $transaction->transaction_id;
         $remarks = $transaction->remarks;
         $users_id = $transaction->users_id;
@@ -160,7 +162,7 @@ class TransactionFlow{
                 return GenericMethod::resultResponse('invalid-access','','');
             }
             $state= $subprocess;
-            GenericMethod::tagTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
+            GenericMethod::tagTransaction($model,$request_id,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
         }else if($process == 'voucher'){
             $account_titles = $voucher_account_titles;
@@ -398,7 +400,7 @@ class TransactionFlow{
                 return GenericMethod::resultResponse('invalid-access','','');
             }
             $state= $subprocess;
-            GenericMethod::releaseTransaction($model,$transaction_id,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
+            GenericMethod::releaseTransaction($model,$transaction_id,$tag_no,$remarks,$date_now,$reason_id,$reason_remarks,$status,$distributed_to );
             GenericMethod::updateTransactionStatus($transaction_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
         }else if($process == 'file'){
             $model = new File;
@@ -490,8 +492,8 @@ class TransactionFlow{
         $cheque_no = $request['cheque_no'];
         $id = $request['id'];
 
-       $transaction = Transaction::with('tag.cheque.cheques')
-       ->whereHas('tag.cheque.cheques', function ($query) use ($cheque_no){
+       $transaction = Transaction::with('cheques.cheques')
+       ->whereHas('cheques.cheques', function ($query) use ($cheque_no){
             $query->where('cheque_no',$cheque_no);
        })
        ->where('id','<>',$id)
