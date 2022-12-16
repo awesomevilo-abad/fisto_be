@@ -98,10 +98,14 @@ class CounterReceiptController extends Controller
                 $query->whereIn('counter_receipts.state',['pending','monitoring-return'])
                 ->orderByDesc('counter_receipts.id');
             }, function ($query) use ($status){
-                $query->when(strtolower($status) == "monitoring-receive", function ($query) use ($status){
-                    $query->whereIn('counter_receipts.state',['monitoring-receive','monitoring-unreturn']);
-                }, function ($query) use ($status){
-                    $query->where('counter_receipts.state',preg_replace('/\s+/', '', $status));
+                $query->when(strtolower($status) == 'pending-monitoring', function ($query) use ($status){
+                    $query->whereIn('counter_receipts.state',['pending']);
+                },function ($query) use ($status){
+                    $query->when(strtolower($status) == "monitoring-receive", function ($query) use ($status){
+                        $query->whereIn('counter_receipts.state',['monitoring-receive','monitoring-unreturn']);
+                    }, function ($query) use ($status){
+                        $query->where('counter_receipts.state',preg_replace('/\s+/', '', $status));
+                    });
                 });
             });
         });
