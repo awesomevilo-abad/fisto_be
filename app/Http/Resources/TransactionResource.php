@@ -4,7 +4,18 @@ namespace App\Http\Resources;
 use App\Models\User;
 use App\Models\POBatch;
 use App\Models\Transaction;
+use App\Models\Tagging;
+use App\Models\Associate;
+use App\Models\Approver;
+use App\Models\Transmit;
+use App\Models\Treasury;
+use App\Models\Cheque;
+use App\Models\Release;
+use App\Models\File;
+use App\Models\Clear;
+use App\Models\Transfer;
 use App\Models\Reason;
+use App\Models\Reverse;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TransactionResource extends JsonResource
@@ -59,6 +70,9 @@ class TransactionResource extends JsonResource
         $transaction_voucher_no = (isset($transaction->voucher_no)?$transaction->voucher_no:NULL);
         $transaction_voucher_month = (isset($transaction->voucher_month)?$transaction->voucher_month:NULL);
         $transaction_with_debit = $transaction;
+        $transaction_request_id = $transaction['request_id'];
+        $reason_date = ($this->reason_id)?$transaction->updated_at:NULL;
+        
         // TAG PROCESS
         if(count($transaction->tag)>0){
             $transaction_tag= $transaction->tag->first();
@@ -565,9 +579,14 @@ class TransactionResource extends JsonResource
 
         // TAG
         if(isset($transaction_tag_status)){
-
             $reason = null;
             $distributed_to = null;
+            $dates = null;
+            
+            $model = new Tagging;
+            $process = 'tag';
+            $subprocess = ['receive','tag'];
+            $dates = $this->get_transaction_dates($model,$transaction_request_id,$process,$subprocess);
 
             if(isset($transaction_tag_distributed_id)){
                 $distributed_to = [
@@ -586,7 +605,7 @@ class TransactionResource extends JsonResource
             $tag = [
                     "status"=>$transaction_tag_status,
                     "no"=>$transaction_tag_no,
-                    "date"=>$transaction_tag_date,
+                    "dates"=>$dates,
                     "distributed_to"=>$distributed_to,
                     "reason"=>$reason
                 ];
@@ -600,6 +619,12 @@ class TransactionResource extends JsonResource
             $approver = null;
             $tax = null;
             $account_title = null;
+
+            $dates = null;
+            $model = new Associate;
+            $process = 'voucher';
+            $subprocess = ['receive','voucher'];
+            $dates = $this->get_transaction_dates($model,$transaction_tag_no,$process,$subprocess);
 
             if(isset($voucher_receipt_type)){
                 if(strtolower($voucher_receipt_type) == "unofficial"){
@@ -659,8 +684,8 @@ class TransactionResource extends JsonResource
 
             $voucher = [
                     "status"=>$voucher_status,
-                    "date"=>$voucher_date,
                     "no"=>$transaction_voucher_no,
+                    "dates"=>$dates,
                     "month"=>$transaction_voucher_month,
                     "tax"=>$tax,
                     "accounts"=>$account_title,
@@ -674,6 +699,12 @@ class TransactionResource extends JsonResource
         if(isset($approve_status)){
             $reason = null;
             $distributed_to = null;
+            $dates = null;
+            $model = new Approver;
+            $process = 'approve';
+            $subprocess = ['receive','approve'];
+            $dates = $this->get_transaction_dates($model,$transaction_tag_no,$process,$subprocess);
+
 
             if(isset($approve_distributed_id)){
                 $distributed_to = [
@@ -690,8 +721,8 @@ class TransactionResource extends JsonResource
             }
 
             $approve = [
+                    "dates"=>$dates,
                     "status"=>$approve_status,
-                    "date"=>$approve_date,
                     "distributed_to"=>$distributed_to,
                     "reason"=>$reason
                 ];
@@ -700,11 +731,15 @@ class TransactionResource extends JsonResource
         // TRANSMIT
         if(isset($transmit_status)){
 
-            $reason = null;
+            $dates = null;
+            $model = new Transmit;
+            $process = 'transmit';
+            $subprocess = ['receive','transmit'];
+            $dates = $this->get_transaction_dates($model,$transaction_tag_no,$process,$subprocess);
 
             $transmit = [
+                    "dates"=>$dates,
                     "status"=>$transmit_status,
-                    "date"=>$transmit_date,
                 ];
 
         }
@@ -714,6 +749,12 @@ class TransactionResource extends JsonResource
 
             $reason = null;
             $account_title = null;
+            $dates = null;
+            $model = new Treasury;
+            $process = 'cheque';
+            $subprocess = ['receive','cheque','release'];
+            $dates = $this->get_transaction_dates($model,$transaction_tag_no,$process,$subprocess);
+
 
             if(isset($cheque->cheques)){
                 $cheque_cheques = $cheque->cheques;
@@ -785,8 +826,8 @@ class TransactionResource extends JsonResource
             }
 
             $cheque_description = [
+                    "dates"=>$dates,
                     "status"=>$cheque_status,
-                    "date"=>$cheque_date_status,
                     "cheques"=>$cheque_details,
                     "accounts"=>$account_title,
                     "reason"=>$reason
@@ -799,6 +840,12 @@ class TransactionResource extends JsonResource
 
             $reason = null;
             $distributed_to = null;
+            $dates = null;
+            $model = new Release;
+            $process = 'release';
+            $subprocess = ['receive','release'];
+            $dates = $this->get_transaction_dates($model,$transaction_tag_no,$process,$subprocess);
+
 
             if(isset($release_distributed_id)){
                 $distributed_to = [
@@ -816,8 +863,8 @@ class TransactionResource extends JsonResource
             }
 
             $release_description = [
+                    "dates"=>$dates,
                     "status"=>$release_status,
-                    "date"=>$release_date,
                     "distributed_to"=>$distributed_to,
                     "reason"=>$reason
                 ];
@@ -828,6 +875,11 @@ class TransactionResource extends JsonResource
         if(isset($file_status)){
 
             $reason = null;
+            $dates = null;
+            $model = new File;
+            $process = 'file';
+            $subprocess = ['receive','file'];
+            $dates = $this->get_transaction_dates($model,$transaction_tag_no,$process,$subprocess);
 
             if(isset($file_reason_id)){
                 $reason = [
@@ -838,8 +890,8 @@ class TransactionResource extends JsonResource
             }
 
             $file_description = [
+                    "dates"=>$dates,
                     "status"=>$file_status,
-                    "date"=>$file_date,
                     "reason"=>$reason
                 ];
 
@@ -898,6 +950,11 @@ class TransactionResource extends JsonResource
         if(isset($clear_status)){
 
             $account_title = null;
+            $dates = null;
+            $model = new Clear;
+            $process = 'clear';
+            $subprocess = ['receive','clear'];
+            $dates = $this->get_transaction_dates($model,$transaction_tag_no,$process,$subprocess);
 
             if(isset($clear->account_title)){
                 $clear_account_title = $clear->account_title;
@@ -929,6 +986,7 @@ class TransactionResource extends JsonResource
             }      
             
             $clear_description = [
+                    "dates"=>$dates,
                     "status"=>$clear_status,
                     "date"=>$clear_date_status,
                     "date_cleared"=>$clear_date_cleared,
@@ -998,6 +1056,7 @@ class TransactionResource extends JsonResource
                 "id"=>$this->reason_id
                 ,"description"=>$this->reason
                 ,"remarks"=>$this->reason_remarks
+                ,"date"=>$reason_date
             ],
             "requestor"=>[
                 "id"=> $this->users_id
@@ -1036,5 +1095,72 @@ class TransactionResource extends JsonResource
         return $result;
     }
     
+    public function get_transaction_dates($model,$id,$process,$subprocesses){
+        $flow_details = $model::when($process == 'tag', function($query) use($id){
+            $query->where('request_id',$id);
+        }, function ($query) use ($id){
+            $query->where('tag_id',$id);
+        })
+        ->latest()
+        ->get();
+
+
+        $details = [];
+        foreach($subprocesses as $k=>$subprocess){
+            $status = $process.'-'.$subprocess;
+            $details[$k]['subprocess'] = $this->stateChange($subprocess);
+
+            if($process == 'tag'){
+                $details[$k]['date'] =  isset($flow_details->where('status',$status)->first()->created_at)?$flow_details->where('status',$status)->first()->created_at:null;
+            }else{
+                $details[$k]['date'] =  isset($flow_details->where('status',$status)->first()['created_at'])?$flow_details->where('status',$status)->first()['created_at']:null;
+            }
+        }
+
+
+        return array_reduce($details, function ($result, $item) {
+            $result[$item['subprocess']] = $item['date'];
+            return $result;
+        },array());
+    }
+
     
+    public function stateChange($state){
+
+        switch($state){
+            case "tag":
+                    $state = "tagged";
+            break;
+            case "request":
+            case "pending":
+                    $state = "pending";
+            break;
+            case "cheque":
+                    $state = "created";
+            break;
+            case "hold":
+                    $state = "held";
+            break;
+            case "transmit":
+                    $state = "transmitted";
+            break;
+            case "receive-approver":
+                    $state = "received";
+            break;
+            case "receive-requestor":
+                    $state = "received";
+            break;
+            
+            default:
+                if(str_ends_with($state,"e")){
+                    $state = strtolower($state.'d');
+                }else if(str_ends_with($state,"g")){
+                    $state = strtolower($state);
+                }else{
+                    $state = strtolower($state.'ed');
+                }
+        }
+
+        return $state;
+    }
 }
