@@ -451,8 +451,8 @@ class TransactionController extends Controller
         
 
         switch($fields['document']['id']){
+            
             case 1: //PAD
-            case 5: //Contractor's Billing
                 GenericMethod::documentNoValidation($request['document']['no']);
 
                 if (empty($fields['po_group']) ) 
@@ -473,6 +473,43 @@ class TransactionController extends Controller
                     return GenericMethod::resultResponse('invalid','',$errorMessage);
                 }
                 GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
+                $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
+                $request_id,$date_requested,$fields);
+                if(isset($transaction->transaction_id)){
+                   return $this->resultResponse('save','Transaction',[]);
+                }
+            break;
+
+            case 5: //Contractor's Billing
+
+                if (empty($fields['po_group']) ) 
+                {
+                    $errorMessage = GenericMethod::resultLaravelFormat('po_group',["PO group required"]);
+                    return $this->resultResponse('invalid','',$errorMessage);
+                }
+
+                $transaction_id = isset($transaction_id)?$transaction_id:NULL;
+                GenericMethod::billingValidation(
+                    $fields['document']['company']['id'],
+                    $fields['document']['department']['id'],
+                    $fields['document']['location']['id'],
+                    $fields['document']['supplier']['id'],
+                    $fields['document']['category']['id'],
+                    $fields['document']['capex_no'],
+                    $transaction_id);
+                $duplicatePO = GenericMethod::validatePOFull($fields['document']['company']['id'],$fields['po_group']);
+                if(isset($duplicatePO)){
+                    return $this->resultResponse('invalid','',$duplicatePO);
+                }
+               
+                $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
+               
+                $errorMessage = GenericMethod::validateWith1PesoDifference('po_group.amount','Document',$fields['document']['amount'],$po_total_amount);
+                if(! empty($errorMessage)){
+                    return GenericMethod::resultResponse('invalid','',$errorMessage);
+                }
+                GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
+               
                 $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                 $request_id,$date_requested,$fields);
                 if(isset($transaction->transaction_id)){
@@ -674,15 +711,24 @@ class TransactionController extends Controller
             case 1: //PAD
             case 5: //Contractor's Billing
         
-                GenericMethod::documentNoValidationUpdate($request['document']['no'],$id);
-
                 if (empty($fields['po_group']) ) 
                 {
                     $errorMessage = GenericMethod::resultLaravelFormat('po_group',["PO group required"]);
                     return $this->resultResponse('invalid','',$errorMessage);
                 }
                 
+                $transaction_id = isset($transaction_id)?$transaction_id:NULL;
+                
+                GenericMethod::billingValidation(
+                    $fields['document']['company']['id'],
+                    $fields['document']['department']['id'],
+                    $fields['document']['location']['id'],
+                    $fields['document']['supplier']['id'],
+                    $fields['document']['category']['id'],
+                    $fields['document']['capex_no'],
+                    $id);
                 $duplicatePO = GenericMethod::validatePOFullUpdate($fields['document']['company']['id'],$fields['po_group'],$id);
+                
                 if(isset($duplicatePO)){
                     return $this->resultResponse('invalid','',$duplicatePO);
                 }

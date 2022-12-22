@@ -42,7 +42,7 @@ class TransactionPostRequest extends FormRequest
             , "document.capex_no" => 'required_if:document.id,5'
             , "document.name" => 'required'
             , "document.payment_type" => 'required'
-            , "document.no" => 'required_if:document.id,1,5,2'
+            , "document.no" => 'required_if:document.id,1,2'
             , "document.date" => 'required_if:document.id,1,5,2'
             , "document.amount" => 'required_if:document.id,1,5,2,6,8,7|numeric'
             , "document.remarks" => 'nullable'
@@ -61,7 +61,7 @@ class TransactionPostRequest extends FormRequest
 
             , "po_group.*.no" => 'required'
             , "po_group.*.amount" => 'required|numeric'
-            , "po_group.*.rr_no" => 'required'
+            , "po_group.*.rr_no" => 'nullable'
 
             , "document.utility.receipt_no" => 'nullable'
             , "document.utility.consumption" => 'nullable'

@@ -839,6 +839,7 @@ class GenericMethod{
 
         public static function insertTransaction($transaction_id,$po_total_amount=0,
         $request_id,$date_requested,$fields,$balance_po_ref_amount=0){
+            
             $status = 'create';
             // return $date_requested;
             if($fields['document']['id'] == 6){
@@ -1024,7 +1025,6 @@ class GenericMethod{
                     , "supplier_id" => $fields['document']['supplier']['id']
                     , "supplier" => $fields['document']['supplier']['name']
                     , "payment_type" => $fields['document']['payment_type']
-                    , "document_no" => $fields['document']['no']
                     , "document_date" => $fields['document']['date']
                     , "document_amount" => $fields['document']['amount']
                     , "remarks" => $fields['document']['remarks']
@@ -2623,6 +2623,28 @@ class GenericMethod{
             
             if(TransactionValidationMethod::validateIfDocumentNoExistUpdate($doc_no,$id,$transaction_id) > 0){
                 throw new FistoLaravelException("The given data was invalid.", 422, NULL, collect(["document.no"=>["The Document number has already been taken."]]));
+            }
+        }
+            
+        public static function billingValidation($company_id,$department_id,$location_id,$supplier_id,$category_id,$capex_no,$transaction_id=null){
+          
+            if(Transaction::where('id','<>',$transaction_id)
+            ->where('company_id',$company_id)
+            ->where('department_id',$company_id)
+            ->where('location_id',$location_id)
+            ->where('supplier_id',$supplier_id)
+            ->where('category_id',$category_id)
+            ->where('capex_no',$capex_no)
+            ->exists()){
+                throw new FistoLaravelException("The given data was invalid.", 422, NULL, collect(
+                    ["document.company.id"=>["The Company has already been taken."],
+                    "document.department.id"=>["The Department has already been taken."],
+                    "document.location.id"=>["The Location has already been taken."],
+                    "document.supplier.id"=>["The Supplier has already been taken."],
+                    "document.category.id"=>["The Category has already been taken."],
+                    "document.capex_no"=>["The Capex number has already been taken."],
+                    ]
+                ));
             }
         }
             

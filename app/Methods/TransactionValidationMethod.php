@@ -51,6 +51,7 @@ class TransactionValidationMethod
         return $transactions;
 
     }
+    
 // CONTINUATION     
     
     public static function fullPOValidation($payment_type,$company_id,$supplier_id,$po_group){
