@@ -86,6 +86,7 @@ class TransactionPostRequest extends FormRequest
             , "document.reference.id" => 'required_if:document.id,4'
             , "document.reference.no" => 'required_if:document.id,4'
             , "document.reference.amount" => 'nullable'
+            , "document.reference.allowable" => 'nullable'
             , "document.reference.qty" => 'nullable'
             , "document.reference.type" => 'required_if:document.id,4'
 

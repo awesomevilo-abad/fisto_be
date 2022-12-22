@@ -625,10 +625,11 @@ class TransactionController extends Controller
                     }
                     
                     $po_total_amount = GenericMethod::getPOTotalAmount($request_id,$fields['po_group']);
-                    
-                    $errorMessage = GenericMethod::validateWith1PesoDifference('document.amount','Reference',$fields['document']['reference']['amount'],$po_total_amount);
-                    if(! empty($errorMessage)){
-                        return GenericMethod::resultResponse('invalid','',$errorMessage);
+                    if(!$fields['document']['reference']['allowable']){
+                        $errorMessage = GenericMethod::validateWith1PesoDifference('document.amount','Reference',$fields['document']['reference']['amount'],$po_total_amount);
+                        if(! empty($errorMessage)){
+                            return GenericMethod::resultResponse('invalid','',$errorMessage);
+                        }   
                     }
 
                     GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
