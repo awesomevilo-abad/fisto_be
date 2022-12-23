@@ -30,6 +30,7 @@ class Bank extends Model
   public function AccountTitleOne() {
     return $this->hasOne(AccountTitle::class, 'id', 'account_title_1')->select('id','title');
   }
+  
   public function AccountTitleTwo() {
     return $this->hasOne(AccountTitle::class, 'id', 'account_title_2')->select('id','title');
   }

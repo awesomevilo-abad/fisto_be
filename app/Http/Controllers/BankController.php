@@ -35,9 +35,10 @@ class BankController extends Controller
     ->latest('updated_at');
     
    if($paginate == 0){
-     $banks = $banks->where('account_title_1',$account_title_id)
-     ->without('AccountTitleOne')
-     ->without('AccountTitleTwo')->get(['id','name','branch']);
+     $banks = $banks
+    //  ->without('AccountTitleOne')
+    //  ->without('AccountTitleTwo')
+     ->get(['account_title_1','account_title_2','id','name','branch']);
      $banks = ["banks"=>$banks];
     }else{
       $banks = $banks->paginate($rows);
