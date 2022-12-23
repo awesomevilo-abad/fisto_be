@@ -87,9 +87,9 @@ class CounterReceiptSingleView extends JsonResource
         if(count($transaction->voucher)>0){
             $voucher = $transaction->voucher->first();
             $voucher_receipt_type= (isset($voucher->receipt_type)?$voucher->receipt_type:NULL);
-            $voucher_percentage_tax= (isset($voucher->percentage_tax)?$voucher->percentage_tax:NULL);
-            $vouocher_witholding_tax= (isset($voucher->witholding_tax)?$voucher->witholding_tax:NULL);
-            $voucher_net_amount= (isset($voucher->net_amount)?$voucher->net_amount:NULL);
+            // $voucher_percentage_tax= (isset($voucher->percentage_tax)?$voucher->percentage_tax:NULL);
+            // $vouocher_witholding_tax= (isset($voucher->witholding_tax)?$voucher->witholding_tax:NULL);
+            // $voucher_net_amount= (isset($voucher->net_amount)?$voucher->net_amount:NULL);
             $voucher_approver_id= (isset($voucher->approver_id)?$voucher->approver_id:NULL);
             $voucher_approver_name= (isset($voucher->approver_name)?$voucher->approver_name:NULL);
             $voucher_date= (isset($voucher->date)?$voucher->date:NULL);
@@ -598,22 +598,8 @@ class CounterReceiptSingleView extends JsonResource
 
             $reason = null;
             $approver = null;
-            $tax = null;
             $account_title = null;
 
-            if(isset($voucher_receipt_type)){
-                if(strtolower($voucher_receipt_type) == "unofficial"){
-                    $voucher_percentage_tax = null;
-                    $vouocher_witholding_tax = null;
-                    $voucher_net_amount = null;
-                }
-                $tax = [
-                    "receipt_type"=>$voucher_receipt_type,
-                    "percentage_tax"=>$voucher_percentage_tax,
-                    "witholding_tax"=>$vouocher_witholding_tax,
-                    "net_amount"=>$voucher_net_amount
-                ];
-            }
             if(isset($voucher->account_title)){
                 $voucher_account_title = $voucher->account_title;
                 $voucher_account_title = $voucher_account_title->mapToGroups(function ($item, $key) {
@@ -662,7 +648,7 @@ class CounterReceiptSingleView extends JsonResource
                     "date"=>$voucher_date,
                     "no"=>$transaction_voucher_no,
                     "month"=>$transaction_voucher_month,
-                    "tax"=>$tax,
+                    "receipt_type"=>$voucher_receipt_type,
                     "accounts"=>$account_title,
                     "approver"=>$approver,
                     "reason"=>$reason

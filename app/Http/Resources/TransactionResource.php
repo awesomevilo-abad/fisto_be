@@ -617,7 +617,6 @@ class TransactionResource extends JsonResource
 
             $reason = null;
             $approver = null;
-            $tax = null;
             $account_title = null;
 
             $dates = null;
@@ -626,19 +625,6 @@ class TransactionResource extends JsonResource
             $subprocess = ['receive','voucher'];
             $dates = $this->get_transaction_dates($model,$transaction_tag_no,$process,$subprocess);
 
-            if(isset($voucher_receipt_type)){
-                if(strtolower($voucher_receipt_type) == "unofficial"){
-                    $voucher_percentage_tax = null;
-                    $vouocher_witholding_tax = null;
-                    $voucher_net_amount = null;
-                }
-                $tax = [
-                    "receipt_type"=>$voucher_receipt_type,
-                    "percentage_tax"=>$voucher_percentage_tax,
-                    "witholding_tax"=>$vouocher_witholding_tax,
-                    "net_amount"=>$voucher_net_amount
-                ];
-            }
             if(isset($voucher->account_title)){
                 $voucher_account_title = $voucher->account_title;
                 $voucher_account_title = $voucher_account_title->mapToGroups(function ($item, $key) {
@@ -687,7 +673,7 @@ class TransactionResource extends JsonResource
                     "no"=>$transaction_voucher_no,
                     "dates"=>$dates,
                     "month"=>$transaction_voucher_month,
-                    "tax"=>$tax,
+                    "receipt_type"=>$voucher_receipt_type,
                     "accounts"=>$account_title,
                     "approver"=>$approver,
                     "reason"=>$reason

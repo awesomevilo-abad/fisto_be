@@ -290,9 +290,7 @@ class GenericMethod{
         
         public static function voucherTransaction(
             $model,$transaction_id,$tag_no,$reason_remarks,$date_now,
-            $reason_id,$status,$receipt_type,$percentage_tax,$witholding_tax,$net_amount,
-            $voucher_no,$approver,$account_titles ){
-                
+            $reason_id,$status,$receipt_type,$voucher_no,$approver,$account_titles ){
 
             $approver_id = (isset($approver['id'])?$approver['id']:(isset($approver['approver']['id'])?$approver['approver']['id']:NULL));
             $approver_name = (isset($approver['name'])?$approver['name']:(isset($approver['approver']['name'])?$approver['approver']['name']:NULL));
@@ -301,9 +299,6 @@ class GenericMethod{
                 "transaction_id"=>$transaction_id,
                 "tag_id"=>$tag_no,
                 "receipt_type"=>$receipt_type,
-                "percentage_tax"=>$percentage_tax,
-                "witholding_tax"=>$witholding_tax,
-                "net_amount"=>$net_amount,
                 "approver_id"=>$approver_id,
                 "approver_name"=>$approver_name,
                 "status"=>$status,

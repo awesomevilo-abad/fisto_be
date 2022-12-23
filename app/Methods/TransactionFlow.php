@@ -77,10 +77,10 @@ class TransactionFlow{
         $previous_voucher_transaction = Transaction::with('transaction_voucher.account_title')->where('transaction_id',$transaction['transaction_id'])->latest()->first();
         $previous_cheque_transaction = Transaction::with('transaction_cheque.account_title')->where('transaction_id',$transaction['transaction_id'])->latest()->first();
         
+        // $previous_percentage_tax = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['percentage_tax'];
+        // $previous_withholding_tax = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['witholding_tax'];
+        // $previous_net_amount = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['net_amount'];
         $previous_receipt_type = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['receipt_type'];
-        $previous_percentage_tax = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['percentage_tax'];
-        $previous_withholding_tax = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['witholding_tax'];
-        $previous_net_amount = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['transaction_voucher']->first()['net_amount'];
         $previous_voucher_no = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['voucher_no'];
         $previous_voucher_month = ($previous_voucher_transaction['transaction_voucher']->isEmpty())?NULL:$previous_voucher_transaction['voucher_month'];
         $previous_approver = array("id"=>$previous_voucher_transaction['transaction_voucher']->first()['approver_id'],"name"=>$previous_voucher_transaction['transaction_voucher']->first()['approver_name']);
@@ -103,10 +103,10 @@ class TransactionFlow{
         $cheque_cheques=  isset($request['cheques'])?$request['cheques']:NULL;
         $date_cleared=  isset($request['date_cleared'])?$request['date_cleared']:NULL;
 
-        $receipt_type = GenericMethod::with_previous_transaction($request['tax']['receipt_type'],$previous_receipt_type);
-        $percentage_tax = GenericMethod::with_previous_transaction($request['tax']['percentage_tax'],$previous_percentage_tax);
-        $withholding_tax = GenericMethod::with_previous_transaction($request['tax']['withholding_tax'],$previous_withholding_tax);
-        $net_amount = GenericMethod::with_previous_transaction($request['tax']['net_amount'],$previous_net_amount);
+        // $percentage_tax = GenericMethod::with_previous_transaction($request['tax']['percentage_tax'],$previous_percentage_tax);
+        // $withholding_tax = GenericMethod::with_previous_transaction($request['tax']['withholding_tax'],$previous_withholding_tax);
+        // $net_amount = GenericMethod::with_previous_transaction($request['tax']['net_amount'],$previous_net_amount);
+        $receipt_type = GenericMethod::with_previous_transaction($request['receipt_type'],$previous_receipt_type);
         $voucher_no = GenericMethod::with_previous_transaction($request['voucher']['no'],$previous_voucher_no);
         $voucher_month = GenericMethod::with_previous_transaction($request['voucher']['month'],$previous_voucher_month);
         $voucher_account_titles=  GenericMethod::with_previous_transaction($accounts,$voucher_account_title);
@@ -210,7 +210,7 @@ class TransactionFlow{
                     return GenericMethod::resultResponse('not-equal','Document and account title',[]); 
                 }
             }
-            GenericMethod::voucherTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$receipt_type,$percentage_tax,$withholding_tax,$net_amount,$voucher_no,$approver,$account_titles );
+            GenericMethod::voucherTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$receipt_type,$voucher_no,$approver,$account_titles );
             GenericMethod::updateTransactionStatus($transaction_id,$request_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
 
         }else if($process == 'approve'){
