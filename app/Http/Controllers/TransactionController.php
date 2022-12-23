@@ -43,6 +43,9 @@ class TransactionController extends Controller
         $document_ids =  isset($request['document_ids']) && $request['document_ids'] ? array_map('intval', json_decode($request['document_ids'])) : [];
         $transaction_from =  isset($request['transaction_from']) && $request['transaction_from'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_from'])->startOfDay()->format('Y-m-d H:i:s')  : $dateToday->startOfDay()->format('Y-m-d H:i:s');
         $transaction_to =  isset($request['transaction_to']) && $request['transaction_to'] ? Carbon::createFromFormat('Y-m-d', $request['transaction_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday->endOfDay()->format('Y-m-d H:i:s');
+        $cheque_from =  isset($request['cheque_from']) && $request['cheque_from'] ? Carbon::createFromFormat('Y-m-d', $request['cheque_from'])->startOfDay()->format('Y-m-d H:i:s')  : $dateToday->startOfDay()->format('Y-m-d H:i:s');
+        $cheque_to =  isset($request['cheque_to']) && $request['cheque_to'] ? Carbon::createFromFormat('Y-m-d', $request['cheque_to'])->endOfDay()->format('Y-m-d H:i:s')  : $dateToday->endOfDay()->format('Y-m-d H:i:s');
+      
         $search =  $request['search'];
         $state = isset($request['state'])? $request['state']: 'request';
         !empty($request['department'])? $department = json_decode($request['department']): array_push($department, Auth::user()->department[0]['name']) ;
@@ -55,9 +58,10 @@ class TransactionController extends Controller
         $approve_window = ['Approver'];
         $cheque_window = ['Treasury Associate'];
 
-        $transactions = Transaction::select([
+       return $transactions = Transaction::select([
             'id',
             'company_id'
+            // ,'tag_no'
         ])
         ->with('users', function ($query) {
             return $query->select(['id', 'first_name', 'middle_name', 'last_name', 'users.department', 'position']);
@@ -68,15 +72,23 @@ class TransactionController extends Controller
         ->with('po_details', function ($query) {
             return $query->select(['id', 'request_id', 'po_no', 'po_total_amount']);
         })
+        ->with('cheques.cheques')
         ->when(!empty($document_ids),function($query) use ($document_ids){
             $query->whereIn('document_id',$document_ids);
         })
         ->when(!empty($suppliers),function($query) use ($suppliers){
             $query->whereIn('supplier_id',$suppliers);
         })
-        ->when(!empty($document_ids) || !empty($suppliers),function($query) use ($transaction_from, $transaction_to){
-            $query->where('date_requested','>=',$transaction_from) 
-            ->where('date_requested','<=',$transaction_to);
+        ->when(isset($request['cheque_from']) || isset($request['cheque_to']), function ($query) use ($cheque_from, $cheque_to){
+            $query->whereHas('cheques.cheques', function ($query) use($cheque_from, $cheque_to){
+                $query->where('cheque_date','>=',$cheque_from) 
+                ->where('cheque_date','<=',$cheque_to);
+            });
+        }, function ($query) use ($document_ids,$suppliers, $transaction_from, $transaction_to){
+            $query->when(!empty($document_ids) || !empty($suppliers),function($query) use ($transaction_from, $transaction_to){
+                $query->where('date_requested','>=',$transaction_from) 
+                ->where('date_requested','<=',$transaction_to);
+            });
         })
         ->where(function ($query) use ($search) {
             $query->where('date_requested', 'like', '%' . $search . '%')
