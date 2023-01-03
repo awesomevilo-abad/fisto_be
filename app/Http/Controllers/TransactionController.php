@@ -58,7 +58,7 @@ class TransactionController extends Controller
         $approve_window = ['Approver'];
         $cheque_window = ['Treasury Associate'];
 
-       return $transactions = Transaction::select([
+        $transactions = Transaction::select([
             'id',
             'company_id'
             // ,'tag_no'
@@ -411,6 +411,7 @@ class TransactionController extends Controller
         ->paginate($rows);
 
         TransactionIndex::collection($transactions);
+
 
         if (count($transactions)) return $this->resultResponse('fetch', 'Transaction', $transactions);
         return $this->resultResponse('not-found', 'Transaction', []);
