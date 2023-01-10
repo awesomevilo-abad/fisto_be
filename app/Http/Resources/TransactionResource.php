@@ -622,7 +622,7 @@ class TransactionResource extends JsonResource
             $dates = null;
             $model = new Associate;
             $process = 'voucher';
-            $subprocess = ['receive','voucher'];
+            $subprocess = ['transfer','receive','voucher'];
             $dates = $this->get_transaction_dates($model,$transaction_tag_no,$process,$subprocess);
 
             if(isset($voucher->account_title)){
