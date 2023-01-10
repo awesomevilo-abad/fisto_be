@@ -507,14 +507,24 @@ class TransactionFlow{
     }
 
     public static function transfer($request,$id){
+      $transaction = Transaction::where('id',$id)->first();
+      $transaction_id = $transaction->transaction_id;
+      $tag_no = $transaction->tag_no;
+      $date_now= Carbon::now('Asia/Manila')->format('Y-m-d');
+      $status= 'voucher-transfer';
+     
+       $model = new Associate;
        $user_info = Auth::user();
        $from_user_id = $user_info->id;
        $from_full_name = GenericMethod::getFullnameNoMiddle($user_info->first_name,$user_info->last_name,$user_info->suffix);
-       $to_user_id = $request['id'];
-       $to_full_name = $request['name'];
+       $to_user_id = $request['transfer']['id'];
+       $to_full_name = $request['transfer']['name'];
        
-       GenericMethod::transferTransaction($id,$from_user_id,$from_full_name,$to_user_id,$to_full_name);
-      return GenericMethod::resultResponse('transfer','','');
+       GenericMethod::transferTransaction($id,$from_user_id,$from_full_name,$to_user_id,$to_full_name,$transaction_id,$tag_no);
+       GenericMethod::voucherTransaction($model,$transaction_id,$tag_no,
+       $reason_remarks = NULL,$date_now,$reason_id= NULL,$status,
+       $receipt_type = NULL,$voucher_no = NULL,$approver = NULL,$account_titles = NULL );
+       return GenericMethod::resultResponse('transfer','','');
     }
 
 }

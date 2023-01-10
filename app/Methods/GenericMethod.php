@@ -490,11 +490,7 @@ class GenericMethod{
             }
         }
 
-        public static function transferTransaction($id,$from_user_id,$from_full_name,$to_user_id,$to_full_name){
-
-            $transaction = Transaction::where('id',$id)->select('transaction_id','tag_no')->get();
-            $transaction_id = $transaction->first()->transaction_id;
-            $tag_no = $transaction->first()->tag_no;
+        public static function transferTransaction($id,$from_user_id,$from_full_name,$to_user_id,$to_full_name,$transaction_id,$tag_no){
 
            $transfer_transaction_log = Transfer::Create([
                 "transaction_id"=>$transaction_id
