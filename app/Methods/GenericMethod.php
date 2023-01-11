@@ -490,10 +490,17 @@ class GenericMethod{
             }
         }
 
-        public static function transferTransaction($id,$from_user_id,$from_full_name,$to_user_id,$to_full_name,$transaction_id,$tag_no){
-
+        public static function transferTransaction($id,$transaction_id,$tag_no,$request){
+            $user_info = Auth::user();
+            $from_user_id = $user_info->id;
+            $from_full_name = GenericMethod::getFullnameNoMiddle($user_info->first_name,$user_info->last_name,$user_info->suffix);
+            $to_user_id = $request['transfer']['id'];
+            $to_full_name = $request['transfer']['name'];
+            $process = $request['process'];
+            
            $transfer_transaction_log = Transfer::Create([
-                "transaction_id"=>$transaction_id
+               "process"=>$process
+                ,"transaction_id"=>$transaction_id
                 ,"tag_id"=>$tag_no
                 ,"from_distributed_id"=>$from_user_id
                 ,"from_distributed_name"=>$from_full_name
@@ -507,6 +514,8 @@ class GenericMethod{
                 ->update([
                     'distributed_id' => $to_user_id
                     ,'distributed_name' => $to_full_name
+                    ,'status'=>$process.'-transfer'
+                    ,'state'=>'transfer'
                 ]);
 
             if(isset($update_transaction)){
@@ -3325,6 +3334,14 @@ class GenericMethod{
                 
             case('exist'):
                 throw new FistoException($modelName." already exist.", 409, NULL, $data);
+            break;
+                
+            case('transfer-invalid-process'):
+                throw new FistoException($modelName." Invalid, process inputted is not allowed to transfer.", 422, NULL, $data);
+            break;
+            
+            case('transfer-invalid-subprocess'):
+                throw new FistoException($modelName." Invalid, subprocess must be transfer.", 422, NULL, $data);
             break;
             
             case('exist-flow'):

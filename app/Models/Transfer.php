@@ -10,7 +10,8 @@ class Transfer extends Model
     use HasFactory;
 
     protected $fillable = [
-        "transaction_id"
+        "process"
+        ,"transaction_id"
         ,"tag_id"
         ,"from_distributed_id"
         ,"from_distributed_name"

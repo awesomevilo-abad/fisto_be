@@ -720,7 +720,7 @@ class TransactionResource extends JsonResource
             $dates = null;
             $model = new Transmit;
             $process = 'transmit';
-            $subprocess = ['receive','transmit'];
+            $subprocess = ['transfer','receive','transmit'];
             $dates = $this->get_transaction_dates($model,$transaction_tag_no,$process,$subprocess);
 
             $transmit = [
@@ -864,7 +864,7 @@ class TransactionResource extends JsonResource
             $dates = null;
             $model = new File;
             $process = 'file';
-            $subprocess = ['receive','file'];
+            $subprocess = ['transfer','receive','file'];
             $dates = $this->get_transaction_dates($model,$transaction_tag_no,$process,$subprocess);
 
             if(isset($file_reason_id)){

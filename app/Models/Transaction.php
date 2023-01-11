@@ -201,6 +201,15 @@ class Transaction extends Model
         'user_role','user_id','user_name','date_status as date','status','reason_id','remarks','distributed_id','distributed_name')->latest()->limit(1);
     }
 
+    public function transfer_voucher(){
+        return $this->hasMany(Transfer::class,'tag_id','tag_no')->where('process','voucher')->latest()->limit(1);
+    }
+    public function transfer_transmit(){
+        return $this->hasMany(Transfer::class,'tag_id','tag_no')->where('process','transmit')->latest()->limit(1);
+    }
+    public function transfer_file(){
+        return $this->hasMany(Transfer::class,'tag_id','tag_no')->where('process','file')->latest()->limit(1);
+    }
 
 
 }

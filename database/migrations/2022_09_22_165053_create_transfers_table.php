@@ -16,6 +16,7 @@ class CreateTransfersTable extends Migration
         Schema::create('transfers', function (Blueprint $table) {
             $table->id();
             $table->string('transaction_id')->nullable();
+            $table->string('process')->nullable();
             $table->unsignedBigInteger('tag_id');
             $table->bigInteger('from_distributed_id')->nullable();
             $table->string('from_distributed_name')->nullable();
