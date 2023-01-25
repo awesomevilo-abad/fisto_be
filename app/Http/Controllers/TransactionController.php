@@ -385,17 +385,21 @@ class TransactionController extends Controller
                 }, function ($query) use ($status){
                     $query->when(strtolower($status) == "pending", function ($query){
                         $query->whereIn('status',['transmit-transmit']);
-                    },function ($query) use($status){
-                        $query->when(strtolower($status) == "return-return", function ($query) use ($status){
-                            $query->whereIn('status',['release-return','reverse-return']);
-                        },function ($query) use ($status){
-                            $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
-                                $query->whereIn('status',['release-hold']);
-                             },function ($query) use($status){
-                                $query->when(strtolower($status) == "return-void", function ($query) use ($status){
-                                    $query->whereIn('status',['release-void']);
-                                },function ($query) use($status){
-                                    $query->where('status',preg_replace('/\s+/', '', $status));
+                    },function ($query) use ($status){
+                        $query->when(strtolower($status) == "pending-clear", function ($query){
+                            $query->whereIn('status',['file-file']);
+                        },function ($query) use($status){
+                            $query->when(strtolower($status) == "return-return", function ($query) use ($status){
+                                $query->whereIn('status',['release-return','reverse-return']);
+                            },function ($query) use ($status){
+                                $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
+                                    $query->whereIn('status',['release-hold']);
+                                 },function ($query) use($status){
+                                    $query->when(strtolower($status) == "return-void", function ($query) use ($status){
+                                        $query->whereIn('status',['release-void']);
+                                    },function ($query) use($status){
+                                        $query->where('status',preg_replace('/\s+/', '', $status));
+                                    });
                                 });
                             });
                         });

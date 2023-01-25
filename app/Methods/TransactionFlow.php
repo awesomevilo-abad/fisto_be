@@ -419,7 +419,7 @@ class TransactionFlow{
             }
 
             $state= $subprocess;
-            GenericMethod::fileTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$receipt_type,$percentage_tax,$withholding_tax,$net_amount,$voucher_no,[],[] );
+            GenericMethod::fileTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$receipt_type,$percentage_tax=0,$withholding_tax=0,$net_amount=0,$voucher_no,[],[] );
             GenericMethod::updateTransactionStatus($transaction_id,$request_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
 
         }else if($process == 'reverse'){
