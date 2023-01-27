@@ -12,20 +12,15 @@ class Monitoring extends Model
     protected $table ="monitoring";
 
     protected $fillable = [
-        'counter_receipt_id',
-        'date_countered',
-        'date_transaction',
-        'counter_receipt_no',
-        'receipt_type',
+        'counter_id',
         'receipt_no',
-        'supplier_id',
-        'supplier',
-        'department_id',
-        'department',
-        'amount',
         'status',
         'state',
         'receiver',
-        'remarks',
+        'notice_count',
+        'latest_notice',
+        'reason_id',
+        'reason',
+        'reason_remarks'
     ];
 }

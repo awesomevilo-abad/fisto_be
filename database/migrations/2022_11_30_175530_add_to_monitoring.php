@@ -13,7 +13,7 @@ class AddToMonitoring extends Migration
      */
     public function up()
     {
-        Schema::table('monitoring', function (Blueprint $table) {
+        Schema::table('_monitoring', function (Blueprint $table) {
             //
             $table->bigInteger('reason_id')->nullable();
             $table->string('reason')->nullable();

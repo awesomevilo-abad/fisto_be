@@ -43,6 +43,7 @@ use App\Http\Controllers\CounterReceiptController;
 
 //  Public Routes
 Route::post('/login', [UserController::class, 'login'])->name('login');
+Route::get('/coa', [MasterlistController::class,'coa']);
 
 // Protected Routes
 // Route::middleware('auth:sanctum')->get('/authenticated', function (Request $request) {
@@ -216,14 +217,17 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::put('transactions/flow/transfer/{id}',[TransactionFlowController::class, 'transfer']);
 
     // COUNTER RECEIPT 
-    Route::get('counter-receipts/view/{counter}',[CounterReceiptController::class,'showView']);
-    Route::get('counter-receipts/edit/{counter}',[CounterReceiptController::class,'showEdit']);
-    Route::post('counter-receipts/validate-receipt-no',[CounterReceiptController::class,'validate_receipt']);
-    Route::post('counter-receipts/download-memo',[CounterReceiptController::class,'update_receiver_notice']);
-    Route::post('counter-receipts/',[CounterReceiptController::class,'store']);
     Route::get('counter-receipts/',[CounterReceiptController::class,'index']);
+    Route::get('counter-receipts/counter/{counter}',[CounterReceiptController::class,'showCounter']);
+    Route::get('counter-receipts/receipt/{receipt}',[CounterReceiptController::class,'showReceipt']);
+
+    Route::post('counter-receipts/',[CounterReceiptController::class,'store']);
     Route::put('counter-receipts/{counter}',[CounterReceiptController::class,'update']);
-    Route::post('counter-receipts/flow/{id}',[CounterReceiptController::class,'update_flow_counter']);
+    Route::post('counter-receipts/download',[CounterReceiptController::class,'download']);
+
+    Route::post('counter-receipts/validate',[CounterReceiptController::class,'check']);
+
+    Route::post('counter-receipts/flow/{id}',[CounterReceiptController::class,'flow']);
 
     // Route::get('transactions/flow/',[TransactionFlowController::class,'pullRequest']);
     // Route::get('transactions/flow/{id}',[TransactionFlowController::class,'pullSingleRequest']);

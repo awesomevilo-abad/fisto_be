@@ -23,6 +23,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
+use App\Methods\GenericMethod;
+
 class MasterlistController extends Controller
 {
   public function documentDropdown(){
@@ -190,4 +192,26 @@ class MasterlistController extends Controller
     
     return $this->resultResponse('fetch','Department',$data);
   }
+
+  public static function coa(Request $request){
+
+    $company = $request->company;
+    $department= $request->department;
+    $location= $request->location;
+
+    $companies = Company::with('departments')
+    ->select('id','code','company as name')
+    ->whereHas('departments.locations', function ($query) use ($department, $location){
+        $query->where('departments.department','like','%'.$department.'%')
+        ->where('locations.location','like','%'.$location.'%');
+    })
+    ->get();
+
+    if($companies->isEmpty()){
+      return GenericMethod::resultResponse('not-found','Company',$companies);
+    }
+
+    return GenericMethod::resultResponse('fetch','Company',$companies);
+
+  } 
 }

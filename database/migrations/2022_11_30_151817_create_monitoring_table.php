@@ -13,7 +13,7 @@ class CreateMonitoringTable extends Migration
      */
     public function up()
     {
-        Schema::create('monitoring', function (Blueprint $table) {
+        Schema::create('_monitoring', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('counter_receipt_id');
             $table->dateTime('date_countered')->nullable();

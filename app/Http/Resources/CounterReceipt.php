@@ -47,8 +47,6 @@ class CounterReceipt extends JsonResource
             array_push($counter_receipt_group,$counter_receipt);
         }
 
-
-
         $transaction = [
             "id"=>$this->id,
             "date_countered"=>$this->date_countered,

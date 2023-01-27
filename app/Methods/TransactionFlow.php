@@ -507,50 +507,14 @@ class TransactionFlow{
     }
 
     public static function transfer($request,$id){
-        $allowed_process = ['voucher','transmit','file'];
-
-        if(!in_array($request['process'],$allowed_process)){
-            return GenericMethod::resultResponse('transfer-invalid-process','Process','');
-        }
-
-       if($request['subprocess'] != 'transfer'){
-            return GenericMethod::resultResponse('transfer-invalid-subprocess','Subprocess','');
-       }
-
-       $transaction = Transaction::where('id',$id)->first();
-       $transaction_id = $transaction->transaction_id;
-       $tag_no = $transaction->tag_no;
-       $date_now= Carbon::now('Asia/Manila')->format('Y-m-d');
-       $status= $request['process'].'-transfer';
-     
-       GenericMethod::transferTransaction($id,$transaction_id,$tag_no,$request);
-
-       switch($request['process']){
-            case 'voucher':
-                $model = new Associate;
-                GenericMethod::voucherTransaction($model,$transaction_id,$tag_no,
-                $reason_remarks = NULL,$date_now,$reason_id= NULL,$status,
-                $receipt_type = NULL,$voucher_no = NULL,$approver = NULL,$account_titles = NULL );
-            break;
-
-            case 'transmit':
-                $model = new Transmit;
-                GenericMethod::transmitTransaction($model,$transaction_id,$tag_no
-                ,$reason_remarks = NULL,$date_now,$reason_id = NULL,$status,
-                $distributed_to = NULL,$transaction_type = NULL );
-            break;
-
-            case 'file':
-                $model = new File;
-                GenericMethod::fileTransaction($model,$transaction_id,$tag_no,
-                $reason_remarks = NULL,$date_now,$reason_id= NULL,$status,
-                $receipt_type = NULL, $percentage_tax = NULL, $withholding_tax = NULL, 
-                $net_amount = NULL, $voucher_no = NULL, [],[] );
-            break;
-       }
+       $user_info = Auth::user();
+       $from_user_id = $user_info->id;
+       $from_full_name = GenericMethod::getFullnameNoMiddle($user_info->first_name,$user_info->last_name,$user_info->suffix);
+       $to_user_id = $request['id'];
+       $to_full_name = $request['name'];
        
-       
-       return GenericMethod::resultResponse('transfer','','');
+       GenericMethod::transferTransaction($id,$from_user_id,$from_full_name,$to_user_id,$to_full_name);
+      return GenericMethod::resultResponse('transfer','','');
     }
 
 }

@@ -142,23 +142,24 @@ class CounterReceiptMethod{
 
         foreach($counter_receipt as $receipt){
             $counter_receipt = CounterReceipt::create([
-                "date_countered"=>$date_countered,
-                "counter_receipt_no"=>$counter_receipt_no,
-                "supplier_id"=>$fields['supplier']['id'],
-                "supplier"=>$fields['supplier']['name'],
-                "department_id"=>$receipt['department']['id'],
-                "department"=>$receipt['department']['name'],
-                "receipt_type_id"=>$receipt['receipt_type']['id'],
-                "receipt_type"=>$receipt['receipt_type']['type'],
-                "receipt_no"=>$receipt['receipt_no'],
-                "date_transaction"=>$receipt['date_transaction'],
-                "amount"=>$receipt['amount'],
-                "status"=>"Pending",
-                "state"=>"pending",
-                "remarks"=>$fields['remarks'],
-                "counter_receipt_status"=>NULL,
-            ]);
+                "date_countered"        =>          $date_countered,
+                "counter_receipt_no"    =>          $counter_receipt_no,
+                
+                "supplier_id"           =>          $fields['supplier']['id'],
+                "supplier"              =>          $fields['supplier']['name'],
+                "remarks"               =>          $fields['remarks'],
 
+                "receipt_type_id"       =>          $receipt['receipt_type']['id'],
+                "receipt_type"          =>          $receipt['receipt_type']['type'],
+                "receipt_no"            =>          $receipt['receipt_no'],
+                "amount"                =>          $receipt['amount'],
+                "date_transaction"      =>          $receipt['date_transaction'],
+                "department_id"         =>          $receipt['department']['id'],
+                "department"            =>          $receipt['department']['name'],
+                
+                "state"                 =>          "pending",
+                "status"                =>          "Pending"
+            ]);
         }
 
         return $counter_receipt;

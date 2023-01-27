@@ -34,4 +34,7 @@ class Department extends Model
         return $this->belongsTo(Company::class);
     }
     
+    public function locations(){
+        return $this->belongsToMany(Location::class,'location_departments','department_id','location_id');
+    }
 }

@@ -40,5 +40,11 @@ class Company extends Model
     {
 
     }
+
+    public function departments(){
+        return $this->hasMany(Department::class,'company','id') 
+        ->select('id','code','department as name','company')
+        ->with('locations');
+    }
     
 }
