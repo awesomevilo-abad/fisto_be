@@ -2317,7 +2317,10 @@ class GenericMethod{
             $total_dst = array_sum(GenericMethod::convert_string_to_float(array_column($autoDebit_group,"dst")));
             $total_net = ($total_principal + $total_interest + $total_dst) - $total_cwt;
 
-            if($document_amount != $total_net){
+            
+            $is_greater_than_piso_balance = !(((abs($document_amount - $total_net) ) >= 0.00) && ((abs($document_amount - $total_net) ) < 1.00)); 
+
+            if($is_greater_than_piso_balance){
                 throw new FistoLaravelException("The given data was invalid.", 422, NULL, collect(["document.amount"=>[$message]]));
             }
         }
