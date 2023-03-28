@@ -152,17 +152,17 @@ class AccountNumberController extends Controller
         $category_id  = 0;
       }
 
-      if (!empty($account_no)) {
-        $duplicateAccountNo = $account_number_masterlist->filter(function ($query) use ($account_no,$category_id){
-          return ((strtolower($query['account_no']) == strtolower($account_no)) && (strtolower($query['category_id']) == strtolower($category_id))) ; 
-        });
-        if ($duplicateAccountNo->count() > 0)
-          $errorBag[] = (object) [
-            "error_type" => "existing",
-            "line" => $index,
-            "description" => $category. ", with ".$account_no. " account number is already registered."
-          ];
-      }
+      // if (!empty($account_no)) {
+      //   $duplicateAccountNo = $account_number_masterlist->filter(function ($query) use ($account_no,$category_id){
+      //     return ((strtolower($query['account_no']) == strtolower($account_no)) && (strtolower($query['category_id']) == strtolower($category_id))) ; 
+      //   });
+      //   if ($duplicateAccountNo->count() > 0)
+      //     $errorBag[] = (object) [
+      //       "error_type" => "existing",
+      //       "line" => $index,
+      //       "description" => $category. ", with ".$account_no. " account number is already registered."
+      //     ];
+      // }
 
 
       if (!empty($location)) {

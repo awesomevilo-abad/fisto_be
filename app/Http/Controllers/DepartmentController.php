@@ -18,14 +18,20 @@ class DepartmentController extends Controller
       $search =  $request['search'];
       $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
       $company_id =  $request['company_id'];
+      $api_for = strtolower((isset($request['api_for']))? $request['api_for']: "default");
       
       $departments = Department::withTrashed()
         ->when($paginate === 1, function ($query) {
           return $query->with('Company');
         })
         ->where(function ($query) use ($status){
-          if ($status == 1) return $query->whereNull('deleted_at');
-          else return $query->whereNotNull('deleted_at');
+          if ($status == "all"){
+            return $query;
+          }else if ($status == 1){
+            return $query->whereNull('deleted_at');
+          } else if ( $status == 0){
+            return $query->whereNotNull('deleted_at');
+          }
         })
         ->where(function ($query) use ($search) {
           return $query->where('code', 'like', '%' . $search . '%')
@@ -40,8 +46,11 @@ class DepartmentController extends Controller
         $departments = $departments->when(!empty($company_id), function($query) use ($company_id) {
           return $query->where('company',$company_id);
         })
-        ->get(['id', 'department as name']);
-
+        ->when($api_for == 'vladimir', function ($query) {
+            return $query->get(['id','code','department as name',DB::RAW('(CASE WHEN (ISNULL(deleted_at)) THEN 1 ELSE 0 END) as status')]);
+        },function ($query) {
+            return $query->get(['id','department as name']);
+        });
         if(count($departments)) $departments = array('departments' => $departments);
       }
       

@@ -33,7 +33,7 @@ class TransactionPostRequest extends FormRequest
             , "requestor.role" => 'required'
             , "requestor.position" => 'required'
             , "requestor.first_name" => 'required'
-            , "requestor.middle_name" => 'required'
+            , "requestor.middle_name" => 'nullable'
             , "requestor.last_name" => 'required'
             , "requestor.suffix" => 'nullable'
             , "requestor.department" => 'required'

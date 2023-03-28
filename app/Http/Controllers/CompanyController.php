@@ -17,11 +17,18 @@ class CompanyController extends Controller
       $rows =  (empty($request['rows']))?10:(int)$request['rows'];
       $search =  $request['search'];
       $paginate = (isset($request['paginate']))? $request['paginate']:$paginate = 1;
+      $api_for = strtolower((isset($request['api_for']))? $request['api_for']: "default");
       
       $companies = Company::withTrashed()
       ->with('associates')
       ->where(function ($query) use ($status){
-        return ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
+        if ($status == "all"){
+          return $query;
+        }else if ($status == 1){
+          return $query->whereNull('deleted_at');
+        } else if ( $status == 0){
+          return $query->whereNotNull('deleted_at');
+        }
       })->where(function ($query) use ($search) {
         $query->where('code', 'like', '%' . $search . '%')
         ->orWhere('company', 'like', '%' . $search . '%');
@@ -31,9 +38,14 @@ class CompanyController extends Controller
        $companies = $companies
        ->paginate($rows);
      }else if ($paginate == 0){
-       $companies = $companies
+      $companies = $companies
        ->without('associates')
-       ->get(['id','company as name']);
+       ->when($api_for == 'vladimir', function ($query) {
+          return $query->get(['id','code','company as name',DB::RAW('(CASE WHEN (ISNULL(deleted_at)) THEN 1 ELSE 0 END) as status')]);
+       },function ($query) {
+          return $query->get(['id','company as name']);
+       });
+
        if(count($companies)==true){
            $companies = array("companies"=>$companies);;
        }

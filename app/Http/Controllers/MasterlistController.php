@@ -16,12 +16,14 @@ use App\Models\SupplierType;
 use App\Models\Referrence;
 use App\Models\UtilityLocation;
 use App\Models\UtilityCategory;
-
+use App\Models\Sedar;
 use App\Models\AccountTitle;
+use App\Models\OrganizationDepartment;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 use App\Methods\GenericMethod;
 
@@ -175,9 +177,6 @@ class MasterlistController extends Controller
      }
         $user['document_types'] =  $new_document_types;
         return $this->resultResponse('fetch','User',$user);
-
-
-
   }
 
   public function departmentDropdown(Request $request){
@@ -185,6 +184,19 @@ class MasterlistController extends Controller
       return $query->withTrashed();
     })
     ->get(['id','department as name']);
+
+    $data = array(
+      "departments" => $departments
+    );
+    
+    return $this->resultResponse('fetch','Department',$data);
+  }
+
+  public function organizationDropdown(Request $request){
+    $departments = OrganizationDepartment::when(isset($request['all']), function($query) {
+      return $query->withTrashed();
+    })
+    ->get(['id','name']);
 
     $data = array(
       "departments" => $departments
@@ -214,4 +226,17 @@ class MasterlistController extends Controller
     return GenericMethod::resultResponse('fetch','Company',$companies);
 
   } 
+
+  public function genus_orders(){
+
+    return Sedar::paginate(10);
+  }
+
+  public function sedar_employees(){
+
+    $response = Http::withToken('8|AUeqUEdjU4ueJjtNRbWJZnzMIbSLeVcGGeWlMeFD')->get('http://rdfsedar.com/api/data/employees');
+    $result = json_decode($response->body());
+
+    return $result;
+  }
 }

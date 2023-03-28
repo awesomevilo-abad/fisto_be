@@ -265,7 +265,7 @@ class TransactionResource extends JsonResource
                 $po_details[$key]['previous_balance'] = $previous_balance;
             }else{
             }
-            $po_details->last()->balance = $po_details->pluck('previous_balance')->sum() - $this->referrence_amount;
+            $po_details->first()->balance = $po_details->pluck('previous_balance')->sum() - $this->referrence_amount;
     }
         $transaction =($po_transaction->where('request_id',$this->request_id));
  
@@ -302,6 +302,7 @@ class TransactionResource extends JsonResource
                     ]
                 ];
             break;
+
             case 3: //PRM Multiple
                 $document = [
                     "id"=>$this->document_id
@@ -363,6 +364,7 @@ class TransactionResource extends JsonResource
                 }
 
             break;
+            
             case 5: //Contractor's Billing
                     $document = [
                         "id"=>$this->document_id

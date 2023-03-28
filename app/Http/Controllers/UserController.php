@@ -14,6 +14,7 @@ use App\Models\UserDocument;
 use App\Models\UserDocumentCategory;
 use App\Models\Permission;
 use App\Models\Transaction;
+use App\Models\OrganizationDepartment;
 use App\Http\Requests\UserControllerRequest;
 
 use App\Methods\GenericMethod;
@@ -37,7 +38,7 @@ class UserController extends Controller
             $department = $request->department;
         }
 
-        if(!Department::where('department',$department)->exists()){
+        if(!OrganizationDepartment::where('name',$department)->exists()){
             return $this->resultResponse('not-exist-department','Department',collect(['error_field'=>'department']));
         }
         
@@ -280,7 +281,7 @@ class UserController extends Controller
     public function username_validation(Request $request)
     {
         $fields = $request->validate(['username'=>['required','string']]);
-        $user = User::firstWhere('username',$fields['username']);
+        $user = User::withTrashed()->firstWhere('username',$fields['username']);
         if(!empty($user))
         {
             return $this->resultResponse('registered','Username',["error_field" => "username"]);
@@ -295,7 +296,7 @@ class UserController extends Controller
             "id_no"=>['required','string']
         ]);
 
-        $user = User::firstWhere([
+        $user = User::withTrashed()->firstWhere([
             "id_prefix"=>$fields['id_prefix'],
             "id_no"=>$fields["id_no"]
         ]);

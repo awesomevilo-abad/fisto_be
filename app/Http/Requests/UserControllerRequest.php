@@ -28,7 +28,7 @@ class UserControllerRequest extends FormRequest
             , 'id_no' => 'required'
             , 'role' => 'required|string'
             , 'first_name' => 'required|string'
-            , 'middle_name' => 'required|string'
+            , 'middle_name' => 'nullable'
             , 'last_name' => 'required|string'
             , 'suffix' => 'nullable'
             , 'department' => 'required'

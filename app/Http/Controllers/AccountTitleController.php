@@ -140,17 +140,17 @@ class AccountTitleController extends Controller
             "description" => $code. " is already registered."
           ];
       }
-      if (!empty($title)) {
-        $duplicateTitle = $account_title_masterlist->filter(function ($query) use ($title){
-          return ($query['title'] == $title) ; 
-        });
-        if ($duplicateTitle->count() > 0)
-          $errorBag[] = (object) [
-            "error_type" => "existing",
-            "line" => (string) $index,
-            "description" => $title. " is already registered."
-          ];
-      }
+      // if (!empty($title)) {
+      //   $duplicateTitle = $account_title_masterlist->filter(function ($query) use ($title){
+      //     return ($query['title'] == $title) ; 
+      //   });
+      //   if ($duplicateTitle->count() > 0)
+      //     $errorBag[] = (object) [
+      //       "error_type" => "existing",
+      //       "line" => (string) $index,
+      //       "description" => $title. " is already registered."
+      //     ];
+      // }
       if (!empty($category)) {
         if(!in_array($category,$categories)){
           $errorBag[] = (object) [
@@ -196,38 +196,38 @@ class AccountTitleController extends Controller
       }
     }
     
-    foreach ($data_validation_title as $key => $subArr) {
-      unset($subArr['category']);
-      unset($subArr['code']);
-      $data_validation_title[$key] = $subArr;  
-    }
+    // foreach ($data_validation_title as $key => $subArr) {
+    //   unset($subArr['category']);
+    //   unset($subArr['code']);
+    //   $data_validation_title[$key] = $subArr;  
+    // }
 
-    $original_lines_title = array_keys($data_validation_title);
-    $unique_lines_title = array_keys(array_unique($data_validation_title,SORT_REGULAR));
-    $duplicate_lines_title = array_values(array_diff($original_lines_title,$unique_lines_title));
+    // $original_lines_title = array_keys($data_validation_title);
+    // $unique_lines_title = array_keys(array_unique($data_validation_title,SORT_REGULAR));
+    // $duplicate_lines_title = array_values(array_diff($original_lines_title,$unique_lines_title));
     
-    foreach($duplicate_lines_title as $line){
-      $input_title = $data_validation_title[$line]['title'];
+    // foreach($duplicate_lines_title as $line){
+    //   $input_title = $data_validation_title[$line]['title'];
 
-      $duplicate_data =  array_filter($data_validation_title, function ($query) use($input_title){
-        return ($query['title'] == $input_title);
-      }); 
-      $duplicate_lines_imploded =  implode(",",array_map(function($query){
-        return $query+2;
-      },array_keys($duplicate_data)));
+    //   $duplicate_data =  array_filter($data_validation_title, function ($query) use($input_title){
+    //     return ($query['title'] == $input_title);
+    //   }); 
+    //   $duplicate_lines_imploded =  implode(",",array_map(function($query){
+    //     return $query+2;
+    //   },array_keys($duplicate_data)));
 
-      $firstDuplicateLine =  array_key_first($duplicate_data);
+    //   $firstDuplicateLine =  array_key_first($duplicate_data);
       
-      if((empty($data_validation_title[$line]['title']))){
+    //   if((empty($data_validation_title[$line]['title']))){
 
-      }else{
-        $errorBag[] = (object) [
-          "error_type" => "duplicate",
-          "line" => (string) $duplicate_lines_imploded,
-          "description" =>  $data_validation_title[$firstDuplicateLine]['title'].' title has a duplicate in your excel file.'
-        ];
-      }
-    }
+    //   }else{
+    //     $errorBag[] = (object) [
+    //       "error_type" => "duplicate",
+    //       "line" => (string) $duplicate_lines_imploded,
+    //       "description" =>  $data_validation_title[$firstDuplicateLine]['title'].' title has a duplicate in your excel file.'
+    //     ];
+    //   }
+    // }
      
     $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
 

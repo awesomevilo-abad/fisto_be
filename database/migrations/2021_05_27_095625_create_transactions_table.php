@@ -19,7 +19,7 @@ class CreateTransactionsTable extends Migration
             $table->string('id_prefix');
             $table->bigInteger('id_no');
             $table->string('first_name');
-            $table->string('middle_name');
+            $table->string('middle_name')->nullable();
             $table->string('last_name');
             $table->string('suffix')->nullable();
             $table->string('department');

@@ -7,6 +7,7 @@ use App\Http\Controllers\BankController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\OrganizationDepartmentController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ReasonController;
@@ -44,6 +45,8 @@ use App\Http\Controllers\CounterReceiptController;
 //  Public Routes
 Route::post('/login', [UserController::class, 'login'])->name('login');
 Route::get('/coa', [MasterlistController::class,'coa']);
+Route::get('/sedar', [MasterlistController::class,'sedar_employees']);
+Route::get('/genus', [MasterlistController::class,'genus_orders']);
 
 // Protected Routes
 // Route::middleware('auth:sanctum')->get('/authenticated', function (Request $request) {
@@ -92,6 +95,7 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
             Route::get('location-category',[MasterlistController::class,'loccatDropdown']);
             Route::get('account-title',[MasterlistController::class,'accountTitleDropdown']);
             Route::get('company',[MasterlistController::class,'companyDropdown']);
+            Route::get('organization',[MasterlistController::class,'organizationDropdown']);
             Route::get('department',[MasterlistController::class,'departmentDropdown']);
             Route::get('associate',[MasterlistController::class,'associateDropdown']);
         });
@@ -192,6 +196,10 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
         Route::post('locations/import',[LocationController::class,'import']);
         Route::patch('locations/{id}', [LocationController::class, 'change_status']);
         Route::resource('locations', LocationController::class);
+
+        // ORGANIZATION
+        Route::put('organization',[OrganizationDepartmentController::class,'import']);
+        Route::resource('organization', OrganizationDepartmentController::class);
         
     });
 
@@ -220,13 +228,10 @@ Route::group(['middleware'=>'auth:sanctum'],function() {
     Route::get('counter-receipts/',[CounterReceiptController::class,'index']);
     Route::get('counter-receipts/counter/{counter}',[CounterReceiptController::class,'showCounter']);
     Route::get('counter-receipts/receipt/{receipt}',[CounterReceiptController::class,'showReceipt']);
-
     Route::post('counter-receipts/',[CounterReceiptController::class,'store']);
     Route::put('counter-receipts/{counter}',[CounterReceiptController::class,'update']);
     Route::post('counter-receipts/download',[CounterReceiptController::class,'download']);
-
     Route::post('counter-receipts/validate',[CounterReceiptController::class,'check']);
-
     Route::post('counter-receipts/flow/{id}',[CounterReceiptController::class,'flow']);
 
     // Route::get('transactions/flow/',[TransactionFlowController::class,'pullRequest']);

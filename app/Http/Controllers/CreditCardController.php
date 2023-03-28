@@ -35,7 +35,9 @@ class CreditCardController extends Controller
         $credit_card = CreditCard::withTrashed()
         ->where(function ($query) use ($status){
           ($status==true)?$query->whereNull('deleted_at'):$query->whereNotNull('deleted_at');
-        })->get(['id','account_no as no']);
+        })
+        ->get(['id','account_no as no'])
+        ->unique('no');
         $credit_card = array("account_numbers"=>$credit_card);
       }else{
         $credit_card = $credit_card->latest('updated_at')
@@ -50,11 +52,14 @@ class CreditCardController extends Controller
 
     public function store(CreditCardRequest $request)
     {
-        $fields = $request->validated();
-        $credit_card_validateDuplicateAccountNo = CreditCard::withTrashed()->firstWhere('account_no', $fields['account_no']);
+        $fields = $request->toArray();
+        
+        // $credit_card_validateDuplicateAccountNo = CreditCard::withTrashed()->firstWhere('account_no', $fields['account_no']);
 
-        if (!empty($credit_card_validateDuplicateAccountNo))
-          return $this->resultResponse('registered','Account number',["error_field" => "account_no"]);
+        // if (!empty($credit_card_validateDuplicateAccountNo))
+        //   return $this->resultResponse('registered','Account number',["error_field" => "account_no"]);
+
+
           $credit_card = CreditCard::create($fields);
           $credit_card->utility_categories()->attach($fields['categories']);
           $credit_card->utility_locations()->attach($fields['locations']);

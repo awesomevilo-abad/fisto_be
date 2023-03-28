@@ -2661,7 +2661,7 @@ class GenericMethod{
             return $errorBag;
         }
 
-        public static function validateTransactionByDateRange($from,$to,$company_id,$department_id,$location_id,$category,$id=0){
+        public static function validateTransactionByDateRange($from,$to,$company_id,$department_id,$supplier_id,$location_id,$category,$account_no,$id=0){
             $transactions = DB::table('transactions')
             ->where(function ($query) use($from,$to){
                 $query->where(function ($query) use($from,$to){
@@ -2681,7 +2681,10 @@ class GenericMethod{
                     });
                 });
             })
+            ->where('utilities_account_no',$account_no)
             ->where('company_id',$company_id)
+            ->where('department_id',$department_id)
+            ->where('supplier_id',$supplier_id)
             ->where('state','!=','void')
             ->where('utilities_location_id',$location_id)
             ->where('utilities_category',$category)
@@ -2714,6 +2717,7 @@ class GenericMethod{
         public static function validatePayroll($payroll_from
         ,$payroll_to
         ,$company_id
+        ,$department_id
         ,$location_id
         ,$supplier_id
         ,$payroll_client
@@ -2729,6 +2733,8 @@ class GenericMethod{
                 ->leftJoin('transaction_client','transactions.request_id','=','transaction_client.request_id')
                 ->select('client_name')
                 ->where('company_id',$company_id)
+                ->where('department_id',$department_id)
+                ->where('location_id',$location_id)
                 ->where('supplier_id',$supplier_id)
                 ->where('payroll_category',"$payroll_category")
                 ->where('payroll_type',$payroll_type)
@@ -2771,6 +2777,8 @@ class GenericMethod{
                         'document.from',
                         'document.to',
                         'document.company.id',
+                        'document.department.id',
+                        'document.location.id',
                         'document.supplier.id',
                     ],
                     [
@@ -2780,6 +2788,8 @@ class GenericMethod{
                         ["From has already been taken."],
                         ["To date has already been taken."],
                         ["Company has already been taken."],
+                        ["Department has already been taken."],
+                        ["Location has already been taken."],
                         ["Supplier has already been taken."]
                     ]
                 );
@@ -2902,7 +2912,7 @@ class GenericMethod{
         //     }
         // }
         
-        public static function validatePCF($pcf_name,$pcf_date,$pcf_letter,$company_id,$supplier_id,$id=0){
+        public static function validatePCF($pcf_name,$pcf_date,$pcf_letter,$company_id,$supplier_id,$department_id,$location_id,$id=0){
             
             $transactions = DB::table('transactions')
                 ->where('pcf_name',$pcf_name)
@@ -2910,6 +2920,8 @@ class GenericMethod{
                 ->where('pcf_letter',$pcf_letter)
                 ->where('company_id',$company_id)
                 ->where('supplier_id',$supplier_id)
+                ->where('department_id',$department_id)
+                ->where('location_id',$location_id)
                 ->where('state','!=','void')
                 ->when($id, function($query, $id){
                     $query->where('id','<>',$id);
@@ -2921,10 +2933,16 @@ class GenericMethod{
                     [
                         'document.pcf_batch.letter',
                         'document.pcf_batch.date',
+                        'document.company.id',
+                        'document.department.id',
+                        'document.location.id',
                     ],
                     [
                         ["PCF letter has already been taken."],
-                        ["PCF date has already been taken."]
+                        ["PCF date has already been taken."],
+                        ["PCF company has already been taken."],
+                        ["PCF department has already been taken."],
+                        ["PCF location has already been taken."]
                     ]
                 );
             }

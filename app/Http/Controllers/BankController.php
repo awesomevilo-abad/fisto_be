@@ -70,9 +70,10 @@ class BankController extends Controller
     }
     $bank_validateBranchDuplicate = Bank::withTrashed()->where('branch', $fields['branch'])->first();
 
-    if (!empty($bank_validateBranchDuplicate)) {
-      return $this->resultResponse('registered','Branch',["error_field" => "branch"]);
-    }
+    // if (!empty($bank_validateBranchDuplicate)) {
+    //   return $this->resultResponse('registered','Branch',["error_field" => "branch"]);
+    // }
+    
     $bank_validateAccountNoDuplicate = Bank::withTrashed()->where('account_no', $fields['account_no'])->first();
     if (!empty($bank_validateAccountNoDuplicate)) {
       return $this->resultResponse('registered','Account number',["error_field" => "account_no"]);
@@ -180,15 +181,15 @@ class BankController extends Controller
             "description" => $code. " is already registered."
           ];
       }
-      if (!empty($branch)) {
-        $duplicateBranch = $this->getDuplicateInputs($bank_masterlist,$branch,'branch');
-        if ($duplicateBranch->count() > 0)
-          $errorBag[] = (object) [
-            "error_type" => "existing",
-            "line" => $index,
-            "description" => $branch. " is already registered."
-          ];
-      }
+      // if (!empty($branch)) {
+      //   $duplicateBranch = $this->getDuplicateInputs($bank_masterlist,$branch,'branch');
+      //   if ($duplicateBranch->count() > 0)
+      //     $errorBag[] = (object) [
+      //       "error_type" => "existing",
+      //       "line" => $index,
+      //       "description" => $branch. " is already registered."
+      //     ];
+      // }
       if (!empty($account_no)) {
         $duplicateAccountNo = $this->getDuplicateInputs($bank_masterlist,$account_no,'account_no');
         if ($duplicateAccountNo->count() > 0)
@@ -243,26 +244,26 @@ class BankController extends Controller
       }
     }
 
-    $duplicate_branch = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'branch'))));
-    foreach($duplicate_branch as $line){
-      $input_branch = $data_validation_fields[$line]['branch'];
-      $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_branch){
-        return ($query['branch'] == $input_branch);
-      }); 
-      $duplicate_lines =  implode(",",array_map(function($query){
-        return $query+2;
-      },array_keys($duplicate_data)));
-      $firstDuplicateLine =  array_key_first($duplicate_data);
+    // $duplicate_branch = array_values(array_diff($original_lines,array_keys($this->unique_multidim_array($data_validation_fields,'branch'))));
+    // foreach($duplicate_branch as $line){
+    //   $input_branch = $data_validation_fields[$line]['branch'];
+    //   $duplicate_data =  array_filter($data_validation_fields, function ($query) use($input_branch){
+    //     return ($query['branch'] == $input_branch);
+    //   }); 
+    //   $duplicate_lines =  implode(",",array_map(function($query){
+    //     return $query+2;
+    //   },array_keys($duplicate_data)));
+    //   $firstDuplicateLine =  array_key_first($duplicate_data);
 
-      if((empty($data_validation_fields[$line]['branch']))){
-      }else{
-        $errorBag[] = [
-          "error_type" => "duplicate",
-          "line" => (string) $duplicate_lines,
-          "description" =>  $data_validation_fields[$firstDuplicateLine]['branch'].' Branch has a duplicate in your excel file.'
-        ];
-      }
-    }
+    //   if((empty($data_validation_fields[$line]['branch']))){
+    //   }else{
+    //     $errorBag[] = [
+    //       "error_type" => "duplicate",
+    //       "line" => (string) $duplicate_lines,
+    //       "description" =>  $data_validation_fields[$firstDuplicateLine]['branch'].' Branch has a duplicate in your excel file.'
+    //     ];
+    //   }
+    // }
 
     $errorBag = array_values(array_unique($errorBag,SORT_REGULAR));
     
