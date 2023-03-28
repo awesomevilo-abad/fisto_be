@@ -104,6 +104,7 @@ class Transaction extends Model
         ,"amortization"
         ,"interest"
         ,"cwt"
+        ,"dst"
         ,"principal"
 
     ];
@@ -135,7 +136,7 @@ class Transaction extends Model
     }
 
     public function auto_debit(){
-        return $this->hasMany(DebitBatch::class,'request_id','request_id')->select(['request_id','pn_no','interest_from','interest_to','outstanding_amount','interest_rate','no_of_days','principal_amount','interest_due','cwt']);
+        return $this->hasMany(DebitBatch::class,'request_id','request_id')->select(['request_id','pn_no','interest_from','interest_to','outstanding_amount','interest_rate','no_of_days','principal_amount','interest_due','cwt','dst']);
     }
 
     public function cheque(){

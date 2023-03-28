@@ -20,5 +20,6 @@ class DebitBatch extends Model
         ,"principal_amount"
         ,"interest_due"
         ,"cwt"
+        ,"dst"
     ];
 }

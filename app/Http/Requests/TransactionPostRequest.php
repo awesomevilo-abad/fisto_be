@@ -112,6 +112,7 @@ class TransactionPostRequest extends FormRequest
             ,"autoDebit_group.*.principal_amount"=>'nullable'
             ,"autoDebit_group.*.interest_due"=>'nullable'
             ,"autoDebit_group.*.cwt"=>'nullable'
+            ,"autoDebit_group.*.dst"=>'nullable'
 
         ];
     }

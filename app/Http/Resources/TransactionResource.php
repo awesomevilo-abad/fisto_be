@@ -1013,6 +1013,7 @@ class TransactionResource extends JsonResource
                 $auto_debit[$k]["principal_amount"] = floatVal($auto_debit_batch->principal_amount);
                 $auto_debit[$k]["interest_due"] = floatVal($auto_debit_batch->interest_due);
                 $auto_debit[$k]["cwt"]=floatVal($auto_debit_batch->cwt);
+                $auto_debit[$k]["dst"]=floatVal($auto_debit_batch->dst);
             }
 
             $autoDebit_group = $auto_debit;

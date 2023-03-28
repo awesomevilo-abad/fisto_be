@@ -1585,6 +1585,7 @@ class GenericMethod{
                     'principal_amount' => $autoDebit_group[$i]['principal_amount'],
                     'interest_due' => $autoDebit_group[$i]['interest_due'],
                     'cwt' => $autoDebit_group[$i]['cwt'],
+                    'dst' => $autoDebit_group[$i]['dst'],
                 ]);
             }
         }
@@ -1606,6 +1607,7 @@ class GenericMethod{
                     'principal_amount' => $autoDebit_group[$i]['principal_amount'],
                     'interest_due' => $autoDebit_group[$i]['interest_due'],
                     'cwt' => $autoDebit_group[$i]['cwt'],
+                    'dst' => $autoDebit_group[$i]['dst'],
                 ]);
             }
         }
@@ -2292,14 +2294,28 @@ class GenericMethod{
             return GenericMethod::getTransactionCode($department, $transaction_no);
         }
 
+        public static function convert_string_to_float($value){
+            if (gettype($value) == 'array'){
+                return array_map(function ($val) {
+                    return floatval(str_replace(',','',$val));
+                }, $value);
+            }else if(gettype($value) == 'string'){
+                return floatval(str_replace(',','',$value));
+            }
+        }
+
     ##########################################################################################################
     #########################################      VALIDATION           ######################################
     ##########################################################################################################
         public static function validate_debit_amount($document_amount,$autoDebit_group, $message){
-            $total_principal = array_sum(array_column($autoDebit_group,"principal_amount"));
-            $total_interest = array_sum(array_column($autoDebit_group,"interest_due"));
-            $total_cwt = array_sum(array_column($autoDebit_group,"cwt"));
-            $total_net = ($total_principal + $total_interest) - $total_cwt;
+
+
+
+            $total_principal = array_sum(GenericMethod::convert_string_to_float(array_column($autoDebit_group,"principal_amount")));
+            $total_interest = array_sum(GenericMethod::convert_string_to_float(array_column($autoDebit_group,"interest_due")));
+            $total_cwt = array_sum(GenericMethod::convert_string_to_float(array_column($autoDebit_group,"cwt")));
+            $total_dst = array_sum(GenericMethod::convert_string_to_float(array_column($autoDebit_group,"dst")));
+            $total_net = ($total_principal + $total_interest + $total_dst) - $total_cwt;
 
             if($document_amount != $total_net){
                 throw new FistoLaravelException("The given data was invalid.", 422, NULL, collect(["document.amount"=>[$message]]));
