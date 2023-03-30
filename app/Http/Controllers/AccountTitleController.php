@@ -29,7 +29,8 @@ class AccountTitleController extends Controller
     ->latest('updated_at')
     ->paginate($rows);
     
-    if(count($account_titles)==true){
+
+    if(!$account_titles->isEmpty()){
       return $this->resultResponse('fetch','Account Title',$account_titles);
     }
     return $this->resultResponse('not-found','Account Title',[]);

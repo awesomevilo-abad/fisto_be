@@ -176,41 +176,35 @@ class TransactionController extends Controller
             $query->when(strtoupper($status) == "PENDING-REQUEST-REQUESTOR", function ($query) use($department){
                 $query->whereNotIn('status',['requestor-void','tag-return'])
                 ->whereIn('department_details',$department);
-            }, function ($query) use ($status,$department){
-                $query->when(strtolower($status) == "tag-receive", function ($query) {
-                    $query->whereIn('status',['tag-receive','tag-unhold','tag-unreturn']);
-                    }, function ($query) use ($status,$department) {
-                        $query->when(strtolower($status) == "pending", function ($query){
-                            $query->whereIn('status',['pending']);
-                        },function ($query) use ($status,$department){
-                            $query->when(strtolower($status) == "pending-cheque",function ($query) use ($status){
-                                $query->whereIn('status',['cheque-release']);
-                            }, function ($query) use($status,$department){
-                                $query->when(strtolower($status) == "pending-file",function($query){
-                                    $query->whereIn('status',['file-file']);
-                                },function ($query) use($status,$department){
-                                    $query->when(strtolower($status) == 'reverse-request',function ($query) use ($status){
-                                        $query->whereIn('status',['reverse-request']);
-                                    },function ($query) use($status,$department){
-                                        $query->when(strtolower($status) == "return-return", function ($query) use ($status){
-                                            $query->whereIn('status',['voucher-return']);
-                                        },function ($query) use ($status){
-                                            $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
-                                                $query->whereIn('status',['voucher-hold']);
-                                             },function ($query) use($status){
-                                                $query->when(strtolower($status) == "return-void", function ($query) use ($status){
-                                                    $query->whereIn('status',['voucher-void']);
-                                                },function ($query) use($status){
-                                                    $query->where('status',preg_replace('/\s+/', '', $status));
-                                                });
-                                            });
-                                        });
-                                    })
-                                    ->whereIn('department_details',$department);
-                                });
-                            });
-                        });
-                    });
+            })
+            ->when(strtolower($status) == "tag-receive", function ($query) {
+                $query->whereIn('status',['tag-receive','tag-unhold','tag-unreturn']);
+            })
+            ->when(strtolower($status) == "pending", function ($query){
+                $query->whereIn('status',['pending']);
+            })
+            ->when(strtolower($status) == "pending-cheque",function ($query) use ($status){
+                $query->whereIn('status',['cheque-release']);
+            })
+            ->when(strtolower($status) == "pending-file",function($query){
+                $query->whereIn('status',['file-file']);
+            })
+            ->when(strtolower($status) == 'reverse-request',function ($query) use ($status){
+                $query->whereIn('status',['reverse-request']);
+            })
+            ->when(strtolower($status) == "return-return", function ($query) use ($status){
+                $query->whereIn('status',['voucher-return'])
+                ->whereIn('department_details',$department);
+            })
+            ->when(strtolower($status) == "return-hold", function ($query) use ($status){
+                $query->whereIn('status',['voucher-hold'])
+                ->whereIn('department_details',$department);
+            })
+            ->when(strtolower($status) == "return-void", function ($query) use ($status){
+                $query->whereIn('status',['voucher-void'])
+                ->whereIn('department_details',$department);
+            },function ($query) use($status){
+                $query->where('status',preg_replace('/\s+/', '', $status));
             })
             ->select([
                 'id',
