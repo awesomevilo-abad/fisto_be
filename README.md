@@ -1,18 +1,18 @@
 
 # Documentation
 ## Two Ways in Running Laravel APIs
-- **[PHP Artisan Command]**
-- **[Apache]**
+- **PHP Artisan Command**
+- **Apache**
 
 ### PHP Artisan Command
-- **[1. Go to Project root folder.]**
-- **[2. Type PHP artisan serve.]**
-- **[•	Add –host= to change address.]**
+- **1. Go to Project root folder.**
+- **2. Type PHP artisan serve.**
+- **•	Add –host= to change address.**
 
 ### Laragon Apache
-- **[1. Rename server.php to index.php.]**
-- **[2. Move public .htaccess file to root folder.]**
-- **[3. Add folder name in API Address when accesing API thru Apache.]**
+- **1. Rename server.php to index.php.**
+- **2. Move public .htaccess file to root folder.**
+- **3. Add folder name in API Address when accesing API thru Apache.**
 
 
 # Reference for Running APIs
