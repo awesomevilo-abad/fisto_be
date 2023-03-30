@@ -24,5 +24,5 @@
 
 # Format
 [Formating ReadMe in Github doc ](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
-<img src="https://icons8.com/icon/106567/github" alt="laravel" width="40" height="40"/>
+<img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg" alt="laravel" width="40" height="40"/>
 
