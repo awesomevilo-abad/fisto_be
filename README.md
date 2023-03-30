@@ -23,5 +23,5 @@
 
 
 # Format
-[Formating ReadMe in Github docs](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
+[Formating ReadMe in Github docs <img src="https://icons8.com/icon/106567/github") ](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
 
