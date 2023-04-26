@@ -30,6 +30,7 @@ class TransactionController extends Controller
         if (count($departments)) return $this->resultResponse('fetch', 'Departments', array("departments"=>$departments));
         return $this->resultResponse('not-found', 'Transaction', []);
     }
+    
     public function index(Request $request)
     {
        $dateToday = Carbon::now()->timezone('Asia/Manila');
@@ -126,7 +127,7 @@ class TransactionController extends Controller
             });
         })
         ->when(in_array($role,$request_window),function($query) use($status,$department){
-            $query->when(strtoupper($status) == "PENDING-REQUEST-REQUESTOR", function ($query){
+            $query->when(strtoupper($status) == "PENDING", function ($query){
                 $query->whereNotIn('status',['requestor-void','tag-return']);
             },function ($query) use($status){
                 $query->when(strtolower($status) == "return-return", function ($query) use ($status){
@@ -172,40 +173,41 @@ class TransactionController extends Controller
                 'state'
             ]);
         })
-        ->when(in_array($role,$tag_window),function($query) use ($status,$department){
-            $query->when(strtoupper($status) == "PENDING-REQUEST-REQUESTOR", function ($query) use($department){
-                $query->whereNotIn('status',['requestor-void','tag-return'])
-                ->whereIn('department_details',$department);
-            })
+        ->when(in_array($role,$tag_window),function($query) use ($status){
+            $query
             ->when(strtolower($status) == "tag-receive", function ($query) {
                 $query->whereIn('status',['tag-receive','tag-unhold','tag-unreturn']);
-            })
-            ->when(strtolower($status) == "pending", function ($query){
-                $query->whereIn('status',['pending']);
-            })
-            ->when(strtolower($status) == "pending-cheque",function ($query) use ($status){
-                $query->whereIn('status',['cheque-release']);
-            })
-            ->when(strtolower($status) == "pending-file",function($query){
-                $query->whereIn('status',['file-file']);
-            })
-            ->when(strtolower($status) == 'reverse-request',function ($query) use ($status){
-                $query->whereIn('status',['reverse-request']);
-            })
-            ->when(strtolower($status) == "return-return", function ($query) use ($status){
-                $query->whereIn('status',['voucher-return'])
-                ->whereIn('department_details',$department);
-            })
-            ->when(strtolower($status) == "return-hold", function ($query) use ($status){
-                $query->whereIn('status',['voucher-hold'])
-                ->whereIn('department_details',$department);
-            })
-            ->when(strtolower($status) == "return-void", function ($query) use ($status){
-                $query->whereIn('status',['voucher-void'])
-                ->whereIn('department_details',$department);
-            },function ($query) use($status){
-                $query->where('status',preg_replace('/\s+/', '', $status));
-            })
+                }, function ($query) use ($status) {
+                    $query->when(strtolower($status) == "pending", function ($query){
+                        $query->whereIn('status',['pending']);
+                    },function ($query) use ($status){
+                        $query->when(strtolower($status) == "pending-cheque",function ($query) use ($status){
+                            $query->whereIn('status',['cheque-release']);
+                        }, function ($query) use($status){
+                            $query->when(strtolower($status) == "pending-file",function($query){
+                                $query->whereIn('status',['file-file']);
+                            },function ($query) use($status){
+                                $query->when(strtolower($status) == 'reverse-request',function ($query) use ($status){
+                                    $query->whereIn('status',['reverse-request']);
+                                },function ($query) use($status){
+                                    $query->when(strtolower($status) == "return-return", function ($query) use ($status){
+                                        $query->whereIn('status',['voucher-return']);
+                                    },function ($query) use ($status){
+                                        $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
+                                            $query->whereIn('status',['voucher-hold']);
+                                         },function ($query) use($status){
+                                            $query->when(strtolower($status) == "return-void", function ($query) use ($status){
+                                                $query->whereIn('status',['voucher-void']);
+                                            },function ($query) use($status){
+                                                $query->where('status',preg_replace('/\s+/', '', $status));
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                })
             ->select([
                 'id',
                 'users_id',
@@ -234,75 +236,44 @@ class TransactionController extends Controller
                 'state'
             ]);
         })
-        ->when(in_array($role,$voucher_window),function($query) use ($users_id,$status,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered,$department){
-            $query->when(strtoupper($status) == "PENDING-REQUEST-REQUESTOR", function ($query) use ($department,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered){
-                $query->whereNotIn('status',['requestor-void','tag-return'])
-                ->whereIn('department_details',$department);
-            }, function ($query) use ($users_id, $status,$department,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered){
-                $query->when(strtolower($status) == "voucher-receive", function ($query) {
-                    $query->whereIn('status',['voucher-receive','voucher-unhold','voucher-unreturn']);
-                }, function ($query) use ($users_id, $status,$department,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered) {
-                    $query->when(strtolower($status) == "pending", function ($query){
-                        $query->whereIn('status',['tag-tag','voucher-transfer']);
-                    },function ($query) use($users_id, $status,$department,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered){
-                        $query->when(strtolower($status) == "pending-transmit", function ($query){
-                            $query->whereIn('status',['approve-approve','transmit-transfer']);
-                        }, function ($query) use ($users_id, $status,$department,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered){
-                            $query->when(strtolower($status) == "pending-file", function ($query){
-                                $query->whereIn('status',['release-release','file-transfer']);
-                            },function ($query) use ($users_id, $status,$department,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered){
-                                $query->when(strtolower($status) == "pending-request",function($query) use ($users_id){
-                                    $query->whereIn('status',['reverse-request']);
-                                },function($query) use($users_id, $status,$department,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered){
-                                    $query->when(strtolower($status) == "reverse-receive-approver", function($query){
-                                        $query->whereIn('status',['reverse-receive-approver']);
-                                    },function ($query) use ($status,$users_id,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered){
-                                        $query->when(in_array(strtolower($status),["pending-request","reverse-receive-approver","reverse-approve"]), function($query) use($users_id){
-                                            $query->where('reverse_distributed_id', $users_id);
-                                        }, function ($query) use($status,$users_id,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered){
-                                            $query->when($is_voucher_transfered, function($query) use ($users_id){
-                                                $query->whereHas('transfer_voucher', function($query) use ($users_id){
-                                                    $query->where('from_distributed_id',$users_id);
-                                                });
-                                            }, function ($query) use($status,$users_id,$is_transmit_transfered,$is_file_transfered){
-                                                $query->when($is_transmit_transfered, function($query) use ($users_id){
-                                                    $query->whereHas('transfer_transmit', function($query) use ($users_id){
-                                                        $query->where('from_distributed_id',$users_id);
-                                                    });
-                                                },
-                                                function ($query) use($status,$users_id,$is_file_transfered){
-                                                    $query->when($is_file_transfered, function($query) use ($users_id){
-                                                        $query->whereHas('transfer_file', function($query) use ($users_id){
-                                                            $query->where('from_distributed_id',$users_id);
-                                                        });
-                                                    },function ($query) use ($users_id){
-                                                        $query->where('distributed_id',$users_id);
-                                                    });
-                                                });  
+        ->when(in_array($role,$voucher_window),function($query) use ($users_id,$status,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered){
+            $query->when(strtolower($status) == "voucher-receive", function ($query) {
+                $query->whereIn('status',['voucher-receive','voucher-unhold','voucher-unreturn']);
+            }, function ($query) use ($users_id, $status) {
+                $query->when(strtolower($status) == "pending", function ($query){
+                    $query->whereIn('status',['tag-tag','voucher-transfer']);
+                },function ($query) use($users_id, $status){
+                    $query->when(strtolower($status) == "pending-transmit", function ($query){
+                        $query->whereIn('status',['approve-approve','transmit-transfer']);
+                    }, function ($query) use ($users_id, $status){
+                        $query->when(strtolower($status) == "pending-file", function ($query){
+                            $query->whereIn('status',['release-release','file-transfer']);
+                        },function ($query) use ($users_id, $status){
+                            $query->when(strtolower($status) == "pending-request",function($query) use ($users_id){
+                                $query->whereIn('status',['reverse-request']);
+                            },function($query) use($users_id, $status){
+                                $query->when(strtolower($status) == "reverse-receive-approver", function($query){
+                                    $query->whereIn('status',['reverse-receive-approver']);
+                                },function ($query) use($status){
+                                    $query->when(strtolower($status) == "return-return", function ($query) use ($status){
+                                        $query->whereIn('status',['cheque-return','approve-return']);
+                                    },function ($query) use ($status){
+                                        $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
+                                            $query->whereIn('status',['cheque-hold','approve-hold']);
+                                         },function ($query) use($status){
+                                            $query->when(strtolower($status) == "return-void", function ($query) use ($status){
+                                                $query->whereIn('status',['cheque-void','approve-void']);
+                                            },function ($query) use($status){
+                                                $query->where('status',preg_replace('/\s+/', '', $status));
                                             });
                                         });
-                                    }, function ($query) use($status,$department){
-                                        $query->when(strtolower($status) == "return-return", function ($query) use ($status){
-                                            $query->whereIn('status',['cheque-return','approve-return']);
-                                        },function ($query) use ($status){
-                                            $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
-                                                $query->whereIn('status',['cheque-hold','approve-hold']);
-                                             },function ($query) use($status){
-                                                $query->when(strtolower($status) == "return-void", function ($query) use ($status){
-                                                    $query->whereIn('status',['cheque-void','approve-void']);
-                                                },function ($query) use($status){
-                                                    $query->where('status',preg_replace('/\s+/', '', $status));
-                                                });
-                                            });
-                                        });
-                                    })
-                                    ->whereIn('department_details',$department);
+                                    });
                                 });
                             });
                         });
                     });
                 });
-            })         
+            })
             ->select([
                 'id',
                 'users_id',
@@ -332,23 +303,41 @@ class TransactionController extends Controller
 
                 'distributed_id',
                 'distributed_name'
-            ]);
-
+            ])
+            ->when(in_array(strtolower($status),["pending-request","reverse-receive-approver","reverse-approve"]), function($query) use($users_id){
+                $query->where('reverse_distributed_id', $users_id);
+            }, function ($query) use($status,$users_id,$is_voucher_transfered,$is_transmit_transfered,$is_file_transfered){
+                $query->when($is_voucher_transfered, function($query) use ($users_id){
+                    $query->whereHas('transfer_voucher', function($query) use ($users_id){
+                        $query->where('from_distributed_id',$users_id);
+                    });
+                }, function ($query) use($status,$users_id,$is_transmit_transfered,$is_file_transfered){
+                    $query->when($is_transmit_transfered, function($query) use ($users_id){
+                        $query->whereHas('transfer_transmit', function($query) use ($users_id){
+                            $query->where('from_distributed_id',$users_id);
+                        });
+                    },
+                    function ($query) use($status,$users_id,$is_file_transfered){
+                        $query->when($is_file_transfered, function($query) use ($users_id){
+                            $query->whereHas('transfer_file', function($query) use ($users_id){
+                                $query->where('from_distributed_id',$users_id);
+                            });
+                        },function ($query) use ($users_id){
+                            $query->where('distributed_id',$users_id);
+                        });
+                    });  
+                });
+            });
             
         })
-        ->when(in_array($role,$approve_window),function($query) use ($users_id,$status,$department){
-            $query->when(strtoupper($status) == "PENDING-REQUEST-REQUESTOR", function ($query){
-                $query->whereNotIn('status',['requestor-void','tag-return'])
-                ->whereIn('department_details',$department);
+        ->when(in_array($role,$approve_window),function($query) use ($users_id,$status){
+            $query->when(strtolower($status) == "approve-receive", function ($query) {
+                $query->whereIn('status',['approve-receive','approve-unhold','approve-unreturn']);
             }, function ($query) use ($status) {
-                $query->when(strtolower($status) == "approve-receive", function ($query) {
-                    $query->whereIn('status',['approve-receive','approve-unhold','approve-unreturn']);
-                }, function ($query) use ($status) {
-                    $query->when(strtolower($status) == "pending", function ($query){
-                        $query->whereIn('status',['voucher-voucher']);
-                    },function ($query) use($status){
-                        $query->where('status',preg_replace('/\s+/', '', $status));
-                    });
+                $query->when(strtolower($status) == "pending", function ($query){
+                    $query->whereIn('status',['voucher-voucher']);
+                },function ($query) use($status){
+                    $query->where('status',preg_replace('/\s+/', '', $status));
                 });
             })
             ->select([
@@ -383,42 +372,36 @@ class TransactionController extends Controller
             ])
             ->where('approver_id',$users_id);
         })
-        ->when(in_array($role,$cheque_window),function($query) use ($status, $is_auto_debit,$department){
-            $query->when(strtoupper($status) == "PENDING-REQUEST-REQUESTOR", function ($query){
-                $query->whereNotIn('status',['requestor-void','tag-return'])
-                ->whereIn('department_details',$department);
-            }, function ($query) use ($is_auto_debit, $status,$department){
-                $query->when($is_auto_debit,function ($query){
-                    $query->where('document_type','Auto Debit');
-                },function($query){
-                    $query->where('document_type','<>','Auto Debit');
-                })
-               ->when(strtolower($status) == "cheque-receive", function ($query) {
-                    $query->whereIn('status',['cheque-receive','cheque-unhold','cheque-unreturn']);
-                }, function($query) use ($status,$department){
-                    $query->when(strtolower($status) == "cheque-cheque", function($query){
-                        $query->whereIn('status',['cheque-cheque','cheque-reverse']);
-                    }, function ($query) use ($status,$department){
-                        $query->when(strtolower($status) == "pending", function ($query){
-                            $query->whereIn('status',['transmit-transmit']);
-                        },function ($query) use ($status,$department){
-                            $query->when(strtolower($status) == "pending-clear", function ($query){
-                                $query->whereIn('status',['file-file']);
-                            },function ($query) use($status,$department){
-                                $query->when(strtolower($status) == "return-return", function ($query) use ($status){
-                                    $query->whereIn('status',['release-return','reverse-return']);
-                                },function ($query) use ($status,$department){
-                                    $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
-                                        $query->whereIn('status',['release-hold']);
-                                     },function ($query) use($status){
-                                        $query->when(strtolower($status) == "return-void", function ($query) use ($status){
-                                            $query->whereIn('status',['release-void']);
-                                        },function ($query) use($status){
-                                            $query->where('status',preg_replace('/\s+/', '', $status));
-                                        });
+        ->when(in_array($role,$cheque_window),function($query) use ($status, $is_auto_debit){
+            $query->when($is_auto_debit,function ($query){
+                $query->where('document_type','Auto Debit');
+            },function($query){
+                $query->where('document_type','<>','Auto Debit');
+            })
+           ->when(strtolower($status) == "cheque-receive", function ($query) {
+                $query->whereIn('status',['cheque-receive','cheque-unhold','cheque-unreturn']);
+            }, function($query) use ($status){
+                $query->when(strtolower($status) == "cheque-cheque", function($query){
+                    $query->whereIn('status',['cheque-cheque','cheque-reverse']);
+                }, function ($query) use ($status){
+                    $query->when(strtolower($status) == "pending", function ($query){
+                        $query->whereIn('status',['transmit-transmit']);
+                    },function ($query) use ($status){
+                        $query->when(strtolower($status) == "pending-clear", function ($query){
+                            $query->whereIn('status',['file-file']);
+                        },function ($query) use($status){
+                            $query->when(strtolower($status) == "return-return", function ($query) use ($status){
+                                $query->whereIn('status',['release-return','reverse-return']);
+                            },function ($query) use ($status){
+                                $query->when(strtolower($status) == "return-hold", function ($query) use ($status){
+                                    $query->whereIn('status',['release-hold']);
+                                 },function ($query) use($status){
+                                    $query->when(strtolower($status) == "return-void", function ($query) use ($status){
+                                        $query->whereIn('status',['release-void']);
+                                    },function ($query) use($status){
+                                        $query->where('status',preg_replace('/\s+/', '', $status));
                                     });
-                                })
-                                ->whereIn('department_details',$department);
+                                });
                             });
                         });
                     });
@@ -455,10 +438,14 @@ class TransactionController extends Controller
         ->latest('updated_at')
         ->paginate($rows);
 
+
         TransactionIndex::collection($transactions);
+
+
         if (count($transactions)) return $this->resultResponse('fetch', 'Transaction', $transactions);
         return $this->resultResponse('not-found', 'Transaction', []);
     }
+
 
     public function showTransaction($id)
     {

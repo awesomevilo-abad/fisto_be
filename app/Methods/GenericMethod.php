@@ -1158,10 +1158,11 @@ class GenericMethod{
                         $error_amount_per_line = [];
                         $error_duplicate_transaction = [];
                         $total_principal = array_sum(array_column($prm_group,"principal"));
+                        $total_net_of_amount = array_sum(array_column($prm_group,"net_of_amount"));
                         $cheque_dates_array = array_column($prm_group, 'cheque_date');
 
-                        $message_if_error = "Document amount and total principal amount not equal.";
-                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_principal,$message_if_error);
+                        $message_if_error = "Document amount and total Net of amount not equal.";
+                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_net_of_amount,$message_if_error);
                         if($validate_document_amount){
                             return $validate_document_amount;
                         }
@@ -1245,11 +1246,12 @@ class GenericMethod{
                         $error_amount_per_line = [];
                         $error_duplicate_transaction = [];
                         $total_principal = array_sum(array_column($prm_group,"principal"));
+                        $total_net_of_amount = array_sum(array_column($prm_group,"net_of_amount"));
                         $cheque_dates_array = array_column($prm_group, 'cheque_date');
 
 
-                        $message_if_error = "Document amount and total principal amount not equal.";
-                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_principal,$message_if_error);
+                        $message_if_error = "Document amount and total Net of amount not equal.";
+                        $validate_document_amount = GenericMethod::validate_document_amount($fields['document']['amount'],$total_net_of_amount,$message_if_error);
 
                         if($validate_document_amount){
                             return $validate_document_amount;
@@ -1705,14 +1707,8 @@ class GenericMethod{
             return new LengthAwarePaginator($items->forPage($page, $perPage)->values(), $items->count(), $perPage, $page, $options);
         }
 
-        public static function updateTransactionStatus($transaction_id,$request_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name,$transaction_type="cheque")
+        public static function updateTransactionStatus($id,$transaction_id,$request_id,$tag_no,$status,$state,$reason_id,$reason,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name,$transaction_type="cheque")
         {
-            // return Transaction::where('tag_no',$tag_no)->get();
-            // if($status != 'tag-tag'){
-            //     $tag_no = 0;
-            // }else if (Transaction::where('tag_no',$tag_no)->get()){
-
-            // }
                     
             $voucher_no = (isset($voucher_no)?$voucher_no:NULL);
             $voucher_month = (isset($voucher_month)?$voucher_month:NULL);
@@ -1725,10 +1721,14 @@ class GenericMethod{
                
             }
             DB::table('transactions')
-                ->when(in_array($status,['tag-receive','tag-hold','tag-unhold','tag-return','tag-unreturn','tag-void','tag-tag']), function($query) use($request_id){
-                    $query->where('request_id', $request_id);
-                },function ($query) use($tag_no){
-                    $query->where('tag_no', $tag_no);
+                ->when(in_array($status,['tag-receive','tag-hold','tag-unhold','tag-return','tag-unreturn','tag-void','tag-tag']), function($query) use($id,$request_id){
+                    $query
+                    ->where('id', $id)
+                    ->where('request_id', $request_id); 
+                },function ($query) use($id,$tag_no){
+                    $query
+                    ->where('id', $id)
+                    ->where('tag_no', $tag_no); 
 
                 })
                 ->when($status == "reverse-request", function($query)  use($status,$state,$tag_no,$reason_id,$reason,$reason_remarks
@@ -2836,6 +2836,7 @@ class GenericMethod{
         public static function validateReferenceNo($fields,$id=0){
             $validateTransactionCount =  Transaction::where('company_id',$fields['document']['company']['id'])
             ->where('referrence_no',$fields['document']['reference']['no'])
+            ->where('supplier_id',$fields['document']['supplier']['id'])
             ->when($id,function($query,$id){
                 $query->where('id','<>',$id);
             })
