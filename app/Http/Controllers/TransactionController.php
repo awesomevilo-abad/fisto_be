@@ -1040,7 +1040,7 @@ class TransactionController extends Controller
                
                $changes = GenericMethod::getTransactionChanges($request_id,$request,$id);
                
-              return GenericMethod::validate_debit_amount($fields['document']['amount'],$fields['autoDebit_group'],"Document amount and net of cwt amount is not equal.");
+               GenericMethod::validate_debit_amount($fields['document']['amount'],$fields['autoDebit_group'],"Document amount and net of amount is not equal.");
                GenericMethod::update_debit_attachment($request_id,$fields['autoDebit_group'],$id);
                $transaction = GenericMethod::updateTransaction($id,$po_total_amount,
                $request_id,$date_requested,$request,0,$changes);

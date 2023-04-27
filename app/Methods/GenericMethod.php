@@ -2330,6 +2330,7 @@ class GenericMethod{
             ->where('supplier_id',$supplier_id)
             ->where('document_date',$document_date)
             ->where('document_type',"Auto Debit")
+            ->where('state','!=',"void")
             ->when($id,function ($query) use ($id){
                 $query->where('id','<>',$id);
             })
@@ -2442,6 +2443,7 @@ class GenericMethod{
             ->where('supplier_id',$supplier_id)
             ->where('period_covered',$period_covered)
             ->where('cheque_date',$cheque_date)
+            ->where('state','!=','void')
             ->exists();
         }
 
@@ -2453,6 +2455,7 @@ class GenericMethod{
             ->where('release_date',$release_date)
             ->where('batch_no',$batch_no)
             ->where('cheque_date',$cheque_date)
+            ->where('state','!=','void')
             ->exists();
         }
 

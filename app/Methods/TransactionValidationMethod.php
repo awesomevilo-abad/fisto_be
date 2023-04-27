@@ -42,7 +42,9 @@ class TransactionValidationMethod
     public static function validateIfDocumentNoExistUpdate($doc_no,$id,$transaction_id=null){
         $transactions = DB::table('transactions')
         ->when($transaction_id,function ($query) use($transaction_id){
-            $query->where('transaction_id','<>',$transaction_id);
+            $query
+            ->where('transaction_id','<>',$transaction_id)
+            ->where('transactions.state','!=','void');
         }, function ($query) use ($id){
             $query->where('id','<>',$id);
         })
