@@ -67,11 +67,21 @@ class MasterlistController extends Controller
       "account_titles"=>AccountTitle::whereNull('deleted_at')->get(['id','title']));
       return $this->resultResponse('fetch','Account Title',$data);
   }
-  public function transactionAccountTitleDropdown(){
+  public function transactionAccountTitleDropdown(Request $request){
+    $api_for = $request->api_for?$request->api_for: "default";
     $data =  array(
-      "account_titles"=>AccountTitle::whereNull('deleted_at')->get(['id','title as name']));
+      "account_titles"=>
+        AccountTitle::withTrashed()
+        ->when($api_for == 'vladimir', function ($query) {
+          return $query->get(['id','code', 'title as name',DB::RAW('(CASE WHEN (ISNULL(deleted_at)) THEN 1 ELSE 0 END) as status')]);
+        }, function ($query){
+          return $query->whereNull('deleted_at')
+           ->get(['id','code','title as name']);
+        })
+       );
       return $this->resultResponse('fetch','Account Title',$data);
   }
+
 
   public function companyDropdown(){
     $data =  array("companies"=>Company::whereNull('deleted_at')->get(['id','company']));
