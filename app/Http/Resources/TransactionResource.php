@@ -543,7 +543,8 @@ class TransactionResource extends JsonResource
                     "id"=>$this->referrence_id,
                     "type"=>$this->referrence_type,
                     "no"=>$this->referrence_no,
-                    "amount"=> $this->referrence_amount
+                    "amount"=> $this->referrence_amount,
+                    "allowable"=> $this->is_allowable
                 ]
             ];
             break;

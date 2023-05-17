@@ -698,11 +698,13 @@ class GenericMethod{
             $reference_type = (isset($transaction['document']['reference']['type'])?$transaction['document']['reference']['type']:NULL);
             $reference_no = (isset($transaction['document']['reference']['no'])?$transaction['document']['reference']['no']:NULL);
             $reference_amount = (isset($transaction['document']['reference']['amount'])?$transaction['document']['reference']['amount']:NULL);
+            $is_allowable = (isset($transaction['document']['reference']['allowable'])?$transaction['document']['reference']['allowable']:NULL);
            
             $current_transaction->referrence_id = $reference_id;
             $current_transaction->referrence_type = $reference_type;
             $current_transaction->referrence_no = $reference_no;
             $current_transaction->referrence_amount = $reference_amount;
+            $current_transaction->is_allowable = $is_allowable;
             
 // ---------------------------------------------------------------------------------------------------------------------------------------
            
@@ -992,6 +994,7 @@ class GenericMethod{
                     , "referrence_no" => $fields['document']['reference']['no']
                     , "referrence_amount" => $fields['document']['reference']['amount']
                     , "referrence_id" => $fields['document']['reference']['id'] 
+                    , "is_allowable" => $fields['document']['reference']['allowable'] 
 
                     , "request_id" => $request_id
                     
@@ -1455,6 +1458,7 @@ class GenericMethod{
             $reference_type = (isset($fields['document']['reference']['type'])?$fields['document']['reference']['type']:NULL);
             $reference_no = (isset($fields['document']['reference']['no'])?$fields['document']['reference']['no']:NULL);
             $reference_amount = (isset($fields['document']['reference']['amount'])?$fields['document']['reference']['amount']:NULL);
+            $is_allowable = (isset($fields['document']['reference']['allowable'])?$fields['document']['reference']['allowable']:NULL);
             $balance_po_ref_amount = (isset($balance_po_ref_amount)?$balance_po_ref_amount:NULL);
           
             $currentTransaction->transaction_id = $fields['transaction']['no'];
@@ -1525,6 +1529,7 @@ class GenericMethod{
             $currentTransaction->referrence_type = $reference_type;
             $currentTransaction->referrence_no = $reference_no;
             $currentTransaction->referrence_amount = $reference_amount;
+            $currentTransaction->is_allowable = $is_allowable;
             $currentTransaction->balance_po_ref_amount = $balance_po_ref_amount;
 
             $currentTransaction->save();
@@ -2849,7 +2854,7 @@ class GenericMethod{
             }
         }
         
-        public static function getAndValidatePOBalance($company_id,$po_no,float $reference_amount,$po_group,$id=0){
+        public static function getAndValidatePOBalance($fields,$company_id,$po_no,float $reference_amount,$po_group,$id=0){
              $balance_po_ref_amount = Transaction::leftJoin('p_o_batches','transactions.request_id','=','p_o_batches.request_id')
             ->where('transactions.company_id',$company_id)
             ->when($id,function($query,$id){
@@ -2866,8 +2871,10 @@ class GenericMethod{
             }
             $balance_po_ref_amount = $balance_po_ref_amount->balance_po_ref_amount;
             
-            if($balance_po_ref_amount == 0){
-                return GenericMethod::resultLaravelFormat('po_group.no',["PO already exist."]);
+            if($balance_po_ref_amount <= 0){
+                if(!$id){
+                    return GenericMethod::resultLaravelFormat('po_group.no',["PO already exist."]);
+                }
             }
             // Additional PO
             $additional_po_group = []; 
@@ -2905,10 +2912,13 @@ class GenericMethod{
                 ,"balance" => $balance
                 ,"new_po_group" => $additional_po_group);
             }
+
+            if(!$fields['document']['reference']['allowable']){
+                if($balance_po_ref_amount < $reference_amount ){
+                    return GenericMethod::resultLaravelFormat('document.reference.no',["Insufficient PO balance."]);
+                }
+            } 
             
-            if($balance_po_ref_amount < $reference_amount ){
-                return GenericMethod::resultLaravelFormat('document.reference.no',["Insufficient PO balance."]);
-            }
             $balance = ($balance_po_ref_amount-$reference_amount);
             return $balance;
         }

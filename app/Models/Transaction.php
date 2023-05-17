@@ -88,6 +88,7 @@ class Transaction extends Model
         ,"referrence_amount"
         ,"referrence_qty"
         ,"referrence_id"
+        ,"is_allowable"
         ,"period_covered"
         ,"prm_multiple_from" 
         ,"prm_multiple_to"

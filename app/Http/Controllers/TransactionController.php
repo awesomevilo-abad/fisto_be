@@ -696,7 +696,7 @@ class TransactionController extends Controller
                     }
                     
                     $fields['po_group'] =  GenericMethod::ValidateIfPOExists($fields['po_group'],$fields['document']['company']['id']);
-                    $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],last($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
+                    $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields,$fields['document']['company']['id'],last($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group']);
                     if(gettype($getAndValidatePOBalance) == 'object'){
                         return $this->resultResponse('invalid','',$getAndValidatePOBalance);  
                     }
@@ -991,7 +991,7 @@ class TransactionController extends Controller
                 }
 
                 $fields['po_group'] =  GenericMethod::ValidateIfPOExists($fields['po_group'],$fields['document']['company']['id'],$id);
-                $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields['document']['company']['id'],last($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group'],$id);
+                $getAndValidatePOBalance = GenericMethod::getAndValidatePOBalance($fields,$fields['document']['company']['id'],last($fields['po_group'])['no'],$fields['document']['reference']['amount'],$fields['po_group'],$id);
                 if(gettype($getAndValidatePOBalance) == 'object'){
                     return $this->resultResponse('invalid','',$getAndValidatePOBalance);  
                 }
@@ -1013,8 +1013,10 @@ class TransactionController extends Controller
                 $balance_po_ref_amount = $po_total_amount - $fields['document']['reference']['amount'];
                     
                 if($po_total_amount < $fields['document']['reference']['amount']){
-                    $amountValdiation =  GenericMethod::resultLaravelFormat('document.reference.no',["Insufficient PO balance."]);
-                    return $this->resultResponse('invalid','',$amountValdiation);  
+                    if(!$fields['document']['reference']['allowable']){
+                        $amountValdiation =  GenericMethod::resultLaravelFormat('document.reference.no',["Insufficient PO balance."]);
+                        return $this->resultResponse('invalid','',$amountValdiation);  
+                    } 
                 }
                 
                 if(isset($getAndValidatePOBalance)){
