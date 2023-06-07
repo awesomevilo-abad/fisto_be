@@ -515,9 +515,12 @@ class TransactionController extends Controller
                 if(! empty($errorMessage)){
                     return GenericMethod::resultResponse('invalid','',$errorMessage);
                 }
-                GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                 $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                 $request_id,$date_requested,$fields);
+
+                $request_id = $transaction->id; // replace value of request_id to ID
+                
+                GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                 if(isset($transaction->transaction_id)){
                    return $this->resultResponse('save','Transaction',[]);
                 }
@@ -551,10 +554,11 @@ class TransactionController extends Controller
                 if(! empty($errorMessage)){
                     return GenericMethod::resultResponse('invalid','',$errorMessage);
                 }
-                GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
-               
+                
                 $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                 $request_id,$date_requested,$fields);
+                $request_id = $transaction->id; // replace value of request_id to ID
+                GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                 if(isset($transaction->transaction_id)){
                    return $this->resultResponse('save','Transaction',[]);
                 }
@@ -640,9 +644,11 @@ class TransactionController extends Controller
                 if(isset($duplicatePayroll)){
                     return $this->resultResponse('invalid','',$duplicatePayroll);
                 }
-                GenericMethod::insertClient($request_id,$fields['document']['payroll']['clients']);
                 $transaction = GenericMethod::insertTransaction($transaction_id,NULL,
                 $request_id,$date_requested,$fields);
+                
+                $request_id = $transaction->id; // replace value of request_id to ID
+                GenericMethod::insertClient($request_id,$fields['document']['payroll']['clients']);
                 if(isset($transaction->transaction_id)){
                    return $this->resultResponse('save','Transaction',[]);
                 }
@@ -680,9 +686,11 @@ class TransactionController extends Controller
                         }   
                     }
 
-                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                     $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                     $request_id,$date_requested,$fields);
+                    
+                    $request_id = $transaction->id; // replace value of request_id to ID
+                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                     if(isset($transaction->transaction_id)){
                        return $this->resultResponse('save','Transaction',[]);
                     }
@@ -704,9 +712,11 @@ class TransactionController extends Controller
                         $new_po= $getAndValidatePOBalance['new_po_group'];
                         $po_total_amount= $getAndValidatePOBalance['po_total_amount'];
                         $balance_with_additional_total_po_amount= $getAndValidatePOBalance['balance'];
-                       GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
-                       $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
-                       $request_id,$date_requested,$fields,$balance_with_additional_total_po_amount);
+                        $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
+                        $request_id,$date_requested,$fields,$balance_with_additional_total_po_amount);
+                        
+                        $request_id = $transaction->id; // replace value of request_id to ID
+                        GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                        if(isset($transaction->transaction_id)){
                           return $this->resultResponse('save','Transaction',[]);
                        }
@@ -723,9 +733,12 @@ class TransactionController extends Controller
                     if(isset($getAndValidatePOBalance)){
                         $balance_po_ref_amount = $getAndValidatePOBalance;
                     }
-                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                     $transaction = GenericMethod::insertTransaction($transaction_id,$po_total_amount,
                     $request_id,$date_requested,$fields,$balance_po_ref_amount);
+                    
+                    $request_id = $transaction->id; // replace value of request_id to ID
+
+                    GenericMethod::insertPO($request_id,$fields['po_group'],$po_total_amount,strtoupper($fields['document']['payment_type']));
                     if(isset($transaction->transaction_id)){
                        return $this->resultResponse('save','Transaction',[]);
                     }

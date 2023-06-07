@@ -1406,11 +1406,19 @@ class GenericMethod{
                 ]);
             }
 
+            
+            GenericMethod::updateRequestID($new_transaction->id);
             GenericMethod::insertRequestorLogs($new_transaction->id,$transaction_id,$date_requested,$fields['document']['remarks'],$fields['requestor']['id'],$status,NULL,NULL,NULL);
 
             return $new_transaction;
         }
 
+        public static function updateRequestID($id) {
+            Transaction::where('id',$id)->update([
+                'request_id' => $id
+            ]);
+
+        }
         public static function updateTransaction($transaction_id,$po_total_amount=0,
         $request_id,$date_requested,$fields,$balance_po_ref_amount=0,$changes){
             
